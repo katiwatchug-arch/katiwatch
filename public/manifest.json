@@ -1,0 +1,56 @@
+{
+  "name": "Katiwatch",
+  "short_name": "Katiwatch",
+  "description": "Experience Entertainment Like Never Before. Watch the latest blockbuster movies and TV shows with translations by VJ Junior, VJ Jjingo, ICE P, and more—all in one place.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#141414",
+  "theme_color": "#E50914",
+  "categories": [
+    "entertainment"
+  ],
+  "lang": "en-UG",
+  "icons": [
+    {
+      "src": "/logo.jpeg",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.jpeg",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/hero-image.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Katiwatch Home Screen"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Movies",
+      "url": "/movies",
+      "description": "Browse all movies"
+    },
+    {
+      "name": "Browse Series",
+      "url": "/series",
+      "description": "Browse all TV series"
+    }
+  ]
+}
