@@ -28,8 +28,8 @@ export const metadata: Metadata = {
     default: 'Katiwatch - We Are Entertainment',
     template: '%s | Katiwatch',
   },
-  description: 'Katiwatch is Uganda\'s #1 premium translated movie and series streaming platform. Watch blockbuster movies and TV shows translated by top VJs like VJ Junior, VJ Jjingo, ICE P, and more. Stream the best Ugandan translated movies online at katiwatch.com.',
-  keywords: 'katiwatch, Katiwatch, katiwatch.com, katiwatch ug, watch movies online Uganda, translated movies Uganda, VJ Junior movies, VJ Jjingo movies, ICE P movies, Ugandan translated movies, premium streaming platform in Uganda, movies in luganda, luganda movies online, stream movies Uganda, watch all translated movies, Uganda movie streaming, VJ Emmie, VJ Kevo',
+  description: 'Katiwatch is Uganda\'s number one platform for translated movies and series. Watch blockbuster movies and TV shows translated by your favorite VJs like VJ Junior, VJ Jjingo, ICE P, and more. Stream the best Ugandan translated movies online at katiwatch.com.',
+  keywords: 'katiwatch, Katiwatch, katiwatch.com, katiwatch ug, watch movies online Uganda, translated movies Uganda, VJ Junior movies, VJ Jjingo movies, ICE P movies, translated movies, premium streaming platform in Uganda, movies in luganda, luganda movies online, stream movies Uganda, watch all translated movies, Uganda movie streaming, VJ Emmie, VJ Kevo,VJ,vj',
   applicationName: 'Katiwatch',
   authors: [{ name: 'Katiwatch' }],
   generator: 'Next.js',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Katiwatch - We are Entertainment',
-    description: 'Katiwatch is Uganda\'s #1 premium movie streaming platform. Watch blockbuster movies translated by VJ Junior, VJ Jjingo, ICE P and more.',
+    description: 'Katiwatch is Uganda\'s number one movie streaming platform. Watch blockbuster movies translated by your favorite VJs like VJ Junior, VJ Jjingo, ICE P and more.',
     url: 'https://katiwatch.com',
     siteName: 'Katiwatch',
     images: [
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Katiwatch - We Are Entertainment',
-    description: 'Uganda\'s #1 premium streaming platform. Watch movies translated by VJ Junior, VJ Jjingo, ICE P and more.',
+    description: 'Uganda\'s number one movie streaming platform. Watch movies translated by your favorite VJs like  VJ Junior, VJ Jjingo, ICE P and more.',
     images: ['/logo.jpeg'],
     site: '@katiwatch',
   },
@@ -99,7 +99,7 @@ const jsonLd = {
       url: 'https://katiwatch.com',
       name: 'Katiwatch',
       alternateName: ['katiwatch.com', 'katiwatch'],
-      description: 'Uganda\'s #1 premium movie streaming platform with translated movies by top VJs.',
+      description: 'Uganda\'s number one movie streaming platform with translated movies by top VJs.',
       publisher: { '@id': 'https://katiwatch.com/#organization' },
       potentialAction: {
         '@type': 'SearchAction',
@@ -132,7 +132,7 @@ const jsonLd = {
       name: 'Katiwatch - We Are Entertainment',
       isPartOf: { '@id': 'https://katiwatch.com/#website' },
       about: { '@id': 'https://katiwatch.com/#organization' },
-      description: 'Katiwatch is Uganda\'s #1 premium streaming platform. Watch blockbuster movies and TV shows translated by top VJs.',
+      description: 'Katiwatch is Uganda\'s number one movie streaming platform. Watch blockbuster movies and TV shows translated by your favorite VJs like VJ Junior, VJ Jjingo, ICE P, and more.',
       inLanguage: 'en-UG',
     },
   ],

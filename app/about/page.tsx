@@ -4,13 +4,13 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: 'About katiwatch - We Are Entertainment',
-  description: 'Learn about katiwatch, Experience Entertainment Like Never Before. Watch the latest blockbuster movies and TV shows with translations by VJ Junior, VJ Jjingo, ICE P, and more—all in one place.',
+  description: 'Learn about katiwatch, Experience Entertainment With Us Like You Never Have Before. Watch the latest and all movies and TV shows with translations from your favorite Vjs like VJ Junior, VJ Jjingo, ICE P, and more all in one place.',
   alternates: {
     canonical: '/about',
   },
   openGraph: {
-    title: 'About katiwatch - Uganda\'s #1 Movie Streaming Platform',
-    description: 'Learn about katiwatch, Uganda\'s premier streaming platform for translated movies and TV shows.',
+    title: 'About katiwatch - The one and only entertainment platform.Stream movies by your Favorite VJs.Or enjoy them untranslated',
+    description: 'Learn about katiwatch, We Are Entertainment.Stream all your favorite movies and tv shows',
     url: 'https://katiwatch.com/about',
   },
 };
