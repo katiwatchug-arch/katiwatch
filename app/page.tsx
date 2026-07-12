@@ -10,7 +10,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { NetflixCard } from "@/components/NetflixCard";
 import { FullPageSpinner } from "@/components/LoadingSpinner";
-import { getVJContent } from "@/lib/api";
+import { getVJContent, getMovieById, getSeriesById, getMovies, getSeries, getGenreRowsForHome, searchMovies } from "@/lib/api";
 import { Movie, Series } from "@/lib/supabase";
 import { useAuthCheck } from "@/components/AuthRequiredModal";
 import AuthRequiredModal from "@/components/AuthRequiredModal";
@@ -64,10 +64,9 @@ export default function HomePage() {
 
       if (!item.description?.trim()) {
         try {
-          const api = await import('@/lib/api');
           const details = item.type === 'movie'
-            ? await api.getMovieById(item.id)
-            : await api.getSeriesById(item.id);
+            ? await getMovieById(item.id)
+            : await getSeriesById(item.id);
           if (details?.description) { setFeaturedItem({ ...item, description: details.description } as any); setHeroLoading(false); return; }
         } catch {}
       }
@@ -78,20 +77,18 @@ export default function HomePage() {
 
   // Phase 2: Load movies + series in parallel (show as soon as ready)
   useEffect(() => {
-    import('@/lib/api').then(api =>
-      Promise.all([api.getMovies(24), api.getSeries(24)])
-        .then(([movies, series]) => {
-          setLatestMovies(movies);
-          setLatestSeries(series);
-          setFilteredMovies(movies);
-          setTrendingContent([
-            ...movies.slice(0, 3).map((m: any) => ({ ...m, type: 'movie', trending: 'hot' })),
-            ...series.slice(0, 3).map((s: any) => ({ ...s, type: 'series', trending: 'today' })),
-          ]);
-          setContentLoading(false);
-        })
-        .catch(() => setContentLoading(false))
-    );
+    Promise.all([getMovies(24), getSeries(24)])
+      .then(([movies, series]) => {
+        setLatestMovies(movies);
+        setLatestSeries(series);
+        setFilteredMovies(movies);
+        setTrendingContent([
+          ...movies.slice(0, 3).map((m: any) => ({ ...m, type: 'movie', trending: 'hot' })),
+          ...series.slice(0, 3).map((s: any) => ({ ...s, type: 'series', trending: 'today' })),
+        ]);
+        setContentLoading(false);
+      })
+      .catch(() => setContentLoading(false));
   }, []);
 
   // Phase 3: Load genre rows after content is visible (deferred)
@@ -100,9 +97,7 @@ export default function HomePage() {
     genresFetched.current = true;
     // Use setTimeout as a safe fallback — requestIdleCallback is not supported on iOS Safari
     const id = setTimeout(() => {
-      import('@/lib/api').then(api =>
-        api.getGenreRowsForHome(12).then(rows => setGenreRows(rows)).catch(() => {})
-      );
+      getGenreRowsForHome(12).then(rows => setGenreRows(rows)).catch(() => {});
     }, 500);
     return () => clearTimeout(id);
   }, [contentLoading]);
@@ -111,12 +106,10 @@ export default function HomePage() {
   useEffect(() => {
     if (selectedFilter === 'All') { setFilteredMovies(latestMovies); return; }
     setFilterLoading(true);
-    import('@/lib/api').then(api =>
-      api.searchMovies('', 16, 1, undefined, selectedFilter.toLowerCase())
-        .then(r => setFilteredMovies(r.length > 0 ? r : latestMovies))
-        .catch(() => setFilteredMovies(latestMovies))
-        .finally(() => setFilterLoading(false))
-    );
+    searchMovies('', 16, 1, undefined, selectedFilter.toLowerCase())
+      .then(r => setFilteredMovies(r.length > 0 ? r : latestMovies))
+      .catch(() => setFilteredMovies(latestMovies))
+      .finally(() => setFilterLoading(false));
   }, [selectedFilter, latestMovies]);
 
   if (heroLoading) return <FullPageSpinner text="Loading..." />;

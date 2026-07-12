@@ -9,6 +9,7 @@ import { StreamitHoverCard } from "@/components/StreamitHoverCard";
 import { Button } from "@/components/ui/button";
 import { Trash2, Film, Tv } from "lucide-react";
 import { useUserPreferences } from "@/lib/hooks/useUserPreferences";
+import { getMovieById, getSeriesById } from "@/lib/api";
 
 export default function WatchlistPage() {
   const { user, loading: authLoading } = useAuth();
@@ -43,10 +44,10 @@ export default function WatchlistPage() {
         const itemPromises = watchlist.map(async (item) => {
           try {
             if (item.type === 'movie') {
-              const movie = await (await import('@/lib/api')).getMovieById(item.id);
+              const movie = await getMovieById(item.id);
               return movie ? { ...movie, type: 'movie' as const } : null;
             } else {
-              const series = await (await import('@/lib/api')).getSeriesById(item.id);
+              const series = await getSeriesById(item.id);
               return series ? { ...series, type: 'series' as const } : null;
             }
           } catch (err) {
