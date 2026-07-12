@@ -165,16 +165,21 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           strategy="afterInteractive"
         />
-        {/* Register PWA service worker */}
+        {/* Unregister PWA service worker - older TVs have broken SW implementations that hang fetch requests */}
         <Script
-          id="register-sw"
+          id="unregister-sw"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
-                    console.warn('SW registration failed:', err);
+                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                      registration.unregister();
+                      console.log('Unregistered service worker');
+                    }
+                  }).catch(function(err) {
+                    console.warn('SW unregistration failed:', err);
                   });
                 });
               }
