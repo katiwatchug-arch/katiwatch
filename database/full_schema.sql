@@ -235,6 +235,7 @@ CREATE INDEX IF NOT EXISTS idx_makypay_transactions_status ON makypay_transactio
 CREATE INDEX IF NOT EXISTS idx_makypay_transactions_created_at ON makypay_transactions(created_at DESC);
 
 -- Auto-update trigger
+
 CREATE TRIGGER trigger_update_makypay_transactions_updated_at
     BEFORE UPDATE ON makypay_transactions
     FOR EACH ROW
