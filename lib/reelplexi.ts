@@ -12,11 +12,18 @@ class ReelplexiError extends Error {
 }
 
 async function fetchReelplexi(endpoint: string, params: Record<string, string | number> = {}) {
-  const urlString = isServer ? `${REELPLEXI_BASE_URL}${endpoint}` : `${window.location.origin}${REELPLEXI_BASE_URL}${endpoint}`;
-  const url = new URL(urlString);
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, String(value));
+  let origin = '';
+  if (!isServer) {
+    origin = window.location.origin || (window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: ''));
   }
+  const urlString = isServer ? `${REELPLEXI_BASE_URL}${endpoint}` : `${origin}${REELPLEXI_BASE_URL}${endpoint}`;
+  
+  let queryString = '';
+  const paramKeys = Object.keys(params);
+  if (paramKeys.length > 0) {
+    queryString = '?' + paramKeys.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(String(params[k]))}`).join('&');
+  }
+  const fullUrl = `${urlString}${queryString}`;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -27,10 +34,47 @@ async function fetchReelplexi(endpoint: string, params: Record<string, string | 
     headers['Authorization'] = `Bearer ${REELPLEXI_API_KEY}`;
   }
 
-  const res = await fetch(url.toString(), {
-    headers,
-    next: { revalidate: 300 }, // Cache for 5 minutes server-side
-  });
+  let res: any;
+
+  if (isServer) {
+    res = await fetch(fullUrl, {
+      headers,
+      next: { revalidate: 300 }, // Cache for 5 minutes server-side
+    });
+  } else {
+    // Client-side: use XMLHttpRequest to bypass Next.js buggy fetch polyfills on old TVs
+    res = await new Promise((resolve, reject) => {
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', fullUrl, true);
+        for (const k in headers) {
+          if (Object.prototype.hasOwnProperty.call(headers, k)) {
+            xhr.setRequestHeader(k, headers[k]);
+          }
+        }
+        xhr.onload = function() {
+          resolve({
+            ok: xhr.status >= 200 && xhr.status < 300,
+            status: xhr.status,
+            text: async () => xhr.responseText,
+            json: async () => {
+              try {
+                return JSON.parse(xhr.responseText);
+              } catch (e) {
+                return {};
+              }
+            }
+          });
+        };
+        xhr.onerror = function() {
+          reject(new Error('Network request failed'));
+        };
+        xhr.send();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
 
   if (!res.ok) {
     let message = 'Unknown API error';

@@ -91,6 +91,38 @@ button, a {
 .swiper-button-next:hover, .swiper-button-prev:hover { color: #E50914 !important; background: none !important; }
 .swiper-pagination-bullet-active { background: var(--color-primary) !important; }
 
+/* ── Fallback for older TVs where Swiper JS fails to initialize ── */
+.swiper:not(.swiper-initialized) .swiper-wrapper {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 10px;
+}
+.swiper:not(.swiper-initialized) .swiper-slide {
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  width: calc(100% / 3.5);
+  margin-right: 10px;
+  scroll-snap-align: start;
+}
+@media (min-width: 640px) {
+  .swiper:not(.swiper-initialized) .swiper-slide { width: calc(100% / 4.5); margin-right: 15px; }
+}
+@media (min-width: 768px) {
+  .swiper:not(.swiper-initialized) .swiper-slide { width: calc(100% / 5.5); }
+}
+@media (min-width: 1024px) {
+  .swiper:not(.swiper-initialized) .swiper-slide { width: calc(100% / 6.5); margin-right: 20px; }
+}
+@media (min-width: 1280px) {
+  .swiper:not(.swiper-initialized) .swiper-slide { width: calc(100% / 8.5); }
+}
+
 /* ── Video player ── */
 .video-fullscreen {
   position: fixed !important;
