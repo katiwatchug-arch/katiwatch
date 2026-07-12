@@ -53,7 +53,7 @@ const AnimationCard = ({ content }: { content: TMDBMovie }) => {
     <div className="group">
       <Link href={`/non-translated/movies/${content.id}`}>
         <div className="cursor-pointer transition-transform duration-200 hover:scale-105">
-          <div className="aspect-[2/3] relative rounded-lg overflow-hidden bg-gray-800 mb-2">
+          <div className="pt-[150%] relative rounded-lg overflow-hidden bg-gray-800 mb-2">
             <Image
               src={posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : `https://via.placeholder.com/300x450/1f2937/f97316?text=${encodeURIComponent(title)}`}
               alt={title}

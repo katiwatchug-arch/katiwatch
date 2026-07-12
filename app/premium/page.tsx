@@ -65,7 +65,7 @@ export default async function PremiumPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {premiumMovies.map((item) => (
                 <Link key={item.id} href={`/movies/${item.id}`} className="group block">
-                  <div className="aspect-[2/3] relative rounded-lg overflow-hidden bg-gray-900 border border-gray-800 group-hover:border-[#d9a029] transition-colors">
+                  <div className="pt-[150%] relative rounded-lg overflow-hidden bg-gray-900 border border-gray-800 group-hover:border-[#d9a029] transition-colors">
                     <Image
                       src={item.cover_image_url || `https://via.placeholder.com/400x600/141414/d9a029?text=${encodeURIComponent(item.title)}`}
                       alt={item.title}
@@ -95,7 +95,7 @@ export default async function PremiumPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {premiumSeries.map((item) => (
                 <Link key={item.id} href={`/series/${item.id}`} className="group block">
-                  <div className="aspect-[2/3] relative rounded-lg overflow-hidden bg-gray-900 border border-gray-800 group-hover:border-[#d9a029] transition-colors">
+                  <div className="pt-[150%] relative rounded-lg overflow-hidden bg-gray-900 border border-gray-800 group-hover:border-[#d9a029] transition-colors">
                     <Image
                       src={item.cover_image_url || `https://via.placeholder.com/400x600/141414/d9a029?text=${encodeURIComponent(item.title)}`}
                       alt={item.title}

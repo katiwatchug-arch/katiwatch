@@ -225,7 +225,7 @@ const InlinePlayer: React.FC<InlinePlayerProps> = ({
 
         {/* Right: Main Poster (hidden on mobile) */}
         <div className="hidden lg:flex items-center justify-center w-[420px] flex-shrink-0 relative z-10">
-          <div className="relative aspect-[2/3] w-80 rounded-xl overflow-hidden shadow-xl border-4 border-[#E50914]">
+          <div className="relative pt-[150%] w-80 rounded-xl overflow-hidden shadow-xl border-4 border-[#E50914]">
             <Image
               src={coverImage}
               alt={title}

@@ -35,7 +35,7 @@ const NonTranslatedCard = ({ content, type, isAnimeRow = false }: { content: TMD
     <div className="group">
       <Link href={`/non-translated/${displayType === "movie" ? "movies" : "series"}/${content.id}`}>
         <div className="cursor-pointer transition-transform duration-300 hover:scale-105">
-          <div className="aspect-[2/3] relative rounded-md overflow-hidden bg-gray-800 mb-3">
+          <div className="pt-[150%] relative rounded-md overflow-hidden bg-gray-800 mb-3">
             <Image
               src={posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : `https://via.placeholder.com/300x450/1f2937/f97316?text=${encodeURIComponent(title)}`}
               alt={title}
@@ -185,7 +185,7 @@ export default function NonTranslatedPage() {
       {showingPlayer && embedUrl && (
         <div className="w-full bg-black">
           <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 py-6">
-            <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
+            <div className="relative pt-[56.25%] bg-gray-900 rounded-lg overflow-hidden">
               {isPlayerLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-20">
                   <div className="text-white text-center">

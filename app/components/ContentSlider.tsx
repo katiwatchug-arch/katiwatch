@@ -32,7 +32,7 @@ const SliderCard = ({
     <div className="group flex-shrink-0 w-[120px] md:w-[150px] lg:w-[160px]">
       <Link href={`/non-translated/${displayType === "movie" ? "movies" : "series"}/${content.id}`}>
         <div className="cursor-pointer transition-transform duration-200 hover:scale-105">
-          <div className="aspect-[2/3] relative rounded-lg overflow-hidden bg-gray-800 mb-2 md:mb-3">
+          <div className="pt-[150%] relative rounded-lg overflow-hidden bg-gray-800 mb-2 md:mb-3">
             <Image
               src={posterPath ? `https://image.tmdb.org/t/p/original${posterPath}` : `https://via.placeholder.com/240x360/1f2937/f97316?text=${encodeURIComponent(title)}`}
               alt={title}

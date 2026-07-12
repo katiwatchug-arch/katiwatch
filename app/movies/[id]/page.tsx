@@ -131,7 +131,7 @@ export default function MovieDetailsPage() {
     <div className="min-h-screen bg-[#141414] text-white">
 
       {/* Hero — main stream player or cover image */}
-      <section className="relative w-full aspect-video bg-black">
+      <section className="relative w-full pt-[56.25%] bg-black">
         {streamUrl ? (
           <VideoPlayer
             src={streamUrl}
@@ -224,7 +224,7 @@ export default function MovieDetailsPage() {
       {trailerUrl && (
         <section className="px-4 pb-4">
           <h2 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Trailer</h2>
-          <div className="relative w-full aspect-video bg-black overflow-hidden">
+          <div className="relative w-full pt-[56.25%] bg-black overflow-hidden">
             <iframe
               src={`https://www.youtube.com/embed/${trailerUrl.match(/(?:youtu\.be\/|watch\?v=)([^&?]+)/)?.[1]}?autoplay=1&mute=1&rel=0&modestbranding=1`}
               title={`${movie.title} — Trailer`}
@@ -263,7 +263,7 @@ export default function MovieDetailsPage() {
               <p className="text-gray-500 text-sm col-span-3 py-8 text-center">No similar movies found.</p>
             ) : (
               Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-[2/3] rounded bg-gray-800/40 animate-pulse" />
+                <div key={i} className="pt-[150%] rounded bg-gray-800/40 animate-pulse" />
               ))
             )}
           </div>

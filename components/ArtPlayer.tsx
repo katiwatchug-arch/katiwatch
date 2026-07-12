@@ -563,7 +563,7 @@ export function ArtPlayer({ url, poster, title, className, onEnded, episodes = [
 
   if (loading) {
     return (
-      <div className={`w-full aspect-video bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center ${className}`}>
+      <div className={`w-full pt-[56.25%] bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center ${className}`}>
         <p className="text-white">Loading video...</p>
       </div>
     )
@@ -571,7 +571,7 @@ export function ArtPlayer({ url, poster, title, className, onEnded, episodes = [
 
   if (formatError) {
     return (
-      <div className={`w-full aspect-video bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center ${className}`}>
+      <div className={`w-full pt-[56.25%] bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center ${className}`}>
         <div className="text-center max-w-md px-4">
           <p className="text-red-400 mb-2">Unsupported Video Format</p>
           <p className="text-gray-400 text-sm mb-3">{formatError}</p>
@@ -586,7 +586,7 @@ export function ArtPlayer({ url, poster, title, className, onEnded, episodes = [
 
   if (authError) {
     return (
-      <div className={`w-full aspect-video bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center ${className}`}>
+      <div className={`w-full pt-[56.25%] bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center ${className}`}>
         <div className="text-center max-w-md px-4">
           <p className="text-red-400 mb-2">Authentication Error</p>
           <p className="text-gray-400 text-sm mb-3">{authError}</p>
@@ -600,7 +600,7 @@ export function ArtPlayer({ url, poster, title, className, onEnded, episodes = [
 
   if (!authenticatedUrl || authenticatedUrl === "#") {
     return (
-      <div className={`w-full aspect-video bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center ${className}`}>
+      <div className={`w-full pt-[56.25%] bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center ${className}`}>
         <div className="text-center">
           <p className="text-white mb-2">Video not available</p>
           <p className="text-gray-400 text-sm">No valid video source found</p>

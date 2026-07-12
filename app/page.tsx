@@ -33,7 +33,7 @@ function SwiperSkeleton() {
   return (
     <div className="flex gap-2 overflow-hidden">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="flex-shrink-0 w-[calc(100%/3.5)] sm:w-[calc(100%/4.5)] md:w-[calc(100%/5.5)] lg:w-[calc(100%/6.5)] xl:w-[calc(100%/8.5)] aspect-[2/3] bg-gray-800/50 animate-pulse rounded" />
+        <div key={i} className="flex-shrink-0 w-[calc(100%/3.5)] sm:w-[calc(100%/4.5)] md:w-[calc(100%/5.5)] lg:w-[calc(100%/6.5)] xl:w-[calc(100%/8.5)] pt-[150%] bg-gray-800/50 animate-pulse rounded" />
       ))}
     </div>
   );
@@ -211,7 +211,7 @@ export default function HomePage() {
               {trendingContent.map((item) => (
                 <SwiperSlide key={item.id}>
                   <Link href={item.type === 'movie' ? `/movies/${item.id}` : `/series/${item.id}`} className="group block">
-                    <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-gray-900">
+                    <div className="relative pt-[56.25%] rounded-lg overflow-hidden bg-gray-900">
                       <Image
                         src={item.cover_image_url || item.thumbnail_url || `https://via.placeholder.com/640x360/1f2937/e50914?text=${encodeURIComponent(item.title)}`}
                         alt={item.title}

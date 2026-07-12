@@ -13,7 +13,7 @@ export default function MovieCard({ content }: MovieCardProps) {
 
   return (
     <Link href={`/non-translated/movies/${content.id}`} className="group block">
-      <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-gray-900">
+      <div className="relative pt-[150%] rounded-md overflow-hidden bg-gray-900">
         <Image
           src={posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : `https://via.placeholder.com/300x450/1f2937/f97316?text=${encodeURIComponent(title)}`}
           alt={title}
