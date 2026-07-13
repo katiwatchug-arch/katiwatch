@@ -230,7 +230,7 @@ export default function SeriesDetailsPage() {
     <div className="min-h-screen bg-[#141414] text-white">
 
       {/* Hero — video player or cover image with play button */}
-      <section className="relative w-full pt-[56.25%] bg-black">
+      <section className="relative w-full aspect-video bg-black max-h-[85vh]">
         {streamUrl ? (
           <div className="w-full h-full relative">
             <VideoPlayer

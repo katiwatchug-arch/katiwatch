@@ -185,7 +185,7 @@ export default function NonTranslatedMovieDetailsPage() {
       <AuthGuard action="play">
         {showingPlayer && embedUrl && (
           <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 mb-6">
-            <div className="relative pt-[56.25%] bg-gray-900 rounded-lg overflow-hidden">
+            <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
               {isPlayerLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-20">
                   <div className="text-white text-center">

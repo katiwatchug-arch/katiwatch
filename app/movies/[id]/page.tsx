@@ -131,7 +131,7 @@ export default function MovieDetailsPage() {
     <div className="min-h-screen bg-[#141414] text-white">
 
       {/* Hero — main stream player or cover image */}
-      <section className="relative w-full pt-[56.25%] bg-black">
+      <section className="relative w-full aspect-video bg-black max-h-[85vh]">
         {streamUrl ? (
           <VideoPlayer
             src={streamUrl}
