@@ -66,15 +66,8 @@ export default function MovieDetailsPage() {
         if (trailers?.[0]?.key) setTrailerUrl(`https://www.youtube.com/watch?v=${trailers[0].key}`);
       } catch {}
 
-      // Fetch stream for the main player (only if user has rights)
-      const authResult = checkAuth(data.premium);
-      if (authResult.allowed) {
-        try {
-          const streamData = await api.getMovieStream(params.id as string);
-          if (streamData?.video_url) setStreamUrl(streamData.video_url);
-        } catch {}
-      }
-
+      // Fetch stream for the main player is deferred until user clicks Watch Now
+      
       setLoading(false);
 
       if ((data.genre_ids?.length ?? 0) > 0) {
@@ -93,13 +86,25 @@ export default function MovieDetailsPage() {
     }
   }, [movie, hasRights, updateWatchProgress]);
 
-  const handleWatchClick = () => {
+  const handleWatchClick = async () => {
     if (!hasRights) {
       const r = checkAuth(movie?.premium ?? false);
       if (r.reason === "auth_required") { setAuthAction("play"); setShowAuthModal(true); }
       else router.push("/payment");
       return;
     }
+
+    // Fetch stream url here so video player only mounts after tapping "Watch Now"
+    if (!streamUrl && movie) {
+      try {
+        const api = await import("@/lib/api");
+        const streamData = await api.getMovieStream(movie.id);
+        if (streamData?.video_url) setStreamUrl(streamData.video_url);
+      } catch (err) {
+        console.error("Failed to load stream", err);
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
