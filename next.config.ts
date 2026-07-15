@@ -3,14 +3,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   compress: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
       { protocol: 'http', hostname: '**' },
     ],
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 86400,
   },
   serverExternalPackages: [],
+  transpilePackages: ['swiper', 'artplayer', 'lucide-react', 'clsx', 'tailwind-merge'],
   turbopack: {},
   async rewrites() {
     const panelUrl = process.env.PANEL_URL || 'http://localhost:3001';

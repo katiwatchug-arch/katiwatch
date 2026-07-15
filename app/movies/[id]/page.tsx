@@ -66,15 +66,8 @@ export default function MovieDetailsPage() {
         if (trailers?.[0]?.key) setTrailerUrl(`https://www.youtube.com/watch?v=${trailers[0].key}`);
       } catch {}
 
-      // Fetch stream for the main player (only if user has rights)
-      const authResult = checkAuth(data.premium);
-      if (authResult.allowed) {
-        try {
-          const streamData = await api.getMovieStream(params.id as string);
-          if (streamData?.video_url) setStreamUrl(streamData.video_url);
-        } catch {}
-      }
-
+      // Fetch stream for the main player is deferred until user clicks Watch Now
+      
       setLoading(false);
 
       if ((data.genre_ids?.length ?? 0) > 0) {
@@ -93,13 +86,25 @@ export default function MovieDetailsPage() {
     }
   }, [movie, hasRights, updateWatchProgress]);
 
-  const handleWatchClick = () => {
+  const handleWatchClick = async () => {
     if (!hasRights) {
       const r = checkAuth(movie?.premium ?? false);
       if (r.reason === "auth_required") { setAuthAction("play"); setShowAuthModal(true); }
       else router.push("/payment");
       return;
     }
+
+    // Fetch stream url here so video player only mounts after tapping "Watch Now"
+    if (!streamUrl && movie) {
+      try {
+        const api = await import("@/lib/api");
+        const streamData = await api.getMovieStream(movie.id);
+        if (streamData?.video_url) setStreamUrl(streamData.video_url);
+      } catch (err) {
+        console.error("Failed to load stream", err);
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -131,7 +136,7 @@ export default function MovieDetailsPage() {
     <div className="min-h-screen bg-[#141414] text-white">
 
       {/* Hero — main stream player or cover image */}
-      <section className="relative w-full aspect-video bg-black">
+      <section className="relative w-full aspect-video bg-black max-h-[85vh]">
         {streamUrl ? (
           <VideoPlayer
             src={streamUrl}
@@ -224,7 +229,7 @@ export default function MovieDetailsPage() {
       {trailerUrl && (
         <section className="px-4 pb-4">
           <h2 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Trailer</h2>
-          <div className="relative w-full aspect-video bg-black overflow-hidden">
+          <div className="relative w-full pt-[56.25%] bg-black overflow-hidden">
             <iframe
               src={`https://www.youtube.com/embed/${trailerUrl.match(/(?:youtu\.be\/|watch\?v=)([^&?]+)/)?.[1]}?autoplay=1&mute=1&rel=0&modestbranding=1`}
               title={`${movie.title} — Trailer`}
@@ -263,7 +268,7 @@ export default function MovieDetailsPage() {
               <p className="text-gray-500 text-sm col-span-3 py-8 text-center">No similar movies found.</p>
             ) : (
               Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-[2/3] rounded bg-gray-800/40 animate-pulse" />
+                <div key={i} className="pt-[150%] rounded bg-gray-800/40 animate-pulse" />
               ))
             )}
           </div>

@@ -3,6 +3,7 @@ import { Search, Filter, ChevronDown } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { Series } from "@/lib/supabase";
 import { NetflixCard } from "@/components/NetflixCard";
+import { getVJs, searchSeries } from "@/lib/api";
 
 type SeriesWithVJ = Series & {
   vjs: { id: string; name: string } | null;
@@ -28,8 +29,7 @@ export default function SeriesPage() {
 
   const fetchAvailableVJs = useCallback(async () => {
     try {
-      const api = await import('@/lib/api');
-      const vjData = await api.getVJs();
+      const vjData = await getVJs();
       setAvailableVJs(vjData || []);
     } catch (error) {
       console.error('Error fetching VJs:', error);
@@ -40,8 +40,7 @@ export default function SeriesPage() {
   const fetchSeries = useCallback(async (page: number, query = "", vjName = "") => {
     setLoading(true);
     try {
-      const api = await import('@/lib/api');
-      const seriesData = await api.searchSeries(query, seriesPerPage, page, vjName || undefined);
+      const seriesData = await searchSeries(query, seriesPerPage, page, vjName || undefined);
       setSeries(seriesData as any[]);
       setTotalSeries(seriesData.length === seriesPerPage ? page * seriesPerPage + 1 : (page - 1) * seriesPerPage + seriesData.length);
     } catch (error) {

@@ -42,7 +42,7 @@ export const NetflixCard = ({ content, type, isNonTranslated = false }: NetflixC
 
   return (
     <Link href={getHref()} className="group block">
-      <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-gray-900">
+      <div className="relative pt-[150%] rounded-md overflow-hidden bg-gray-900">
         <Image
           src={
             content.thumbnail_url ||

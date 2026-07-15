@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { Movie } from "@/lib/supabase";
 import { NetflixCard } from "@/components/NetflixCard";
+import { getVJs, searchMovies } from "@/lib/api";
 
 type MovieWithVJ = Movie & {
   vjs: { id: string; name: string } | null;
@@ -29,8 +30,7 @@ export default function MoviesPage() {
 
   const fetchAvailableVJs = useCallback(async () => {
     try {
-      const api = await import('@/lib/api');
-      const vjData = await api.getVJs();
+      const vjData = await getVJs();
       setAvailableVJs(vjData || []);
     } catch (error) {
       console.error('Error fetching VJs:', error);
@@ -41,8 +41,7 @@ export default function MoviesPage() {
   const fetchMovies = useCallback(async (page: number, query = "", vjName = "") => {
     setLoading(true);
     try {
-      const api = await import('@/lib/api');
-      const moviesData = await api.searchMovies(query, moviesPerPage, page, vjName || undefined);
+      const moviesData = await searchMovies(query, moviesPerPage, page, vjName || undefined);
       setMovies(moviesData as any);
       setTotalMovies(moviesData.length === moviesPerPage ? page * moviesPerPage + 1 : (page - 1) * moviesPerPage + moviesData.length);
     } catch (error) {

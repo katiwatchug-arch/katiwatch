@@ -18,7 +18,7 @@ export default function Thumbnail({
   className = '',
   priority = false,
 }: ThumbnailProps) {
-  const aspectClass = aspectRatio === 'square' ? 'aspect-square' : 'aspect-landscape';
+  const aspectClass = aspectRatio === 'square' ? 'pt-[100%]' : 'aspect-landscape';
   const containerStyle = { width: `${size}px` };
   const containerClasses = `${aspectClass} image-container ${className}`;
   

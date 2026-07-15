@@ -230,7 +230,7 @@ export default function SeriesDetailsPage() {
     <div className="min-h-screen bg-[#141414] text-white">
 
       {/* Hero — video player or cover image with play button */}
-      <section className="relative w-full aspect-video bg-black">
+      <section className="relative w-full aspect-video bg-black max-h-[85vh]">
         {streamUrl ? (
           <div className="w-full h-full relative">
             <VideoPlayer
@@ -332,7 +332,7 @@ export default function SeriesDetailsPage() {
       {trailerUrl && (
         <section className="px-4 pb-4">
           <h2 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Trailer</h2>
-          <div className="relative w-full aspect-video bg-black overflow-hidden">
+          <div className="relative w-full pt-[56.25%] bg-black overflow-hidden">
             <iframe
               src={`https://www.youtube.com/embed/${trailerUrl.match(/(?:youtu\.be\/|watch\?v=)([^&?]+)/)?.[1]}?autoplay=1&mute=1&rel=0&modestbranding=1`}
               title={`${series.title} — Trailer`}
@@ -397,7 +397,7 @@ export default function SeriesDetailsPage() {
               {activeEpisodes.map(episode => (
                 <div key={episode.id} className="flex items-center gap-3 py-3">
                   <div
-                    className="relative flex-shrink-0 w-28 aspect-video rounded overflow-hidden cursor-pointer"
+                    className="relative flex-shrink-0 w-28 pt-[56.25%] rounded overflow-hidden cursor-pointer"
                     onClick={() => handleEpisodeSelect(episode)}
                   >
                     <Image src={episode.thumbnail_url || coverImage} alt={episode.title} fill className="object-cover" />
@@ -428,7 +428,7 @@ export default function SeriesDetailsPage() {
                   onClick={() => handleEpisodeSelect(episode)}
                 >
                   {/* Thumbnail */}
-                  <div className="relative aspect-video overflow-hidden">
+                  <div className="relative pt-[56.25%] overflow-hidden">
                     <Image src={episode.thumbnail_url || coverImage} alt={episode.title} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">

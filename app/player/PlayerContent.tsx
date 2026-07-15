@@ -12,6 +12,7 @@ import AuthRequiredModal, { useAuthCheck } from '@/components/AuthRequiredModal'
 import { getProfile, Profile } from '@/lib/profiles';
 import { Episode, EpisodeWithSeason } from '@/lib/supabase';
 import { normalizeVideoUrl } from '@/lib/utils';
+import { getMovieById, getSeriesById, getEpisodes, getMovieStream, getEpisodeStream } from "@/lib/api";
 
 export default function PlayerContent() {
   const searchParams = useSearchParams();
@@ -84,11 +85,10 @@ export default function PlayerContent() {
       try {
         let contentTitle = '';
         let contentInfo: any = null;
-        const api = await import('@/lib/api');
 
         if (contentType === 'movie') {
           // Fetch movie display data from API
-          const movie = await api.getMovieById(contentId);
+          const movie = await getMovieById(contentId);
 
           if (!movie) {
             throw new Error('Movie not found or not published');
@@ -117,12 +117,12 @@ export default function PlayerContent() {
             // fallback if it's somehow a different format
           }
 
-          const seriesData = await api.getSeriesById(actualSeriesId);
+          const seriesData = await getSeriesById(actualSeriesId);
           if (!seriesData) {
             throw new Error('Series not found or not published');
           }
 
-          const episodes = await api.getEpisodes(actualSeriesId, seasonNum);
+          const episodes = await getEpisodes(actualSeriesId, seasonNum);
           const episode = episodes.find((e: any) => e.episode_number === episodeNum);
 
           if (!episode) {
@@ -159,10 +159,10 @@ export default function PlayerContent() {
 
         let finalStreamUrl = null;
         if (contentType === 'movie') {
-           const streamData = await api.getMovieStream(contentId);
+           const streamData = await getMovieStream(contentId);
            finalStreamUrl = streamData?.video_url;
         } else {
-           const streamData = await api.getEpisodeStream(seriesId || contentId, contentInfo.seasonOrder, contentInfo.episode_number);
+           const streamData = await getEpisodeStream(seriesId || contentId, contentInfo.seasonOrder, contentInfo.episode_number);
            finalStreamUrl = streamData?.video_url;
         }
 
@@ -295,8 +295,7 @@ export default function PlayerContent() {
       window.history.replaceState({}, '', newUrl);
 
       // SECURITY: Fetch video URL from secure API
-      const api = await import('@/lib/api');
-      const streamData = await api.getEpisodeStream(seriesId || contentId || '', episode.seasonOrder || 1, episode.episode_number);
+      const streamData = await getEpisodeStream(seriesId || contentId || '', episode.seasonOrder || 1, episode.episode_number);
 
       if (!streamData || !streamData.video_url) {
         setError('This episode is not available for watching');

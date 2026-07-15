@@ -27,7 +27,7 @@ const NonTranslatedCard = ({ content, type, isAnime }: { content: TMDBTVShow; ty
     <div className="group">
       <Link href={`/non-translated/${type === "movie" ? "movies" : "series"}/${content.id}`}>
         <div className="cursor-pointer transition-transform duration-300 hover:scale-105">
-          <div className="aspect-[2/3] relative rounded-md overflow-hidden bg-gray-800 mb-3">
+          <div className="pt-[150%] relative rounded-md overflow-hidden bg-gray-800 mb-3">
             <Image
               src={posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : `https://via.placeholder.com/300x450/1f2937/f97316?text=${encodeURIComponent(title)}`}
               alt={title}
@@ -304,7 +304,7 @@ export default function NonTranslatedSeriesDetailsPage() {
                 <button
                   key={episode.id}
                   onClick={() => handlePlayClick(episode)}
-                  className={`aspect-square rounded text-sm font-medium transition-colors ${
+                  className={`pt-[100%] rounded text-sm font-medium transition-colors ${
                     selectedEpisode === episode.episode_number && selectedSeason === episode.season_number
                       ? "bg-blue-600 text-white"
                       : "bg-gray-700 text-gray-300 hover:bg-gray-600"

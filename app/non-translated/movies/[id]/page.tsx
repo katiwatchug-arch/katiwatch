@@ -24,7 +24,7 @@ const NonTranslatedCard = ({ content, type }: { content: TMDBMovie; type: 'movie
     <div className="group">
       <Link href={`/non-translated/${type === "movie" ? "movies" : "series"}/${content.id}`}>
         <div className="cursor-pointer transition-transform duration-300 hover:scale-105">
-          <div className="aspect-[2/3] relative rounded-md overflow-hidden bg-gray-800 mb-3">
+          <div className="pt-[150%] relative rounded-md overflow-hidden bg-gray-800 mb-3">
             <Image
               src={posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : `https://via.placeholder.com/300x450/1f2937/f97316?text=${encodeURIComponent(title)}`}
               alt={title}
