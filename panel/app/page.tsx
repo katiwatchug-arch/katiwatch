@@ -32,13 +32,19 @@ export default function DashboardPage() {
     async function fetchDashboardData() {
       // Counts
       // Use API route for profiles to bypass RLS (profiles are restricted to own row)
-      const profilesRes = await authFetch('/api/profiles');
+      // Counts + Top All-Time (via API route, bypasses RLS with service role key)
+      const [profilesRes, statsRes] = await Promise.all([
+        authFetch('/api/profiles'),
+        authFetch('/api/stats'),
+      ]);
       const profilesJson = await profilesRes.json();
-      const { count: movies } = await supabase.from("movies").select("id", { count: "exact", head: true });
-      const { count: series } = await supabase.from("series").select("id", { count: "exact", head: true });
+      const statsJson = await statsRes.json();
+
       setUserCount(profilesJson.count || 0);
-      setMovieCount(movies || 0);
-      setSeriesCount(series || 0);
+      setMovieCount(statsJson.movieCount || 0);
+      setSeriesCount(statsJson.seriesCount || 0);
+      setTopMovies(statsJson.topMovies || []);
+      setTopSeries(statsJson.topSeries || []);
 
       // Latest Content
       const { data: latestM } = await supabase.from("movies").select("title, created_at").eq("latest", true).order("created_at", { ascending: false }).limit(5);
@@ -47,6 +53,7 @@ export default function DashboardPage() {
       const { data: latestS } = await supabase.from("series").select("title, created_at").order("created_at", { ascending: false }).limit(5);
       setLatestSeries(latestS || []);
 
+      
       // Top All-Time
       const { data: topM } = await supabase.from("movies").select("title, views").order("views", { ascending: false }).limit(10);
       setTopMovies(topM || []);
