@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { signOut } from "@/lib/auth";
 import { setRedirectCookie } from "@/lib/utils";
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, Send } from "lucide-react";
 
 
 const leftNavItems: { href: string; label: React.ReactNode }[] = [
@@ -262,6 +262,17 @@ export default function Header() {
 
           {/* Desktop Right Navigation */}
           <nav className="hidden lg:flex items-center space-x-4">
+            <a
+              href="https://t.me/KatiwatchMovies"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 px-4 py-2 rounded-full bg-[#229ED9] hover:bg-[#1b86bb] text-white font-bold transition-colors duration-200"
+              aria-label="Telegram channel"
+            >
+              <Send className="w-4 h-4" />
+              <span>Telegram</span>
+            </a>
+
             {/* Search Icon */}
             <Link
               href="/search"
@@ -359,6 +370,16 @@ export default function Header() {
 
           {/* Mobile Right Section - Search and Menu */}
           <div className="flex items-center space-x-3 lg:hidden">
+            <a
+              href="https://t.me/KatiwatchMovies"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-lg bg-[#229ED9] hover:bg-[#1b86bb] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#229ED9] min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Telegram channel"
+            >
+              <Send className="w-5 h-5 text-white" />
+            </a>
+
             {/* Mobile Search Button */}
             <Link
               href="/search"
