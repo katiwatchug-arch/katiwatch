@@ -124,7 +124,7 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#141414] text-white pb-16">
+      <div className="min-h-screen bg-[#141414] text-white pb-4">
         <h1 className="sr-only">Katiwatch - We Are Entertainment</h1>
 
         {/* Hero */}
@@ -314,7 +314,7 @@ export default function HomePage() {
         {genreRows.map(genre => (
           <React.Fragment key={genre.name}>
             {genre.movies.length > 0 && (
-              <section className="mb-16 container mx-auto px-4 md:px-12">
+              <section className="mb-4 container mx-auto px-4 md:px-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl md:text-3xl font-bold text-[#E50914]">{genre.name} Movies</h2>
                   <Link href={`/movies?genre=${genre.name.toLowerCase()}`} className="text-[#E50914] hover:text-[#b80710] font-semibold flex items-center gap-2 transition-colors">
@@ -329,7 +329,7 @@ export default function HomePage() {
               </section>
             )}
             {genre.series?.length > 0 && (
-              <section className="mb-16 container mx-auto px-4 md:px-12">
+              <section className="mb-4 container mx-auto px-4 md:px-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl md:text-3xl font-bold text-[#E50914]">{genre.name} Series</h2>
                   <Link href={`/series?genre=${genre.name.toLowerCase()}`} className="text-[#E50914] hover:text-[#b80710] font-semibold flex items-center gap-2 transition-colors">

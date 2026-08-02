@@ -115,11 +115,11 @@ export default function Header() {
 </span>
               ) : user ? (
                 <>
-                  {/* Mobile User Avatar */}
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
+                  {/* Mobile User Avatar - navigates directly to profile page */}
+                  <Link
+                    href="/profile"
                     className="relative flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-[#E50914] min-w-[40px] min-h-[40px]"
-                    aria-label="User menu"
+                    aria-label="Go to Profile"
                   >
                     {user.user_metadata?.avatar_url ? (
                       <Image
@@ -134,97 +134,7 @@ export default function Header() {
                         {user.email?.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    {/* Premium indicator dot */}
-                    {isPremium && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-400 rounded-full flex items-center justify-center">
-                        <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732L14.146 12.8l-1.179 4.456a1 1 0 01-1.934 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.179-4.456A1 1 0 0112 2z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                    {/* Non-premium indicator */}
-                    {!isPremium && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#E50914] rounded-full flex items-center justify-center">
-                        <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732L14.146 12.8l-1.179 4.456a1 1 0 01-1.934 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.179-4.456A1 1 0 0112 2z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-
-                  {/* Mobile User Menu Dropdown */}
-                  {showUserMenu && (
-                    <div className="absolute left-4 top-16 mt-2 w-64 bg-[#23272f] rounded-lg shadow-xl border border-gray-700 py-2 z-50">
-                      <div className="px-4 py-3 border-b border-gray-700">
-                        <div className="flex items-center space-x-3">
-                          {user.user_metadata?.avatar_url ? (
-                            <Image
-                              src={user.user_metadata.avatar_url}
-                              alt="Profile"
-                              width={48}
-                              height={48}
-                              className={`w-12 h-12 rounded-full border-2 ${isPremium ? 'border-[#E50914]' : 'border-[#E50914]'}`}
-                            />
-                          ) : (
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${isPremium ? 'bg-orange-400' : 'bg-[#E50914]'}`}>
-                              {user.email?.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate">
-                              {user.user_metadata?.full_name || 'User'}
-                            </p>
-                            <p className="text-xs text-gray-400 truncate">{user.email}</p>
-                            {isPremium && (
-                              <div className="flex items-center space-x-1 mt-1">
-                                <svg className="w-3 h-3 text-[#E50914]" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732L14.146 12.8l-1.179 4.456a1 1 0 01-1.934 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.179-4.456A1 1 0 0112 2z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-xs text-[#E50914] font-medium">Premium</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="py-1">
-                        <Link
-                          href="/profile"
-                          className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-black hover:text-[#E50914] transition-colors duration-200 flex items-center space-x-3"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.21 0 4.305.534 6.121 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span>Profile</span>
-                        </Link>
-
-                        <Link
-                          href="/payment"
-                          className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-black hover:text-[#E50914] transition-colors duration-200 flex items-center space-x-3"
-                          onClick={() => setShowUserMenu(false)}
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" clipRule="evenodd" />
-                          </svg>
-                          <span>{isPremium ? 'Manage Subscription' : 'Get Premium'}</span>
-                        </Link>
-
-                        <button
-                          onClick={() => {
-                            handleSignOut();
-                            setShowUserMenu(false);
-                          }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-black hover:text-red-400 transition-colors duration-200 flex items-center space-x-3"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          <span>Sign Out</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  </Link>
                 </>
               ) : (
                 <Link
@@ -312,50 +222,26 @@ export default function Header() {
                   </Link>
                 )}
 
-                {/* User Menu */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-black transition-colors duration-200 focus:outline-none"
-                  >
-                    {user.user_metadata?.avatar_url ? (
-                      <Image
-                        src={user.user_metadata.avatar_url}
-                        alt="Profile"
-                        width={32}
-                        height={32}
-                        className={`w-8 h-8 rounded-full border-2 ${isPremium ? 'border-[#d9a029]' : 'border-gray-600'}`}
-                      />
-                    ) : (
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${isPremium ? 'bg-[#d9a029]' : 'bg-[#E50914]'}`}>
-                        {user.email?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-[#23272f] rounded-lg shadow-xl border border-gray-700 py-1 z-50">
-                      <div className="px-4 py-3 border-b border-gray-700">
-                        <p className="text-sm text-gray-400">Signed in as</p>
-                        <p className="text-sm font-medium text-white truncate">{user.email}</p>
-                      </div>
-                      <Link
-                        href="/profile"
-                        className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-black hover:text-[#E50914] transition-colors duration-200 flex items-center space-x-2"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.21 0 4.305.534 6.121 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        <span>Profile</span>
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-black hover:text-[#E50914] transition-colors duration-200"
-                      >
-                        Sign Out
-                      </button>
+                {/* Desktop User Avatar - navigates directly to profile page */}
+                <Link
+                  href="/profile"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-black transition-colors duration-200 focus:outline-none"
+                  aria-label="Go to Profile"
+                >
+                  {user.user_metadata?.avatar_url ? (
+                    <Image
+                      src={user.user_metadata.avatar_url}
+                      alt="Profile"
+                      width={32}
+                      height={32}
+                      className={`w-8 h-8 rounded-full border-2 ${isPremium ? 'border-[#d9a029]' : 'border-gray-600'}`}
+                    />
+                  ) : (
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${isPremium ? 'bg-[#d9a029]' : 'bg-[#E50914]'}`}>
+                      {user.email?.charAt(0).toUpperCase()}
                     </div>
                   )}
-                </div>
+                </Link>
               </>
             ) : (
               <Link
