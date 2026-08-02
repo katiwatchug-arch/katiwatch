@@ -246,7 +246,7 @@ export default function HomePage() {
                   }}
                 >
                   <Play className="w-6 h-6 fill-current" />
-                  Watch Here Katiwatch
+                  Kati watch
                 </Button>
               </div>
 
@@ -280,27 +280,6 @@ export default function HomePage() {
                       {featuredItem.description}
                     </p>
                   )}
-                </div>
-              )}
-
-              {/* Slide indicators */}
-              {heroSlides.length > 1 && (
-                <div className="flex justify-center gap-2 pt-4">
-                  {heroSlides.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setCurrentSlideIndex(index);
-                        setFeaturedItem(heroSlides[index]);
-                      }}
-                      className={`transition-all duration-300 rounded-full ${
-                        index === currentSlideIndex 
-                          ? 'w-8 h-2 bg-[#E50914]' 
-                          : 'w-2 h-2 bg-gray-500 hover:bg-gray-400'
-                      }`}
-                      aria-label={`Go to slide ${index + 1}`}
-                    />
-                  ))}
                 </div>
               )}
             </div>
