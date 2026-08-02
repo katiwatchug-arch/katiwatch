@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import { Play, Info, Plus, Star, Calendar, Mic, ChevronRight, Heart, Search, X } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -41,7 +41,7 @@ function SwiperSkeleton() {
 }
 
 export default function HomePage() {
-  const router = useRouter();
+
   const [featuredItem, setFeaturedItem] = useState<VJContent | null>(null);
   const [heroSlides, setHeroSlides] = useState<VJContent[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -242,17 +242,13 @@ export default function HomePage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-6 py-4 md:py-5 pr-14 bg-[#2a2a3e]/80 backdrop-blur-sm border-2 border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-[#E50914] transition-all duration-300 text-base md:text-lg"
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && searchQuery.trim()) {
-                        router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-                      }
+                      // Results are shown inline; no redirect needed
                     }}
                   />
                   <button
                     className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-[#E50914] hover:bg-[#b80710] flex items-center justify-center transition-all duration-300 hover:scale-110"
                     onClick={() => {
-                      if (searchQuery.trim()) {
-                        router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-                      }
+                      // Results are shown inline automatically
                     }}
                   >
                     <Search className="w-5 h-5 text-white" />

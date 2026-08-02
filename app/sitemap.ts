@@ -40,12 +40,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.7,
     },
-    {
-      url: `${baseUrl}/search`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
+
     {
       url: `${baseUrl}/signin`,
       lastModified: new Date(),

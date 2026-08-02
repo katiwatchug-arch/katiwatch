@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { signOut } from "@/lib/auth";
 import { setRedirectCookie } from "@/lib/utils";
-import { Search, Bell, Send } from "lucide-react";
+import { Bell, Send } from "lucide-react";
 
 
 const leftNavItems: { href: string; label: React.ReactNode }[] = [
@@ -127,15 +127,7 @@ export default function Header() {
 
           {/* Right section: Search and User */}
           <div className="flex items-center space-x-3 flex-shrink-0">
-            {/* Desktop Search */}
-            <Link
-              href="/search"
-              className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 transition-all duration-300 group"
-              aria-label="Search"
-            >
-              <Search className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
-              <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Search...</span>
-            </Link>
+  
 
             {/* Mobile User Section */}
             <div className="flex items-center lg:hidden">
@@ -270,14 +262,7 @@ export default function Header() {
               <Send className="w-5 h-5 text-white" />
             </a>
 
-            {/* Mobile Search Button */}
-            <Link
-              href="/search"
-              className="p-2 rounded-lg hover:bg-black transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#E50914] min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Search"
-            >
-              <Search className="w-5 h-5 text-[#E50914]" />
-            </Link>
+
 
             {/* Mobile Notifications Button */}
             <Link
