@@ -7,8 +7,8 @@ import { supabaseAdmin } from './supabase-admin';
  * Process collections and disbursements via Mobile Money in Uganda.
  * 
  * Supports:
- * - MTN Mobile Money (077, 078, 076, 039, 031, 079)
- * - Airtel Money (070, 073, 074, 075)
+ * - MTN Mobile Money (077, 078, 076, 079)
+ * - Airtel Money (070, 074, 075)
  * - Card Payments (Visa/Mastercard)
  */
 export class MakyPayService {
@@ -85,14 +85,14 @@ export class MakyPayService {
    * Determine mobile money provider based on phone number prefix
    * 
    * MakyPay officially supported prefixes:
-   * MTN: 077, 078, 076, 039
+   * MTN: 077, 078, 076, 079
    * Airtel: 070, 074, 075
    */
   static getProviderFromPhone(phoneNumber: string): string {
     const formatted = this.formatPhoneNumber(phoneNumber);
 
-    // MTN: 256 + (077, 078, 076, 039) — per MakyPay API docs
-    if (/^256(77|78|76|39)/.test(formatted)) {
+    // MTN: 256 + (077, 078, 076, 079) — per MakyPay API docs
+    if (/^256(77|78|76|79)/.test(formatted)) {
       return 'mtn';
     }
 
@@ -104,7 +104,7 @@ export class MakyPayService {
     // Reject unsupported prefixes instead of silently defaulting
     const prefix = formatted.substring(3, 5);
     throw new MakyPayException(
-      `Unsupported phone prefix (0${prefix}). MakyPay supports MTN (077/078/076/039) and Airtel (070/074/075) only.`
+      `Unsupported phone prefix (0${prefix}). MakyPay supports MTN (077/078/076/079) and Airtel (070/074/075) only.`
     );
   }
 

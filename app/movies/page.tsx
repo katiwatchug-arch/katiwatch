@@ -89,7 +89,7 @@ export default function MoviesPage() {
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">Movies</h1>
           </div>
           <p className="text-gray-500 text-sm ml-9">
-            {totalMovies > 0 && !loading ? `${totalMovies.toLocaleString()}+ titles` : "Browse all translated movies"}
+            Browse all translated movies
           </p>
         </div>
       </div>
@@ -224,14 +224,19 @@ export default function MoviesPage() {
               disabled={currentPage === 1}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-800 text-gray-400 hover:border-[#E50914]/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium uppercase tracking-wider transition-all"
             >
-              ← Prev
+              Previous
             </button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            {Array.from({ length: Math.min(4, totalPages) }, (_, i) => {
               let pageNum;
-              if (totalPages <= 5) pageNum = i + 1;
-              else if (currentPage <= 3) pageNum = i + 1;
-              else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-              else pageNum = currentPage - 2 + i;
+              if (totalPages <= 4) {
+                pageNum = i + 1;
+              } else if (currentPage <= 2) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 1) {
+                pageNum = totalPages - 3 + i;
+              } else {
+                pageNum = currentPage - 1 + i;
+              }
               return (
                 <button
                   key={pageNum}
@@ -246,12 +251,15 @@ export default function MoviesPage() {
                 </button>
               );
             })}
+            {totalPages > 4 && currentPage < totalPages - 2 && (
+              <span className="text-gray-600 px-2">.....</span>
+            )}
             <button
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-800 text-gray-400 hover:border-[#E50914]/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium uppercase tracking-wider transition-all"
             >
-              Next →
+              Next
             </button>
           </div>
         )}

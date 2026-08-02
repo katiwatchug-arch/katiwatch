@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 /// Provides integration for deposits (collecting payments) using YoPayments API
 /// 
 /// Supports:
-/// - MTN Mobile Money (077, 078, 076, 039, 031, 079)
+/// - MTN Mobile Money (077, 078, 076, 079)
 /// - Airtel Money (070, 074, 075)
 export class YoPaymentsService {
   private static readonly SANDBOX_BASE_URL =
@@ -170,21 +170,21 @@ export class YoPaymentsService {
 
   /// Determine account provider code based on phone number
   /// 
-  /// MTN Prefixes (as of March 2025):
-  /// - 077, 078, 076, 039, 031, 079 (newly added March 2025)
+  /// MTN Prefixes:
+  /// - 077, 078, 076, 079
   /// 
   /// Airtel Prefixes:
-  /// - 070, 073, 074, 075
+  /// - 070, 074, 075
   static getAccountProviderCode(phoneNumber: string): string {
     const formatted = this.formatPhoneNumber(phoneNumber);
 
-    // MTN: 256 + (077, 078, 076, 039, 031, 079)
-    if (/^256(77|78|76|39|31|79)/.test(formatted)) {
+    // MTN: 256 + (077, 078, 076, 079)
+    if (/^256(77|78|76|79)/.test(formatted)) {
       return 'MTN_MOMO_UGA';
     }
 
-    // Airtel: 256 + (070, 073, 074, 075)
-    if (/^256(70|73|74|75)/.test(formatted)) {
+    // Airtel: 256 + (070, 074, 075)
+    if (/^256(70|74|75)/.test(formatted)) {
       return 'AIRTEL_OAPI_UGA';
     }
 
