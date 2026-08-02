@@ -43,6 +43,8 @@ function SwiperSkeleton() {
 export default function HomePage() {
   const router = useRouter();
   const [featuredItem, setFeaturedItem] = useState<VJContent | null>(null);
+  const [heroSlides, setHeroSlides] = useState<VJContent[]>([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [latestMovies, setLatestMovies] = useState<any[]>([]);
   const [latestSeries, setLatestSeries] = useState<any[]>([]);
   const [trendingContent, setTrendingContent] = useState<any[]>([]);
@@ -60,22 +62,49 @@ export default function HomePage() {
 
   // Phase 1: Load hero immediately
   useEffect(() => {
-    getVJContent(1).then(async vjData => {
-      const item = vjData[0] as any;
-      if (!item) { setHeroLoading(false); return; }
-
-      if (!item.description?.trim()) {
-        try {
-          const details = item.type === 'movie'
-            ? await getMovieById(item.id)
-            : await getSeriesById(item.id);
-          if (details?.description) { setFeaturedItem({ ...item, description: details.description } as any); setHeroLoading(false); return; }
-        } catch {}
+    getVJContent(5).then(async vjData => {
+      if (!vjData || vjData.length === 0) { 
+        setHeroLoading(false); 
+        return; 
       }
-      setFeaturedItem(item as any);
+
+      // Fetch full details for all hero items
+      const itemsWithDetails = await Promise.all(
+        vjData.map(async (item: any) => {
+          if (!item.description?.trim()) {
+            try {
+              const details = item.type === 'movie'
+                ? await getMovieById(item.id)
+                : await getSeriesById(item.id);
+              if (details?.description) {
+                return { ...item, description: details.description };
+              }
+            } catch {}
+          }
+          return item;
+        })
+      );
+
+      setHeroSlides(itemsWithDetails as any);
+      setFeaturedItem(itemsWithDetails[0] as any);
       setHeroLoading(false);
     }).catch(() => setHeroLoading(false));
   }, []);
+
+  // Auto-change hero slides every 5 seconds
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentSlideIndex((prev) => {
+        const nextIndex = (prev + 1) % heroSlides.length;
+        setFeaturedItem(heroSlides[nextIndex]);
+        return nextIndex;
+      });
+    }, 5000); // Change every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [heroSlides]);
 
   // Phase 2: Load movies + series in parallel (show as soon as ready)
   useEffect(() => {
@@ -129,26 +158,36 @@ export default function HomePage() {
       <div className="min-h-screen bg-[#141414] text-white pb-4">
         <h1 className="sr-only">Katiwatch - We Are Entertainment</h1>
 
-        {/* Hero Section - FMovies Style */}
+        {/* Hero Section - FMovies Style with Auto-Changing Slider */}
         <section className="relative min-h-[80vh] md:min-h-[85vh] w-full overflow-hidden mb-12">
-          {/* Background with movie collage */}
-          {featuredItem && (
-            <div className="absolute inset-0">
-              <Image
-                src={featuredItem.cover_image_url || `https://via.placeholder.com/1920x1080/1a1a2e/e50914?text=${encodeURIComponent(featuredItem.title)}`}
-                alt={featuredItem.title}
-                fill
-                className="object-cover opacity-20"
-                priority
-                sizes="100vw"
-                onError={(e) => { (e.target as HTMLImageElement).src = `https://via.placeholder.com/1920x1080/1a1a2e/e50914?text=${encodeURIComponent(featuredItem.title)}`; }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e]/95 via-[#1a1a2e]/90 to-[#141414]" />
-            </div>
-          )}
+          {/* Background with auto-changing movie slides */}
+          <div className="absolute inset-0">
+            {heroSlides.map((slide, index) => (
+              <div
+                key={slide.id}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  index === currentSlideIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                }`}
+              >
+                <Image
+                  src={slide.cover_image_url || `https://via.placeholder.com/1920x1080/1a1a2e/e50914?text=${encodeURIComponent(slide.title)}`}
+                  alt={slide.title}
+                  fill
+                  className="object-cover"
+                  priority={index === 0}
+                  sizes="100vw"
+                  onError={(e) => { 
+                    (e.target as HTMLImageElement).src = `https://via.placeholder.com/1920x1080/1a1a2e/e50914?text=${encodeURIComponent(slide.title)}`; 
+                  }}
+                />
+              </div>
+            ))}
+            {/* Dark gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e]/80 via-[#1a1a2e]/85 to-[#141414] z-20" />
+          </div>
 
           {/* Centered Content */}
-          <div className="relative z-10 flex flex-col items-center justify-center h-full min-h-[80vh] md:min-h-[85vh] px-4 py-12">
+          <div className="relative z-30 flex flex-col items-center justify-center h-full min-h-[80vh] md:min-h-[85vh] px-4 py-12">
             <div className="text-center max-w-4xl mx-auto space-y-8">
               {/* Large Logo/Title */}
               <div className="mb-8">
@@ -211,35 +250,78 @@ export default function HomePage() {
                 </Button>
               </div>
 
-              {/* Featured Content Info (if available) */}
+              {/* Featured Content Info with fade animation */}
               {featuredItem && (
-                <div className="pt-8 text-center space-y-3">
+                <div 
+                  key={featuredItem.id}
+                  className="pt-8 text-center space-y-3 animate-fade-in"
+                >
                   <h2 className="text-xl md:text-2xl font-bold text-white">
                     Featured: {featuredItem.title}
                   </h2>
-                  <div className="flex flex-wrap justify-center items-center gap-4 text-sm text-gray-400">
+                  <div className="flex flex-wrap justify-center items-center gap-4 text-sm text-gray-300">
                     {featuredItem.release_date && (
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-[#E50914]" />
-                        {new Date(typeof featuredItem.release_date === "string" ? featuredItem.release_date.replace(/ /g, "T") : featuredItem.release_date).getFullYear()}
+                        <span className="font-medium">
+                          {new Date(typeof featuredItem.release_date === "string" ? featuredItem.release_date.replace(/ /g, "T") : featuredItem.release_date).getFullYear()}
+                        </span>
                       </div>
                     )}
                     {featuredItem.vjs && (
                       <div className="flex items-center gap-2">
                         <Mic className="w-4 h-4 text-[#E50914]" />
-                        {featuredItem.vjs.name}
+                        <span className="font-medium">{featuredItem.vjs.name}</span>
                       </div>
                     )}
                   </div>
                   {featuredItem.description && (
-                    <p className="text-gray-300 text-sm md:text-base max-w-2xl mx-auto line-clamp-2">
+                    <p className="text-gray-300 text-sm md:text-base max-w-2xl mx-auto line-clamp-2 leading-relaxed">
                       {featuredItem.description}
                     </p>
                   )}
                 </div>
               )}
+
+              {/* Slide indicators */}
+              {heroSlides.length > 1 && (
+                <div className="flex justify-center gap-2 pt-4">
+                  {heroSlides.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setCurrentSlideIndex(index);
+                        setFeaturedItem(heroSlides[index]);
+                      }}
+                      className={`transition-all duration-300 rounded-full ${
+                        index === currentSlideIndex 
+                          ? 'w-8 h-2 bg-[#E50914]' 
+                          : 'w-2 h-2 bg-gray-500 hover:bg-gray-400'
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Add fade animation keyframes */}
+          <style jsx>{`
+            @keyframes fade-in {
+              from {
+                opacity: 0;
+                transform: translateY(10px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+            .animate-fade-in {
+              animation: fade-in 0.5s ease-out;
+            }
+          `}</style>
         </section>
 
         {/* Trending */}
