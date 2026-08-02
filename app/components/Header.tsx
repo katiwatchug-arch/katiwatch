@@ -83,26 +83,58 @@ export default function Header() {
     <>
       <header
         className={`transition-all duration-300 border-b ${isScrolled
-          ? "bg-black/95 backdrop-blur-md shadow-lg border-gray-700"
-          : "bg-black border-gray-800"
+          ? "bg-[#1a1a2e]/95 backdrop-blur-md shadow-lg border-gray-800"
+          : "bg-[#1a1a2e] border-gray-800"
           }`}
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
-          {/* Left section: Desktop Logo and nav, Mobile User */}
-          <div className="flex items-center space-x-4 flex-shrink-0">
-            {/* Desktop Logo */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+          {/* Left section: Logo */}
+          <div className="flex items-center flex-shrink-0">
+            {/* Logo - Always visible */}
             <Link
               href="/"
-              className="mr-2 flex items-center lg:flex hidden"
+              className="flex items-center gap-3 group"
             >
               <Image
                 src="/logo.jpeg"
                 alt="Katiwatch Logo"
-                width={40}
-                height={40}
-                className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded"
+                width={48}
+                height={48}
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-lg group-hover:scale-110 transition-transform duration-300"
                 priority
               />
+              <span className="hidden sm:block text-xl md:text-2xl font-black text-white tracking-tight">
+                KATIWATCH
+              </span>
+            </Link>
+          </div>
+
+          {/* Center section: Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-1 absolute left-1/2 -translate-x-1/2">
+            {leftNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`px-5 py-2 transition-all duration-200 font-semibold text-sm tracking-wide rounded-lg ${isActive(item.href)
+                  ? "text-white bg-white/10"
+                  : "text-gray-300 hover:text-white hover:bg-white/5"
+                  }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right section: Search and User */}
+          <div className="flex items-center space-x-3 flex-shrink-0">
+            {/* Desktop Search */}
+            <Link
+              href="/search"
+              className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 transition-all duration-300 group"
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
+              <span className="text-sm text-gray-400 group-hover:text-white transition-colors">Search...</span>
             </Link>
 
             {/* Mobile User Section */}
@@ -150,109 +182,80 @@ export default function Header() {
               )}
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-2">
-              {leftNavItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`px-4 py-2 transition-colors duration-200 font-bold uppercase text-sm tracking-wider ${isActive(item.href)
-                    ? "text-[#E50914]"
-                    : "text-gray-300 hover:text-[#E50914]"
-                    }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+            {/* Desktop: Telegram, Notifications, User */}
+            <div className="hidden lg:flex items-center space-x-3">
+              <a
+                href="https://t.me/KatiwatchMovies"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#229ED9]/10 hover:bg-[#229ED9]/20 border border-[#229ED9]/30 text-[#229ED9] hover:text-white transition-all duration-300"
+                aria-label="Telegram channel"
+              >
+                <Send className="w-4 h-4" />
+                <span className="text-sm font-medium">Telegram</span>
+              </a>
 
-          {/* Spacer */}
-          <div className="flex-1"></div>
+              {/* Notifications Icon */}
+              <Link
+                href="/notifications"
+                className="p-2 rounded-lg hover:bg-white/5 transition-colors duration-300"
+                aria-label="Notifications"
+              >
+                <Bell className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
+              </Link>
 
-          {/* Desktop Right Navigation */}
-          <nav className="hidden lg:flex items-center space-x-4">
-            <a
-              href="https://t.me/KatiwatchMovies"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-2 px-4 py-2 rounded-full bg-[#229ED9] hover:bg-[#1b86bb] text-white font-bold transition-colors duration-200"
-              aria-label="Telegram channel"
-            >
-              <Send className="w-4 h-4" />
-              <span>Telegram</span>
-            </a>
-
-            {/* Search Icon */}
-            <Link
-              href="/search"
-              className="p-2 transition-colors focus:outline-none"
-              aria-label="Search"
-            >
-              <Search className="w-5 h-5 text-[#E50914]" />
-            </Link>
-
-            {/* Notifications Icon */}
-            <Link
-              href="/notifications"
-              className="p-2 text-[#E50914] transition-colors focus:outline-none"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5" />
-            </Link>
-
-            {loading ? (
-              <span className="inline-flex items-center justify-center font-bold tracking-widest text-2xl text-[#E50914]">
+              {loading ? (
+                <span className="inline-flex items-center justify-center font-bold tracking-widest text-2xl text-[#E50914]">
   <span className="animate-bounce" style={{ animationDelay: "0ms" }}>.</span>
   <span className="animate-bounce" style={{ animationDelay: "150ms" }}>.</span>
   <span className="animate-bounce" style={{ animationDelay: "300ms" }}>.</span>
 </span>
-            ) : user ? (
-              <>
-                {/* Premium Badge - Show only if user is not premium */}
-                {!isPremium && (
-                  <Link
-                    href="/payment"
-                    className="flex items-center space-x-2 px-5 py-2 bg-[#d9a029] hover:bg-[#c28f23] rounded transition-all focus:outline-none shadow-lg"
-                  >
-                    <svg className="w-4 h-4 text-black fill-current" viewBox="0 0 24 24">
-                      <path d="M3 17h18v2H3v-2zm18-9l-3.5 5.5L12 7l-5.5 6.5L3 8l3 11h12l3-11z" />
-                    </svg>
-                    <span className="text-black font-bold uppercase text-xs tracking-wider">Subscribe</span>
-                  </Link>
-                )}
-
-                {/* Desktop User Avatar - navigates directly to profile page */}
-                <Link
-                  href="/profile"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-black transition-colors duration-200 focus:outline-none"
-                  aria-label="Go to Profile"
-                >
-                  {user.user_metadata?.avatar_url ? (
-                    <Image
-                      src={user.user_metadata.avatar_url}
-                      alt="Profile"
-                      width={32}
-                      height={32}
-                      className={`w-8 h-8 rounded-full border-2 ${isPremium ? 'border-[#d9a029]' : 'border-gray-600'}`}
-                    />
-                  ) : (
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${isPremium ? 'bg-[#d9a029]' : 'bg-[#E50914]'}`}>
-                      {user.email?.charAt(0).toUpperCase()}
-                    </div>
+              ) : user ? (
+                <>
+                  {/* Premium Badge - Show only if user is not premium */}
+                  {!isPremium && (
+                    <Link
+                      href="/payment"
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 rounded-lg transition-all shadow-lg hover:shadow-yellow-500/50"
+                    >
+                      <svg className="w-4 h-4 text-black fill-current" viewBox="0 0 24 24">
+                        <path d="M3 17h18v2H3v-2zm18-9l-3.5 5.5L12 7l-5.5 6.5L3 8l3 11h12l3-11z" />
+                      </svg>
+                      <span className="text-black font-bold text-xs tracking-wider">SUBSCRIBE</span>
+                    </Link>
                   )}
+
+                  {/* Desktop User Avatar */}
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all duration-300"
+                    aria-label="Go to Profile"
+                  >
+                    {user.user_metadata?.avatar_url ? (
+                      <Image
+                        src={user.user_metadata.avatar_url}
+                        alt="Profile"
+                        width={32}
+                        height={32}
+                        className={`w-8 h-8 rounded-full border-2 ${isPremium ? 'border-yellow-500' : 'border-gray-600'}`}
+                      />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${isPremium ? 'bg-gradient-to-r from-yellow-600 to-yellow-500' : 'bg-[#E50914]'}`}>
+                        {user.email?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/signin"
+                  onClick={() => setRedirectCookie(pathname)}
+                  className="px-6 py-2 bg-[#E50914] hover:bg-[#b80710] text-white font-bold rounded-lg text-sm transition-all duration-300 hover:shadow-lg hover:shadow-[#E50914]/50"
+                >
+                  Login
                 </Link>
-              </>
-            ) : (
-              <Link
-                href="/signin"
-                onClick={() => setRedirectCookie(pathname)}
-                className="px-6 py-2 bg-[#E50914] hover:bg-[#b80710] text-white font-bold rounded uppercase text-xs tracking-wider transition-colors"
-              >
-                Login
-              </Link>
-            )}
-          </nav>
+              )}
+            </div>
 
           {/* Mobile Right Section - Search and Menu */}
           <div className="flex items-center space-x-3 lg:hidden">

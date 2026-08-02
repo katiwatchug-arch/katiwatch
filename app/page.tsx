@@ -2,8 +2,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Play, Info, Plus, Star, Calendar, Mic, ChevronRight, Heart } from "lucide-react";
+import { Play, Info, Plus, Star, Calendar, Mic, ChevronRight, Heart, Search } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
@@ -40,6 +41,7 @@ function SwiperSkeleton() {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [featuredItem, setFeaturedItem] = useState<VJContent | null>(null);
   const [latestMovies, setLatestMovies] = useState<any[]>([]);
   const [latestSeries, setLatestSeries] = useState<any[]>([]);
@@ -127,74 +129,117 @@ export default function HomePage() {
       <div className="min-h-screen bg-[#141414] text-white pb-4">
         <h1 className="sr-only">Katiwatch - We Are Entertainment</h1>
 
-        {/* Hero */}
-        <section className="relative h-[70vh] md:h-[85vh] w-full overflow-hidden mb-12">
+        {/* Hero Section - FMovies Style */}
+        <section className="relative min-h-[80vh] md:min-h-[85vh] w-full overflow-hidden mb-12">
+          {/* Background with movie collage */}
           {featuredItem && (
             <div className="absolute inset-0">
               <Image
-                src={featuredItem.cover_image_url || `https://via.placeholder.com/1920x1080/141414/e50914?text=${encodeURIComponent(featuredItem.title)}`}
+                src={featuredItem.cover_image_url || `https://via.placeholder.com/1920x1080/1a1a2e/e50914?text=${encodeURIComponent(featuredItem.title)}`}
                 alt={featuredItem.title}
                 fill
-                className="object-cover"
+                className="object-cover opacity-20"
                 priority
                 sizes="100vw"
-                onError={(e) => { (e.target as HTMLImageElement).src = `https://via.placeholder.com/1920x1080/141414/e50914?text=${encodeURIComponent(featuredItem.title)}`; }}
+                onError={(e) => { (e.target as HTMLImageElement).src = `https://via.placeholder.com/1920x1080/1a1a2e/e50914?text=${encodeURIComponent(featuredItem.title)}`; }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/60 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#141414]/90 via-[#141414]/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e]/95 via-[#1a1a2e]/90 to-[#141414]" />
             </div>
           )}
-          {featuredItem && (
-            <div className="relative z-10 flex items-end h-full pb-12 md:pb-20">
-              <div className="container mx-auto px-4 md:px-12">
-                <div className="max-w-2xl">
-                  <h2 className="text-3xl md:text-6xl lg:text-7xl font-black mb-4 text-white leading-tight">{featuredItem.title}</h2>
-                  <p className="text-sm md:text-base mb-6 text-gray-200 leading-relaxed max-w-xl line-clamp-3">
-                    {featuredItem.description || "Experience the best in entertainment with stunning visuals and captivating storytelling."}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-4 mb-8 text-xs md:text-sm font-medium text-gray-300">
-                    {featuredItem.release_date && (
-                      <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-[#E50914]" />{new Date(typeof featuredItem.release_date === "string" ? featuredItem.release_date.replace(/ /g, "T") : featuredItem.release_date).getFullYear()}</div>
-                    )}
-                    {featuredItem.vjs && (
-                      <div className="flex items-center gap-2"><Mic className="w-4 h-4 text-[#E50914]" />{featuredItem.vjs.name}</div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Button
-                      size="lg"
-                      className="font-bold px-10 py-6 rounded-full bg-[#E50914] text-white hover:bg-[#b80710] transition-all duration-300 flex items-center shadow-lg hover:scale-105"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        const authCheck = checkAuth(featuredItem.is_premium || false);
-                        if (!authCheck.allowed) {
-                          setAuthModal({ isOpen: true, action: 'play', requirePremium: authCheck.reason === 'premium_required' });
-                        } else {
-                          window.location.href = `/${featuredItem.type === 'movie' ? 'movies' : 'series'}/${featuredItem.id}`;
+
+          {/* Centered Content */}
+          <div className="relative z-10 flex flex-col items-center justify-center h-full min-h-[80vh] md:min-h-[85vh] px-4 py-12">
+            <div className="text-center max-w-4xl mx-auto space-y-8">
+              {/* Large Logo/Title */}
+              <div className="mb-8">
+                <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight">
+                  <span className="text-white">KATI</span>
+                  <span className="text-[#E50914]">WATCH</span>
+                </h1>
+                <p className="text-gray-400 text-sm sm:text-base md:text-lg mt-4 font-medium tracking-wide">
+                  WATCH MOVIES & TV SERIES | ENTERTAINMENT
+                </p>
+              </div>
+
+              {/* Search Bar */}
+              <div className="w-full max-w-2xl mx-auto">
+                <div className="relative group">
+                  <input
+                    type="text"
+                    placeholder="Search movie and series..."
+                    className="w-full px-6 py-4 md:py-5 pr-14 bg-[#2a2a3e]/80 backdrop-blur-sm border-2 border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-[#E50914] transition-all duration-300 text-base md:text-lg"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const query = (e.target as HTMLInputElement).value;
+                        if (query.trim()) {
+                          router.push(`/search?q=${encodeURIComponent(query)}`);
                         }
-                      }}
-                    >
-                      <Play className="w-5 h-5 mr-2 fill-current" />Play Now
-                    </Button>
-                    <button
-                      onClick={() => isInWatchlist(featuredItem.id) ? removeFromWatchlist(featuredItem.id) : addToWatchlist(featuredItem.id, featuredItem.type || 'movie')}
-                      className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-300"
-                      aria-label={isInWatchlist(featuredItem.id) ? "Remove from Watchlist" : "Add to Watchlist"}
-                    >
-                      {isInWatchlist(featuredItem.id) ? <Heart className="w-5 h-5 text-[#E50914] fill-current" /> : <Plus className="w-5 h-5 text-white" />}
-                    </button>
-                    <button
-                      onClick={() => window.location.href = `/${featuredItem.type === 'movie' ? 'movies' : 'series'}/${featuredItem.id}`}
-                      className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-300"
-                      aria-label="More Info"
-                    >
-                      <Info className="w-5 h-5 text-white" />
-                    </button>
-                  </div>
+                      }
+                    }}
+                  />
+                  <button
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-[#E50914] hover:bg-[#b80710] flex items-center justify-center transition-all duration-300 hover:scale-110"
+                    onClick={() => {
+                      const input = document.querySelector('input[placeholder="Search movie and series..."]') as HTMLInputElement;
+                      if (input?.value.trim()) {
+                        router.push(`/search?q=${encodeURIComponent(input.value)}`);
+                      }
+                    }}
+                  >
+                    <Search className="w-5 h-5 text-white" />
+                  </button>
                 </div>
               </div>
+
+              {/* CTA Button */}
+              <div className="pt-4">
+                <Button
+                  size="lg"
+                  className="font-bold px-10 py-6 rounded-full bg-[#E50914] text-white hover:bg-[#b80710] transition-all duration-300 flex items-center gap-3 shadow-2xl hover:shadow-[#E50914]/50 hover:scale-105 text-base md:text-lg mx-auto"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const authCheck = checkAuth(featuredItem?.is_premium || false);
+                    if (!authCheck.allowed) {
+                      setAuthModal({ isOpen: true, action: 'play', requirePremium: authCheck.reason === 'premium_required' });
+                    } else if (featuredItem) {
+                      window.location.href = `/${featuredItem.type === 'movie' ? 'movies' : 'series'}/${featuredItem.id}`;
+                    }
+                  }}
+                >
+                  <Play className="w-6 h-6 fill-current" />
+                  Watch Here Katiwatch
+                </Button>
+              </div>
+
+              {/* Featured Content Info (if available) */}
+              {featuredItem && (
+                <div className="pt-8 text-center space-y-3">
+                  <h2 className="text-xl md:text-2xl font-bold text-white">
+                    Featured: {featuredItem.title}
+                  </h2>
+                  <div className="flex flex-wrap justify-center items-center gap-4 text-sm text-gray-400">
+                    {featuredItem.release_date && (
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-[#E50914]" />
+                        {new Date(typeof featuredItem.release_date === "string" ? featuredItem.release_date.replace(/ /g, "T") : featuredItem.release_date).getFullYear()}
+                      </div>
+                    )}
+                    {featuredItem.vjs && (
+                      <div className="flex items-center gap-2">
+                        <Mic className="w-4 h-4 text-[#E50914]" />
+                        {featuredItem.vjs.name}
+                      </div>
+                    )}
+                  </div>
+                  {featuredItem.description && (
+                    <p className="text-gray-300 text-sm md:text-base max-w-2xl mx-auto line-clamp-2">
+                      {featuredItem.description}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </section>
 
         {/* Trending */}
