@@ -256,6 +256,7 @@ export default function Header() {
                 </Link>
               )}
             </div>
+          </div>
 
           {/* Mobile Right Section - Search and Menu */}
           <div className="flex items-center space-x-3 lg:hidden">
