@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Play, Info, Plus, Star, Calendar, Mic, ChevronRight, Heart, Search } from "lucide-react";
+import { Play, Info, Plus, Star, Calendar, Mic, ChevronRight, Heart, Search, X } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
@@ -55,6 +55,12 @@ export default function HomePage() {
   const [contentLoading, setContentLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; action: 'play' | 'download'; requirePremium?: boolean }>({ isOpen: false, action: 'play' });
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   const { checkAuth } = useAuthCheck();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useUserPreferences();
@@ -143,6 +149,32 @@ export default function HomePage() {
       .finally(() => setFilterLoading(false));
   }, [selectedFilter, latestMovies]);
 
+  // Search functionality with debounce
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const handler = setTimeout(async () => {
+      try {
+        const api = await import("@/lib/api");
+        const results = await api.searchAllContent(searchQuery, 20, 1);
+        setSearchResults(results);
+        setShowSearchResults(true);
+        setIsSearching(false);
+      } catch (error) {
+        console.error("Search error:", error);
+        setSearchResults([]);
+        setIsSearching(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   if (heroLoading) return <FullPageSpinner text="Loading..." />;
 
   const swiperProps = {
@@ -206,22 +238,20 @@ export default function HomePage() {
                   <input
                     type="text"
                     placeholder="Search movie and series..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-6 py-4 md:py-5 pr-14 bg-[#2a2a3e]/80 backdrop-blur-sm border-2 border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-[#E50914] transition-all duration-300 text-base md:text-lg"
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const query = (e.target as HTMLInputElement).value;
-                        if (query.trim()) {
-                          router.push(`/search?q=${encodeURIComponent(query)}`);
-                        }
+                      if (e.key === 'Enter' && searchQuery.trim()) {
+                        router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
                       }
                     }}
                   />
                   <button
                     className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-[#E50914] hover:bg-[#b80710] flex items-center justify-center transition-all duration-300 hover:scale-110"
                     onClick={() => {
-                      const input = document.querySelector('input[placeholder="Search movie and series..."]') as HTMLInputElement;
-                      if (input?.value.trim()) {
-                        router.push(`/search?q=${encodeURIComponent(input.value)}`);
+                      if (searchQuery.trim()) {
+                        router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
                       }
                     }}
                   >
@@ -302,6 +332,54 @@ export default function HomePage() {
             }
           `}</style>
         </section>
+
+        {/* Search Results Section */}
+        {showSearchResults && searchQuery && (
+          <section className="mb-16 container mx-auto px-4 md:px-12">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-2xl md:text-3xl font-bold text-white">
+                Search Results for &quot;{searchQuery}&quot;
+              </h2>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setShowSearchResults(false);
+                  setSearchResults([]);
+                }}
+                className="text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+              >
+                <X className="w-5 h-5" />
+                Clear
+              </button>
+            </div>
+
+            {isSearching ? (
+              <div className="flex justify-center py-12">
+                <span className="inline-flex items-center justify-center font-bold tracking-widest text-2xl text-[#E50914]">
+                  <span className="animate-bounce" style={{ animationDelay: "0ms" }}>.</span>
+                  <span className="animate-bounce" style={{ animationDelay: "150ms" }}>.</span>
+                  <span className="animate-bounce" style={{ animationDelay: "300ms" }}>.</span>
+                </span>
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-2 gap-y-4">
+                {searchResults.map((item) => (
+                  <NetflixCard 
+                    key={item.id} 
+                    content={item} 
+                    type={item.type || 'movie'} 
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <Search className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 text-lg">No results found for &quot;{searchQuery}&quot;</p>
+                <p className="text-gray-500 text-sm mt-2">Try different keywords or browse our catalog below</p>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Trending */}
         {trendingContent.length > 0 && (
