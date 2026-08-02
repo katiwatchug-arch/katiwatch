@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { NetflixCard } from "@/components/NetflixCard"
-import { Search, X, ChevronDown, Filter } from "lucide-react"
+import { ModernSearchBar } from "@/components/ModernSearchBar"
+import { ModernFilterDropdown } from "@/components/ModernFilterDropdown"
+import { Search, X, Filter } from "lucide-react"
 
 interface ContentItem {
   id: string
@@ -38,14 +40,10 @@ export default function SearchPage() {
   
   const [selectedVJ, setSelectedVJ] = useState<string>("")
   const [selectedGenre, setSelectedGenre] = useState<string>("")
-  const [vjDropdownOpen, setVjDropdownOpen] = useState(false)
-  const [genreDropdownOpen, setGenreDropdownOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"all" | "movies" | "series">("all")
   const [page, setPage] = useState(1)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
-
-  const filtersRef = useRef<HTMLDivElement>(null)
 
   const HARDCODED_GENRES = [
     { id: "Action", name: "Action" },
@@ -152,22 +150,7 @@ export default function SearchPage() {
     }
   }, [page, fetchResults])
 
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filtersRef.current && !filtersRef.current.contains(event.target as Node)) {
-        setVjDropdownOpen(false)
-        setGenreDropdownOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
   const totalResults = movies.length + series.length
-  const selectedVJName = vjs.find((v) => v.id === selectedVJ)?.name
-  const selectedGenreName = genres.find((g) => g.id === selectedGenre)?.name
   const hasActiveFilters = !!searchQuery || !!selectedVJ || !!selectedGenre
 
   const clearAllFilters = () => {
@@ -179,122 +162,59 @@ export default function SearchPage() {
   const displayMovies = activeTab === "series" ? [] : movies
   const displaySeries = activeTab === "movies" ? [] : series
 
+  const vjOptions = [
+    { value: '', label: 'All VJs' },
+    ...vjs.map(vj => ({ value: vj.id, label: vj.name }))
+  ];
+
+  const genreOptions = [
+    { value: '', label: 'All Genres' },
+    ...genres.map(genre => ({ value: genre.id, label: genre.name }))
+  ];
+
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <div className="container mx-auto px-2 sm:px-4 py-8 flex-1">
         {/* Header */}
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6">Search & Browse</h1>
 
-        {/* Search and Filters */}
-        <div className="mb-8 flex flex-col md:flex-row gap-3" ref={filtersRef}>
-          <div className="flex-1 relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4 group-focus-within:text-[#E50914] transition-colors" />
-            <input
-              type="text"
-              placeholder="Search movies, series, VJs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-10 py-3 bg-[#1a1a1a] border border-gray-800 rounded-none text-white placeholder-gray-600 focus:outline-none focus:border-[#E50914] transition-colors text-sm tracking-wide"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+        {/* Modern Search and Filters */}
+        <div className="mb-8 flex flex-col gap-3">
+          {/* Search bar */}
+          <ModernSearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search movies, series, VJs..."
+            className="w-full"
+          />
           
-          <div className="flex flex-wrap gap-2">
+          {/* Filters row */}
+          <div className="flex flex-wrap gap-3">
             {/* VJ Filter Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setVjDropdownOpen(!vjDropdownOpen)
-                  setGenreDropdownOpen(false)
-                }}
-                className={`flex items-center gap-2 px-4 py-3 border text-sm font-medium tracking-wider uppercase transition-all ${
-                  selectedVJ
-                    ? 'bg-[#E50914] border-[#E50914] text-white'
-                    : 'bg-[#1a1a1a] border-gray-800 text-gray-400 hover:border-[#E50914] hover:text-white'
-                }`}
-              >
-                <Filter className="w-3.5 h-3.5" />
-                <span>{selectedVJName || "VJ"}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${vjDropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-              
-              {vjDropdownOpen && (
-                <div className="absolute top-full left-0 mt-0 w-52 bg-[#111] border border-gray-800 shadow-2xl z-50 max-h-[50vh] overflow-y-auto scrollbar-hide">
-                  <button
-                    onClick={() => { setSelectedVJ(""); setVjDropdownOpen(false) }}
-                    className="w-full text-left px-4 py-3 text-xs text-gray-500 hover:text-white hover:bg-[#1a1a1a] uppercase tracking-wider transition-colors"
-                  >
-                    All VJs
-                  </button>
-                  {vjs.map((vj) => (
-                    <button
-                      key={vj.id}
-                      onClick={() => { setSelectedVJ(vj.id); setVjDropdownOpen(false) }}
-                      className={`w-full text-left px-4 py-3 text-sm hover:bg-[#1a1a1a] transition-colors ${
-                        selectedVJ === vj.id ? "text-[#E50914] font-semibold" : "text-gray-400 hover:text-white"
-                      }`}
-                    >
-                      {vj.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ModernFilterDropdown
+              label="VJ"
+              icon={<Filter className="w-4 h-4" />}
+              options={vjOptions}
+              value={selectedVJ}
+              onChange={setSelectedVJ}
+            />
 
             {/* Genre Filter Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setGenreDropdownOpen(!genreDropdownOpen)
-                  setVjDropdownOpen(false)
-                }}
-                className={`flex items-center gap-2 px-4 py-3 border text-sm font-medium tracking-wider uppercase transition-all ${
-                  selectedGenre
-                    ? 'bg-[#E50914] border-[#E50914] text-white'
-                    : 'bg-[#1a1a1a] border-gray-800 text-gray-400 hover:border-[#E50914] hover:text-white'
-                }`}
-              >
-                <Filter className="w-3.5 h-3.5" />
-                <span>{selectedGenreName || "Genre"}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${genreDropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-              
-              {genreDropdownOpen && (
-                <div className="absolute top-full left-0 mt-0 w-52 bg-[#111] border border-gray-800 shadow-2xl z-50 max-h-[50vh] overflow-y-auto scrollbar-hide">
-                  <button
-                    onClick={() => { setSelectedGenre(""); setGenreDropdownOpen(false) }}
-                    className="w-full text-left px-4 py-3 text-xs text-gray-500 hover:text-white hover:bg-[#1a1a1a] uppercase tracking-wider transition-colors"
-                  >
-                    All Genres
-                  </button>
-                  {genres.map((genre) => (
-                    <button
-                      key={genre.id}
-                      onClick={() => { setSelectedGenre(genre.id); setGenreDropdownOpen(false) }}
-                      className={`w-full text-left px-4 py-3 text-sm hover:bg-[#1a1a1a] transition-colors ${
-                        selectedGenre === genre.id ? "text-[#E50914] font-semibold" : "text-gray-400 hover:text-white"
-                      }`}
-                    >
-                      {genre.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ModernFilterDropdown
+              label="Genre"
+              icon={<Filter className="w-4 h-4" />}
+              options={genreOptions}
+              value={selectedGenre}
+              onChange={setSelectedGenre}
+            />
 
             {/* Clear Filters */}
             {hasActiveFilters && (
               <button
                 onClick={clearAllFilters}
-                className="px-4 py-3 border border-gray-800 text-gray-500 hover:border-red-600 hover:text-red-400 text-xs uppercase tracking-wider transition-all"
+                className="flex items-center gap-2 px-5 py-3.5 rounded-2xl border-2 border-gray-800 bg-black/40 backdrop-blur-xl text-gray-400 hover:border-[#E50914]/60 hover:text-white hover:bg-black/50 transition-all duration-300"
               >
+                <X className="w-4 h-4" />
                 Clear
               </button>
             )}

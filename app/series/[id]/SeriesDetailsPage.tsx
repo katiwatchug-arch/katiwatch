@@ -66,7 +66,7 @@ export default function SeriesDetailsPage() {
             seasonsList.map(async (season: any) => {
               const seasonNum = season.season_number || season.order || 1;
               const seasonId = season.id || String(seasonNum);
-              let seasonEps: any[] = Array.isArray(season.episodes) && season.episodes.length > 0
+              const seasonEps: any[] = Array.isArray(season.episodes) && season.episodes.length > 0
                 ? season.episodes
                 : await api.getEpisodes(params.id as string, seasonNum) || [];
 
@@ -365,98 +365,146 @@ export default function SeriesDetailsPage() {
 
         {activeTab === "episodes" && (
           <div>
-            {/* Season dropdown */}
+            {/* Netflix-style Season Selector */}
             {seasons.length > 0 && (
-              <div className="relative inline-block mb-4">
+              <div className="relative inline-block mb-6">
                 <button
                   onClick={() => setShowSeasonDropdown(!showSeasonDropdown)}
-                  className="flex items-center gap-2 bg-[#333] text-white font-bold px-4 py-2 rounded text-sm"
+                  className="flex items-center gap-3 bg-[#0a0a0a] border-2 border-gray-800 hover:border-gray-600 text-white font-bold px-5 py-3 rounded-lg text-sm transition-all duration-300 min-w-[180px] justify-between group"
                 >
-                  {activeSeason?.name || `Season 1`}
-                  <ChevronDown className="w-4 h-4" />
+                  <span className="group-hover:text-white transition-colors">
+                    {activeSeason?.name || `Season 1`}
+                  </span>
+                  <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${showSeasonDropdown ? "rotate-180" : ""}`} />
                 </button>
+                
                 {showSeasonDropdown && (
-                  <div className="absolute top-full left-0 mt-1 bg-[#333] rounded shadow-xl z-20 min-w-[140px]">
-                    {seasons.map(s => (
-                      <button
-                        key={s.id}
-                        onClick={() => { setActiveSeasonId(s.id); setShowSeasonDropdown(false); }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-[#444] transition-colors ${s.id === activeSeasonId ? "text-white font-bold" : "text-gray-300"}`}
-                      >
-                        {s.name || `Season ${(s as any).order || 1}`}
-                      </button>
-                    ))}
-                  </div>
+                  <>
+                    {/* Backdrop */}
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setShowSeasonDropdown(false)}
+                    />
+                    
+                    {/* Dropdown */}
+                    <div className="absolute top-full left-0 mt-2 bg-[#181818] border-2 border-gray-800 rounded-lg shadow-2xl z-40 min-w-[200px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      {seasons.map((s, index) => {
+                        const isActive = s.id === activeSeasonId;
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => {
+                              setActiveSeasonId(s.id);
+                              setShowSeasonDropdown(false);
+                            }}
+                            className={`w-full text-left px-5 py-3.5 text-sm transition-all duration-200 border-b border-gray-800/50 last:border-b-0 ${
+                              isActive
+                                ? "bg-[#E50914] text-white font-bold"
+                                : "text-gray-300 hover:bg-[#202020] hover:text-white"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span>{s.name || `Season ${(s as any).order || index + 1}`}</span>
+                              {isActive && (
+                                <Check className="w-4 h-4 text-white" />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </div>
             )}
 
-            {/* Mobile: compact rows | Desktop: rich cards grid */}
-            {/* Mobile rows */}
-            <div className="flex flex-col divide-y divide-gray-800/50 md:hidden">
-              {activeEpisodes.map(episode => (
-                <div key={episode.id} className="flex items-center gap-3 py-3">
-                  <div
-                    className="relative flex-shrink-0 w-28 pt-[56.25%] rounded overflow-hidden cursor-pointer"
-                    onClick={() => handleEpisodeSelect(episode)}
-                  >
-                    <Image src={episode.thumbnail_url || coverImage} alt={episode.title} fill className="object-cover" />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/40 transition-colors">
-                      <div className="w-8 h-8 rounded-full border border-white/80 flex items-center justify-center bg-black/30">
-                        <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-bold text-sm truncate">{episode.episode_number}. {episode.title}</p>
-                    <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">{episode.description || ""}</p>
-                    <p className="text-gray-500 text-xs mt-1">{episode.duration || "22m"}</p>
-                  </div>
-                  <button onClick={() => handleDownload(episode)} className="flex-shrink-0 text-gray-400 hover:text-white transition-colors p-1" aria-label="Download">
-                    <Download className="w-5 h-5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop cards grid */}
-            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-8">
-              {activeEpisodes.map(episode => (
+            {/* Netflix-style Episodes List */}
+            <div className="space-y-3 pb-8">
+              {activeEpisodes.map((episode, index) => (
                 <div
                   key={episode.id}
-                  className="group bg-[#0d0d0d] border border-gray-900 hover:border-gray-700 transition-all duration-300 cursor-pointer overflow-hidden"
-                  onClick={() => handleEpisodeSelect(episode)}
+                  className="group bg-[#181818] rounded-lg overflow-hidden hover:bg-[#202020] transition-all duration-300 border border-transparent hover:border-gray-700"
                 >
-                  {/* Thumbnail */}
-                  <div className="relative pt-[56.25%] overflow-hidden">
-                    <Image src={episode.thumbnail_url || coverImage} alt={episode.title} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <div className="w-11 h-11 rounded-full border border-white/60 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                  <div className="flex flex-col sm:flex-row gap-0 sm:gap-4">
+                    {/* Thumbnail Section */}
+                    <div
+                      className="relative w-full sm:w-48 md:w-56 lg:w-64 flex-shrink-0 cursor-pointer"
+                      onClick={() => handleEpisodeSelect(episode)}
+                    >
+                      {/* Aspect ratio container */}
+                      <div className="relative pt-[56.25%] sm:pt-0 sm:h-32 md:h-36 overflow-hidden">
+                        <Image
+                          src={episode.thumbnail_url || coverImage}
+                          alt={episode.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-black/30" />
+                        
+                        {/* Play button overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/30">
+                          <div className="w-12 h-12 rounded-full border-2 border-white/90 flex items-center justify-center bg-black/50 backdrop-blur-sm transform group-hover:scale-110 transition-transform duration-300">
+                            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                          </div>
+                        </div>
+                        
+                        {/* Episode number badge */}
+                        <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+                          <div className="bg-black/80 backdrop-blur-sm border border-white/20 rounded px-2 py-1 text-white font-bold text-xs sm:text-sm">
+                            {episode.episode_number}
+                          </div>
+                        </div>
+                        
+                        {/* Duration badge */}
+                        <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
+                          <div className="bg-black/80 backdrop-blur-sm rounded px-2 py-0.5 text-white text-[10px] sm:text-xs font-medium">
+                            {episode.duration || "22m"}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-1.5 py-0.5 font-mono">{episode.duration || "22m"}</div>
-                    <div className="absolute bottom-2 left-2 text-gray-400 text-[10px] font-mono">E{episode.episode_number}</div>
-                  </div>
-                  {/* Info */}
-                  <div className="p-3 bg-[#111]">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className="text-white font-semibold text-sm line-clamp-1 flex-1 tracking-wide">
-                        {episode.episode_number}. {episode.title}
+
+                    {/* Content Section */}
+                    <div className="flex-1 p-4 sm:py-3 sm:pr-4 sm:pl-0 flex flex-col justify-center min-w-0">
+                      {/* Title and Download Row */}
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h3
+                            className="text-white font-bold text-base sm:text-lg mb-1 line-clamp-1 group-hover:text-[#E50914] transition-colors duration-300 cursor-pointer"
+                            onClick={() => handleEpisodeSelect(episode)}
+                          >
+                            {episode.title}
+                          </h3>
+                        </div>
+                        
+                        {/* Download button */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDownload(episode); }}
+                          className="flex-shrink-0 w-9 h-9 rounded-full border-2 border-gray-700 hover:border-white flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-300 group/download"
+                          aria-label="Download episode"
+                        >
+                          <Download className="w-4 h-4 group-hover/download:scale-110 transition-transform" />
+                        </button>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-gray-400 text-sm sm:text-base leading-relaxed line-clamp-2 sm:line-clamp-3 mb-0">
+                        {episode.description || "Watch this exciting episode to continue the story."}
                       </p>
-                      <button
-                        onClick={e => { e.stopPropagation(); handleDownload(episode); }}
-                        className="flex-shrink-0 text-gray-600 hover:text-white transition-colors"
-                        aria-label="Download"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
                     </div>
-                    <p className="text-gray-500 text-xs leading-relaxed line-clamp-2">
-                      {episode.description || "A new chapter unfolds in this gripping episode."}
-                    </p>
                   </div>
+
+                  {/* Progress bar (if watched) */}
+                  {progress && progress.episode === episode.episode_number && progress.season === episode.seasonOrder && progress.progress > 0 && (
+                    <div className="h-1 bg-gray-800">
+                      <div
+                        className="h-full bg-[#E50914]"
+                        style={{ width: `${Math.min((progress.progress / (progress.duration || 1)) * 100, 100)}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

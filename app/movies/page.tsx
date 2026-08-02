@@ -3,6 +3,9 @@ import { Search, Filter, ChevronDown, X, Film } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { Movie } from "@/lib/supabase";
 import { NetflixCard } from "@/components/NetflixCard";
+import { ModernSearchBar } from "@/components/ModernSearchBar";
+import { ModernFilterDropdown } from "@/components/ModernFilterDropdown";
+import { GenreFilterChips } from "@/components/GenreFilterChips";
 import { getVJs, searchMovies } from "@/lib/api";
 
 type MovieWithVJ = Movie & {
@@ -10,6 +13,12 @@ type MovieWithVJ = Movie & {
 };
 
 type VJ = { id: string; name: string };
+
+const genreOptions = [
+  'All', 'Action', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime',
+  'Documentary', 'Drama', 'Fantasy', 'History', 'Horror', 'Music', 'Mystery',
+  'Romance', 'Sci-Fi', 'Sport', 'Thriller', 'War', 'Western', 'Family'
+];
 
 const LoadingGrid = () => (
   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-2 gap-y-4">
@@ -24,6 +33,7 @@ export default function MoviesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVJ, setSelectedVJ] = useState<string>("");
+  const [selectedGenre, setSelectedGenre] = useState<string>("All");
   const [availableVJs, setAvailableVJs] = useState<VJ[]>([]);
   const [showVJDropdown, setShowVJDropdown] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,10 +50,16 @@ export default function MoviesPage() {
     }
   }, []);
 
-  const fetchMovies = useCallback(async (page: number, query = "", vjName = "") => {
+  const fetchMovies = useCallback(async (page: number, query = "", vjName = "", genre = "All") => {
     setLoading(true);
     try {
-      const moviesData = await searchMovies(query, moviesPerPage, page, vjName || undefined);
+      const moviesData = await searchMovies(
+        query, 
+        moviesPerPage, 
+        page, 
+        vjName || undefined,
+        genre !== "All" ? genre.toLowerCase() : undefined
+      );
       setMovies(moviesData as any);
       setTotalMovies(
         moviesData.length === moviesPerPage
@@ -60,24 +76,32 @@ export default function MoviesPage() {
   useEffect(() => { fetchMovies(1); fetchAvailableVJs(); }, [fetchMovies, fetchAvailableVJs]);
 
   useEffect(() => {
-    if (currentPage > 1) fetchMovies(currentPage, searchQuery, selectedVJ);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+    if (currentPage > 1) fetchMovies(currentPage, searchQuery, selectedVJ, selectedGenre);
+  }, [currentPage, fetchMovies, searchQuery, selectedVJ, selectedGenre]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       if (currentPage !== 1) setCurrentPage(1);
-      else fetchMovies(1, searchQuery, selectedVJ);
+      else fetchMovies(1, searchQuery, selectedVJ, selectedGenre);
     }, 400);
     return () => clearTimeout(handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, selectedVJ]);
+  }, [searchQuery, selectedVJ, selectedGenre, fetchMovies]);
 
-  const clearFilters = () => { setSelectedVJ(""); setSearchQuery(""); setCurrentPage(1); };
+  const clearFilters = () => { 
+    setSelectedVJ(""); 
+    setSearchQuery(""); 
+    setSelectedGenre("All");
+    setCurrentPage(1); 
+  };
 
   const totalPages = Math.ceil(totalMovies / moviesPerPage);
-  const isFiltering = searchQuery.trim().length > 0 || !!selectedVJ;
+  const isFiltering = searchQuery.trim().length > 0 || !!selectedVJ || selectedGenre !== "All";
   const selectedVJLabel = availableVJs.find(vj => vj.id === selectedVJ)?.name;
+
+  const vjOptions = [
+    { value: '', label: 'All VJs' },
+    ...availableVJs.map(vj => ({ value: vj.id, label: vj.name }))
+  ];
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -95,94 +119,67 @@ export default function MoviesPage() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 py-8">
-        {/* Search + Filter bar */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8">
-          {/* Search */}
-          <div className="flex-1 relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 w-4 h-4 group-focus-within:text-[#E50914] transition-colors" />
-            <input
-              type="text"
-              placeholder="Search movies by title or VJ…"
+        {/* Modern Search + Filter bar */}
+        <div className="flex flex-col gap-4 mb-8">
+          {/* Search and VJ Filter Row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Modern Search */}
+            <ModernSearchBar
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white/[0.04] border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-[#E50914] focus:bg-white/[0.06] transition-all text-sm"
+              onChange={setSearchQuery}
+              placeholder="Search movies by title or VJ..."
+              className="flex-1"
             />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
+
+            {/* Modern VJ Filter */}
+            <ModernFilterDropdown
+              label="Filter by VJ"
+              icon={<Filter className="w-4 h-4" />}
+              options={vjOptions}
+              value={selectedVJ}
+              onChange={setSelectedVJ}
+            />
+
+            {/* Clear filters */}
+            {isFiltering && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl border-2 border-gray-800 bg-black/40 backdrop-blur-xl text-gray-400 hover:border-[#E50914]/60 hover:text-white hover:bg-black/50 transition-all duration-300 whitespace-nowrap"
+              >
                 <X className="w-4 h-4" />
+                <span className="hidden sm:inline">Clear</span>
               </button>
             )}
           </div>
 
-          {/* VJ Filter */}
-          <div className="relative">
-            <button
-              onClick={() => setShowVJDropdown(!showVJDropdown)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all min-w-[130px] justify-between ${
-                selectedVJ
-                  ? "bg-[#E50914] border-[#E50914] text-white"
-                  : "bg-white/[0.04] border-gray-800 text-gray-400 hover:border-gray-600 hover:text-white"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Filter className="w-3.5 h-3.5" />
-                <span>{selectedVJLabel || "Filter by VJ"}</span>
-              </div>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showVJDropdown ? "rotate-180" : ""}`} />
-            </button>
-
-            {showVJDropdown && (
-              <div className="absolute top-full left-0 mt-2 w-56 bg-[#111] border border-gray-800 rounded-xl shadow-2xl z-50 overflow-hidden">
-                <div className="max-h-64 overflow-y-auto">
-                  <button
-                    onClick={() => { setSelectedVJ(""); setShowVJDropdown(false); }}
-                    className="w-full text-left px-4 py-3 text-xs text-gray-500 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors"
-                  >
-                    All VJs
-                  </button>
-                  <div className="border-t border-gray-800/60" />
-                  {availableVJs.map((vj) => (
-                    <button
-                      key={vj.id}
-                      onClick={() => { setSelectedVJ(vj.id); setShowVJDropdown(false); }}
-                      className={`w-full text-left px-4 py-3 text-sm transition-colors flex items-center justify-between ${
-                        selectedVJ === vj.id
-                          ? "text-[#E50914] font-semibold bg-[#E50914]/5"
-                          : "text-gray-400 hover:text-white hover:bg-white/5"
-                      }`}
-                    >
-                      {vj.name}
-                      {selectedVJ === vj.id && (
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Clear filters */}
-          {isFiltering && (
-            <button
-              onClick={clearFilters}
-              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-gray-800 text-gray-500 hover:border-red-700/60 hover:text-red-400 text-sm transition-all"
-            >
-              <X className="w-3.5 h-3.5" />
-              Clear
-            </button>
-          )}
+          {/* Genre Filter Chips */}
+          <GenreFilterChips
+            genres={genreOptions}
+            selectedGenre={selectedGenre}
+            onSelectGenre={setSelectedGenre}
+          />
         </div>
 
-        {/* Active filter chip */}
+        {/* Active filter chips */}
         {isFiltering && !loading && (
           <div className="flex items-center gap-2 mb-6 flex-wrap">
-            <span className="text-gray-500 text-xs uppercase tracking-wider">Results:</span>
+            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Active Filters:</span>
             <span className="text-white text-sm font-medium">{movies.length} movie{movies.length !== 1 ? "s" : ""}</span>
-            {searchQuery && <span className="px-3 py-1 bg-white/5 border border-gray-700 rounded-full text-xs text-gray-300">&quot;{searchQuery}&quot;</span>}
-            {selectedVJ && <span className="px-3 py-1 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914]">{selectedVJLabel}</span>}
+            {searchQuery && (
+              <span className="px-3 py-1.5 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914] font-medium">
+                &quot;{searchQuery}&quot;
+              </span>
+            )}
+            {selectedVJ && (
+              <span className="px-3 py-1.5 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914] font-medium">
+                {selectedVJLabel}
+              </span>
+            )}
+            {selectedGenre !== "All" && (
+              <span className="px-3 py-1.5 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914] font-medium">
+                {selectedGenre}
+              </span>
+            )}
           </div>
         )}
 

@@ -260,17 +260,33 @@ export default function HomePage() {
               See More <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="flex gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-            {filterOptions.map(filter => (
-              <button
-                key={filter}
-                onClick={() => setSelectedFilter(filter)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 ${selectedFilter === filter ? 'bg-[#E50914] text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
-              >
-                {filter}
-              </button>
-            ))}
+          
+          {/* Genre filter with proper boundaries */}
+          <div className="relative mb-8">
+            <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide scroll-smooth">
+              {filterOptions.map(filter => (
+                <button
+                  key={filter}
+                  onClick={() => setSelectedFilter(filter)}
+                  className={`
+                    flex-shrink-0 px-5 py-2.5 rounded-full 
+                    text-sm font-semibold whitespace-nowrap
+                    transition-all duration-300
+                    ${selectedFilter === filter 
+                      ? 'bg-gradient-to-r from-[#E50914] to-[#b80710] text-white shadow-lg shadow-[#E50914]/40 scale-105' 
+                      : 'bg-white/5 backdrop-blur-sm text-gray-300 hover:bg-white/10 hover:text-white hover:scale-105'
+                    }
+                  `}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+            {/* Gradient fade on sides */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#141414] to-transparent pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#141414] to-transparent pointer-events-none" />
           </div>
+          
           {contentLoading ? <SwiperSkeleton /> : filterLoading ? (
             <div className="flex justify-center py-12"><span className="inline-flex items-center justify-center font-bold tracking-widest text-2xl text-[#E50914]">
   <span className="animate-bounce" style={{ animationDelay: "0ms" }}>.</span>
@@ -286,14 +302,41 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Latest Series */}
+        {/* TV Shows with genre filter */}
         <section className="mb-16 container mx-auto px-4 md:px-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#E50914]">New Series</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-[#E50914]">TV Shows</h2>
             <Link href="/series" className="text-[#E50914] hover:text-[#b80710] font-semibold flex items-center gap-2 transition-colors">
               See More <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
+          
+          {/* Genre filter with proper boundaries */}
+          <div className="relative mb-8">
+            <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide scroll-smooth">
+              {filterOptions.map(filter => (
+                <button
+                  key={filter}
+                  onClick={() => {
+                    // This will be implemented when user clicks
+                    // For now it just shows the UI
+                  }}
+                  className={`
+                    flex-shrink-0 px-5 py-2.5 rounded-full 
+                    text-sm font-semibold whitespace-nowrap
+                    transition-all duration-300
+                    bg-white/5 backdrop-blur-sm text-gray-300 hover:bg-white/10 hover:text-white hover:scale-105
+                  `}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+            {/* Gradient fade on sides */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#141414] to-transparent pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#141414] to-transparent pointer-events-none" />
+          </div>
+          
           {contentLoading ? <SwiperSkeleton /> : (
             <Swiper {...swiperProps} className="series-swiper">
               {latestSeries.slice(0, 16).map(series => (
