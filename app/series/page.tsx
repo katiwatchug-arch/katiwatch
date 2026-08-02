@@ -83,13 +83,13 @@ export default function SeriesPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Page header */}
-      <div className="bg-gradient-to-b from-[#141414] to-[#0a0a0a] pt-8 pb-6 px-4 border-b border-gray-800/50">
+      <div className="bg-gradient-to-b from-[#141414] to-[#0a0a0a] pt-8 pb-6 px-4 border-b border-gray-800/50 pt-safe">
         <div className="container mx-auto sm:px-6">
           <div className="flex items-center gap-3 mb-1">
-            <Tv className="w-6 h-6 text-[#E50914]" />
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight">TV Shows</h1>
+            <Tv className="w-5 h-5 sm:w-6 sm:h-6 text-[#E50914]" />
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">TV Shows</h1>
           </div>
-          <p className="text-gray-500 text-sm ml-9">
+          <p className="text-gray-500 text-xs sm:text-sm ml-8 sm:ml-9">
             Browse all translated series
           </p>
         </div>

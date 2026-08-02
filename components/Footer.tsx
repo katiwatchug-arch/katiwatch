@@ -13,8 +13,6 @@ const quickLinks = [
 ];
 
 const supportLinks = [
-  { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact" },
   { href: "https://t.me/KatiwatchMovies", label: "Telegram Channel", external: true },
 ];
 

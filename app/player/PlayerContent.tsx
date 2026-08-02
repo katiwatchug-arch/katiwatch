@@ -9,10 +9,12 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import AuthRequiredModal, { useAuthCheck } from '@/components/AuthRequiredModal';
+import { IOSDownloadModal } from '@/components/IOSDownloadModal';
 import { getProfile, Profile } from '@/lib/profiles';
 import { Episode, EpisodeWithSeason } from '@/lib/supabase';
 import { normalizeVideoUrl } from '@/lib/utils';
 import { getMovieById, getSeriesById, getEpisodes, getMovieStream, getEpisodeStream } from "@/lib/api";
+import { isIOSDevice } from '@/lib/device-utils';
 
 export default function PlayerContent() {
   const searchParams = useSearchParams();
@@ -29,6 +31,8 @@ export default function PlayerContent() {
   const [showNextEpisodePrompt, setShowNextEpisodePrompt] = useState(false);
   const [seriesId, setSeriesId] = useState<string | null>(null);
   const [switchingEpisode, setSwitchingEpisode] = useState(false);
+  const [showIOSDownloadModal, setShowIOSDownloadModal] = useState(false);
+  const [iosDownloadInfo, setIOSDownloadInfo] = useState<{ url: string; filename: string } | null>(null);
   // Tracks the content key for which we have already successfully fetched a stream URL,
   // preventing redundant re-fetches caused by multiple Supabase auth state events
   // (TOKEN_REFRESHED, INITIAL_SESSION, SIGNED_IN) firing for the same user on page load.
@@ -601,13 +605,35 @@ export default function PlayerContent() {
                             {canAccess && (
                               <button
                                 className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-white transition-opacity shrink-0"
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                   e.stopPropagation();
                                   const cleanTitle = episode.title ? episode.title.replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim() : 'episode';
                                   const filename = `${cleanTitle}.mp4`;
-                                  // The API route redirects to the signed S3 URL which enforces the download
-                                  const proxyUrl = `/api/download?id=${seriesId || contentId}&type=episode&season=${episode.seasonOrder}&episode=${episode.episode_number}&filename=${encodeURIComponent(filename)}`;
-                                  window.open(proxyUrl, '_blank');
+                                  
+                                  // Detect iOS
+                                  const isIOS = isIOSDevice();
+                                  
+                                  if (isIOS) {
+                                    // For iOS: Fetch the download URL and show modal with instructions
+                                    try {
+                                      const response = await fetch(`/api/download?id=${seriesId || contentId}&type=episode&season=${episode.seasonOrder}&episode=${episode.episode_number}&filename=${encodeURIComponent(filename)}`);
+                                      const data = await response.json();
+                                      
+                                      if (data.downloadUrl) {
+                                        setIOSDownloadInfo({
+                                          url: data.downloadUrl,
+                                          filename: filename
+                                        });
+                                        setShowIOSDownloadModal(true);
+                                      }
+                                    } catch (error) {
+                                      alert('Failed to get download link. Please try again.');
+                                    }
+                                  } else {
+                                    // For non-iOS: Direct download redirect
+                                    const proxyUrl = `/api/download?id=${seriesId || contentId}&type=episode&season=${episode.seasonOrder}&episode=${episode.episode_number}&filename=${encodeURIComponent(filename)}`;
+                                    window.open(proxyUrl, '_blank');
+                                  }
                                 }}
                                 title="Download"
                               >
@@ -664,6 +690,19 @@ export default function PlayerContent() {
         action="play"
         requirePremium={Boolean(contentData?.premium)}
       />
+
+      {/* iOS Download Modal */}
+      {iosDownloadInfo && (
+        <IOSDownloadModal
+          isOpen={showIOSDownloadModal}
+          onClose={() => {
+            setShowIOSDownloadModal(false);
+            setIOSDownloadInfo(null);
+          }}
+          downloadUrl={iosDownloadInfo.url}
+          filename={iosDownloadInfo.filename}
+        />
+      )}
     </div>
   );
 }

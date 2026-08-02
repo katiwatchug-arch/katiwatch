@@ -182,21 +182,23 @@ export default function CategoriesPage() {
           </span>
         </h2>
         <p className="text-orange-600 mb-8 max-w-2xl mx-auto">
-          Have a specific movie or genre you&apos;d like us to review?
-          Get in touch and let us know what you&apos;d like to see covered next.
+          Have a specific movie or genre you&apos;d like to see?
+          Check out our Telegram channel to stay updated with new releases.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <Link
-            href="/contact"
+            href="https://t.me/KatiwatchMovies"
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-6 py-3 rounded bg-[#E50914] hover:bg-[#b80710] text-white font-semibold text-lg transition"
           >
-            Request a Review
+            Join Telegram Channel
           </Link>
           <Link
-            href="/blog"
+            href="/movies"
             className="px-6 py-3 rounded border border-[#E50914] text-[#E50914] hover:bg-[#E50914] hover:text-white font-semibold text-lg transition"
           >
-            Browse All Posts
+            Browse All Movies
           </Link>
         </div>
       </section>

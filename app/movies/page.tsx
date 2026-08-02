@@ -82,13 +82,13 @@ export default function MoviesPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Page header */}
-      <div className="bg-gradient-to-b from-[#141414] to-[#0a0a0a] pt-8 pb-6 px-4 border-b border-gray-800/50">
+      <div className="bg-gradient-to-b from-[#141414] to-[#0a0a0a] pt-8 pb-6 px-4 border-b border-gray-800/50 pt-safe">
         <div className="container mx-auto sm:px-6">
           <div className="flex items-center gap-3 mb-1">
-            <Film className="w-6 h-6 text-[#E50914]" />
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight">Movies</h1>
+            <Film className="w-5 h-5 sm:w-6 sm:h-6 text-[#E50914]" />
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">Movies</h1>
           </div>
-          <p className="text-gray-500 text-sm ml-9">
+          <p className="text-gray-500 text-xs sm:text-sm ml-8 sm:ml-9">
             Browse all translated movies
           </p>
         </div>
@@ -181,7 +181,7 @@ export default function MoviesPage() {
           <div className="flex items-center gap-2 mb-6 flex-wrap">
             <span className="text-gray-500 text-xs uppercase tracking-wider">Results:</span>
             <span className="text-white text-sm font-medium">{movies.length} movie{movies.length !== 1 ? "s" : ""}</span>
-            {searchQuery && <span className="px-3 py-1 bg-white/5 border border-gray-700 rounded-full text-xs text-gray-300">"{searchQuery}"</span>}
+            {searchQuery && <span className="px-3 py-1 bg-white/5 border border-gray-700 rounded-full text-xs text-gray-300">&quot;{searchQuery}&quot;</span>}
             {selectedVJ && <span className="px-3 py-1 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914]">{selectedVJLabel}</span>}
           </div>
         )}

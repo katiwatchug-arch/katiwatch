@@ -47,9 +47,74 @@ main, [data-page] {
   pointer-events: none;
 }
 
-/* ── Safe area inset for mobile nav ── */
+/* ── Safe area insets for all iOS notches and home indicators ── */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+
+.pr-safe {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ── iOS-specific fixes ── */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific styles */
+  
+  /* Fix video player height on iOS */
+  video {
+    object-fit: contain;
+  }
+  
+  /* Prevent zoom on double-tap for buttons */
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+  
+  /* Fix 100vh issue on iOS Safari */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+  
+  html {
+    height: -webkit-fill-available;
+  }
+  
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* ── Ensure minimum touch target size (44x44pt) for iOS accessibility ── */
+button, a[role="button"], input[type="button"], input[type="submit"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ── Responsive text sizing ── */
+@media screen and (max-width: 480px) {
+  html {
+    font-size: 14px; /* Slightly smaller base for very small screens */
+  }
+}
+
+@media screen and (min-width: 481px) and (max-width: 768px) {
+  html {
+    font-size: 15px; /* Standard mobile */
+  }
+}
+
+@media screen and (min-width: 769px) {
+  html {
+    font-size: 16px; /* Desktop */
+  }
 }
 
 /* ── Prevent text size inflation on iOS ── */
