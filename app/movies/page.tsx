@@ -1,5 +1,5 @@
 "use client";
-import { Search, Filter, ChevronDown, X, Film } from "lucide-react";
+import { Search, Filter, X, Film } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { Movie } from "@/lib/supabase";
 import { NetflixCard } from "@/components/NetflixCard";
@@ -33,9 +33,12 @@ export default function MoviesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVJ, setSelectedVJ] = useState<string>("");
-  const [selectedGenre, setSelectedGenre] = useState<string>("All");
+  const [selectedGenre, setSelectedGenre] = useState<string>(() => {
+    const g = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('genre') : null;
+    if (!g) return "All";
+    return genreOptions.find(o => o.toLowerCase() === g.toLowerCase()) || "All";
+  });
   const [availableVJs, setAvailableVJs] = useState<VJ[]>([]);
-  const [showVJDropdown, setShowVJDropdown] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalMovies, setTotalMovies] = useState(0);
 

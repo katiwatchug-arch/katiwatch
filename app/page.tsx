@@ -11,7 +11,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { NetflixCard } from "@/components/NetflixCard";
 import { FullPageSpinner } from "@/components/LoadingSpinner";
-import { getVJContent, getMovieById, getSeriesById, getMovies, getSeries, getGenreRowsForHome, searchMovies } from "@/lib/api";
+import { getVJContent, getMovieById, getSeriesById, getMovies, getSeries, getGenreRowsForHome, searchMovies, searchSeries } from "@/lib/api";
 import { Movie, Series } from "@/lib/supabase";
 import { useAuthCheck } from "@/components/AuthRequiredModal";
 import AuthRequiredModal from "@/components/AuthRequiredModal";
@@ -49,11 +49,14 @@ export default function HomePage() {
   const [latestSeries, setLatestSeries] = useState<any[]>([]);
   const [trendingContent, setTrendingContent] = useState<any[]>([]);
   const [selectedFilter, setSelectedFilter] = useState('All');
+  const [selectedSeriesFilter, setSelectedSeriesFilter] = useState('All');
   const [filteredMovies, setFilteredMovies] = useState<any[]>([]);
+  const [filteredSeries, setFilteredSeries] = useState<any[]>([]);
   const [genreRows, setGenreRows] = useState<{ name: string; movies: any[]; series: any[] }[]>([]);
   const [heroLoading, setHeroLoading] = useState(true);
   const [contentLoading, setContentLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
+  const [seriesFilterLoading, setSeriesFilterLoading] = useState(false);
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; action: 'play' | 'download'; requirePremium?: boolean }>({ isOpen: false, action: 'play' });
   
   // Search state
@@ -119,6 +122,7 @@ export default function HomePage() {
         setLatestMovies(movies);
         setLatestSeries(series);
         setFilteredMovies(movies);
+        setFilteredSeries(series);
         setTrendingContent([
           ...movies.slice(0, 3).map((m: any) => ({ ...m, type: 'movie', trending: 'hot' })),
           ...series.slice(0, 3).map((s: any) => ({ ...s, type: 'series', trending: 'today' })),
@@ -139,7 +143,7 @@ export default function HomePage() {
     return () => clearTimeout(id);
   }, [contentLoading]);
 
-  // Genre filter
+  // Genre filter - movies
   useEffect(() => {
     if (selectedFilter === 'All') { setFilteredMovies(latestMovies); return; }
     setFilterLoading(true);
@@ -148,6 +152,16 @@ export default function HomePage() {
       .catch(() => setFilteredMovies(latestMovies))
       .finally(() => setFilterLoading(false));
   }, [selectedFilter, latestMovies]);
+
+  // Genre filter - series
+  useEffect(() => {
+    if (selectedSeriesFilter === 'All') { setFilteredSeries(latestSeries); return; }
+    setSeriesFilterLoading(true);
+    searchSeries('', 16, 1, undefined, selectedSeriesFilter.toLowerCase())
+      .then(r => setFilteredSeries(r.length > 0 ? r : latestSeries))
+      .catch(() => setFilteredSeries(latestSeries))
+      .finally(() => setSeriesFilterLoading(false));
+  }, [selectedSeriesFilter, latestSeries]);
 
   // Search functionality with debounce
   useEffect(() => {
@@ -497,15 +511,15 @@ export default function HomePage() {
               {filterOptions.map(filter => (
                 <button
                   key={filter}
-                  onClick={() => {
-                    // This will be implemented when user clicks
-                    // For now it just shows the UI
-                  }}
+                  onClick={() => setSelectedSeriesFilter(filter)}
                   className={`
                     flex-shrink-0 px-5 py-2.5 rounded-full 
                     text-sm font-semibold whitespace-nowrap
                     transition-all duration-300
-                    bg-white/5 backdrop-blur-sm text-gray-300 hover:bg-white/10 hover:text-white hover:scale-105
+                    ${selectedSeriesFilter === filter 
+                      ? 'bg-gradient-to-r from-[#E50914] to-[#b80710] text-white shadow-lg shadow-[#E50914]/40 scale-105' 
+                      : 'bg-white/5 backdrop-blur-sm text-gray-300 hover:bg-white/10 hover:text-white hover:scale-105'
+                    }
                   `}
                 >
                   {filter}
@@ -517,9 +531,15 @@ export default function HomePage() {
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#141414] to-transparent pointer-events-none" />
           </div>
           
-          {contentLoading ? <SwiperSkeleton /> : (
+          {contentLoading ? <SwiperSkeleton /> : seriesFilterLoading ? (
+            <div className="flex justify-center py-12"><span className="inline-flex items-center justify-center font-bold tracking-widest text-2xl text-[#E50914]">
+  <span className="animate-bounce" style={{ animationDelay: "0ms" }}>.</span>
+  <span className="animate-bounce" style={{ animationDelay: "150ms" }}>.</span>
+  <span className="animate-bounce" style={{ animationDelay: "300ms" }}>.</span>
+</span></div>
+          ) : (
             <Swiper {...swiperProps} className="series-swiper">
-              {latestSeries.slice(0, 16).map(series => (
+              {filteredSeries.slice(0, 16).map(series => (
                 <SwiperSlide key={series.id}><NetflixCard content={series} type="series" /></SwiperSlide>
               ))}
             </Swiper>

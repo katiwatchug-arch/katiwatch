@@ -9,6 +9,7 @@ import ConditionalLayout from "../components/ConditionalLayout";
 import WhatsAppFloat from "../components/WhatsAppFloat";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import Script from "next/script";
+import NotificationPrompt from "@/components/NotificationPrompt";
 
 const roboto = Roboto({
   weight: ['100', '300', '400', '500', '700', '900'],
@@ -168,7 +169,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           strategy="afterInteractive"
         />
-        {/* Unregister PWA service worker - older TVs have broken SW implementations that hang fetch requests */}
+        {/* Unregister non-OneSignal service workers (old TV compatibility) */}
         <Script
           id="unregister-sw"
           strategy="afterInteractive"
@@ -178,8 +179,8 @@ export default function RootLayout({
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.getRegistrations().then(function(registrations) {
                     for(let registration of registrations) {
+                      if (registration.active && registration.active.scriptURL && registration.active.scriptURL.includes('OneSignal')) continue;
                       registration.unregister();
-                      console.log('Unregistered service worker');
                     }
                   }).catch(function(err) {
                     console.warn('SW unregistration failed:', err);
@@ -193,6 +194,7 @@ export default function RootLayout({
           <AuthProvider>
             <ConditionalLayout>{children}</ConditionalLayout>
             <WhatsAppFloat />
+            <NotificationPrompt />
           </AuthProvider>
         </ErrorBoundary>
       </body>

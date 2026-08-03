@@ -34,7 +34,11 @@ export default function SeriesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVJ, setSelectedVJ] = useState<string>("");
-  const [selectedGenre, setSelectedGenre] = useState<string>("All");
+  const [selectedGenre, setSelectedGenre] = useState<string>(() => {
+    const g = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('genre') : null;
+    if (!g) return "All";
+    return genreOptions.find(o => o.toLowerCase() === g.toLowerCase()) || "All";
+  });
   const [availableVJs, setAvailableVJs] = useState<VJ[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalSeries, setTotalSeries] = useState(0);
