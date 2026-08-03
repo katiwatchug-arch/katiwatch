@@ -22,6 +22,38 @@ declare global {
 
 export type NotifPermission = 'default' | 'granted' | 'denied' | 'loading' | 'unsupported';
 
+export interface StoredNotification {
+  id: string;
+  title: string;
+  message: string;
+  imageUrl?: string;
+  receivedAt: string;
+  read: boolean;
+  url?: string;
+}
+
+const STORAGE_KEY = 'katiwatch-notifications';
+const MAX_STORED = 50;
+
+export function getStoredNotifications(): StoredNotification[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch { return []; }
+}
+
+export function saveNotification(notif: StoredNotification) {
+  const existing = getStoredNotifications();
+  if (existing.find(n => n.id === notif.id)) return;
+  const updated = [notif, ...existing].slice(0, MAX_STORED);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+}
+
+export function markAllRead() {
+  const existing = getStoredNotifications();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(existing.map(n => ({ ...n, read: true }))));
+}
+
 interface UseOneSignalReturn {
   permission: NotifPermission;
   isSubscribed: boolean;
@@ -61,7 +93,7 @@ export function useOneSignal(): UseOneSignalReturn {
           notifyButton: { enable: false },
           welcomeNotification: {
             disable: false,
-            title: 'katiwatch',
+            title: 'Katiwatch',
             message: "Welcome! You'll now get notified about new movies and series.",
           },
         });
@@ -77,6 +109,24 @@ export function useOneSignal(): UseOneSignalReturn {
           const isGranted = Boolean(granted);
           setIsSubscribed(isGranted);
           setPermission(isGranted ? 'granted' : 'default');
+        });
+
+        // Store incoming foreground notifications
+        OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event: unknown) => {
+          try {
+            const e = event as any;
+            const n = e?.notification;
+            if (!n) return;
+            saveNotification({
+              id: n.notificationId || n.id || Date.now().toString(),
+              title: n.title || 'Katiwatch',
+              message: n.body || n.message || '',
+              imageUrl: n.bigPicture || n.largeIcon || n.icon || undefined,
+              receivedAt: new Date().toISOString(),
+              read: false,
+              url: n.launchURL || n.url || undefined,
+            });
+          } catch {}
         });
       } catch (err) {
         console.error('[OneSignal] Init error:', err);
