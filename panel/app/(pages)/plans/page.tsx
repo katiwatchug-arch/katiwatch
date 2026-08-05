@@ -20,6 +20,7 @@ interface Plan {
   duration: string;
   duration_in_months: number;
   duration_in_days: number;
+  duration_in_hours: number;
   recommended: boolean;
   sort_order: number;
   features: string[];
@@ -35,6 +36,7 @@ const emptyPlan = {
   duration: '',
   duration_in_months: 0,
   duration_in_days: 0,
+  duration_in_hours: 0,
   recommended: false,
   sort_order: 0,
   features: [] as string[],
@@ -105,6 +107,7 @@ export default function PlansPage() {
       duration: plan.duration || '',
       duration_in_months: plan.duration_in_months || 0,
       duration_in_days: plan.duration_in_days || 0,
+      duration_in_hours: plan.duration_in_hours || 0,
       recommended: plan.recommended || false,
       sort_order: plan.sort_order || 0,
       features: plan.features || [],
@@ -138,8 +141,11 @@ export default function PlansPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.amount || !formData.duration_in_days) {
-      setMessage({ type: 'error', text: 'Name, amount, and duration in days are required.' });
+    // Validation: Must have at least one duration specified
+    const hasDuration = formData.duration_in_days > 0 || formData.duration_in_hours > 0 || formData.duration_in_months > 0;
+    
+    if (!formData.name || !formData.amount || !hasDuration) {
+      setMessage({ type: 'error', text: 'Name, amount, and at least one duration (hours, days, or months) are required.' });
       return;
     }
 
@@ -154,13 +160,26 @@ export default function PlansPage() {
           .neq('id', editingPlan?.id || '00000000-0000-0000-0000-000000000000');
       }
 
+      // Auto-generate duration label if not provided
+      let durationLabel = formData.duration;
+      if (!durationLabel) {
+        if (formData.duration_in_hours > 0) {
+          durationLabel = `${formData.duration_in_hours} Hour${formData.duration_in_hours !== 1 ? 's' : ''}`;
+        } else if (formData.duration_in_days > 0) {
+          durationLabel = `${formData.duration_in_days} Day${formData.duration_in_days !== 1 ? 's' : ''}`;
+        } else if (formData.duration_in_months > 0) {
+          durationLabel = `${formData.duration_in_months} Month${formData.duration_in_months !== 1 ? 's' : ''}`;
+        }
+      }
+
       const planData = {
         name: formData.name,
         amount: formData.amount,
         description: formData.description || null,
-        duration: formData.duration || `${formData.duration_in_days} Days`,
+        duration: durationLabel,
         duration_in_months: formData.duration_in_months || null,
-        duration_in_days: formData.duration_in_days,
+        duration_in_days: formData.duration_in_days || null,
+        duration_in_hours: formData.duration_in_hours || null,
         recommended: formData.recommended,
         sort_order: formData.sort_order,
         features: formData.features,
@@ -492,20 +511,20 @@ export default function PlansPage() {
               />
             </div>
 
-            {/* Duration Row */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Duration Fields - Updated to include Hours */}
+            <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Duration Label</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Hours</label>
                 <input
-                  type="text"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  placeholder="e.g., 7 Days, 1 Month"
+                  type="number"
+                  value={formData.duration_in_hours || ''}
+                  onChange={(e) => setFormData({ ...formData, duration_in_hours: parseInt(e.target.value) || 0 })}
+                  placeholder="e.g., 24"
                   className="w-full px-4 py-3 border border-gray-800 rounded-lg bg-black text-white focus:outline-none focus:ring-1 focus:ring-[#E50914] placeholder-gray-600"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Duration (Days) *</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Days</label>
                 <input
                   type="number"
                   value={formData.duration_in_days || ''}
@@ -514,6 +533,30 @@ export default function PlansPage() {
                   className="w-full px-4 py-3 border border-gray-800 rounded-lg bg-black text-white focus:outline-none focus:ring-1 focus:ring-[#E50914] placeholder-gray-600"
                 />
               </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Months</label>
+                <input
+                  type="number"
+                  value={formData.duration_in_months || ''}
+                  onChange={(e) => setFormData({ ...formData, duration_in_months: parseInt(e.target.value) || 0 })}
+                  placeholder="e.g., 1"
+                  className="w-full px-4 py-3 border border-gray-800 rounded-lg bg-black text-white focus:outline-none focus:ring-1 focus:ring-[#E50914] placeholder-gray-600"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-600 -mt-3">Specify at least one duration field. You can set multiple if needed.</p>
+
+            {/* Duration Label (Optional) */}
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Duration Label (Optional)</label>
+              <input
+                type="text"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                placeholder="e.g., '24 Hours Trial', '7 Days', '1 Month Premium'"
+                className="w-full px-4 py-3 border border-gray-800 rounded-lg bg-black text-white focus:outline-none focus:ring-1 focus:ring-[#E50914] placeholder-gray-600"
+              />
+              <p className="text-[10px] text-gray-600 mt-1">Leave empty to auto-generate from duration values above.</p>
             </div>
 
             {/* Sort Order */}
@@ -628,7 +671,7 @@ export default function PlansPage() {
             </Button>
             <Button
               onClick={handleSave}
-              disabled={saving || !formData.name || !formData.amount || !formData.duration_in_days}
+              disabled={saving || !formData.name || !formData.amount || (formData.duration_in_hours === 0 && formData.duration_in_days === 0 && formData.duration_in_months === 0)}
               className="bg-[#E50914] text-white hover:bg-[#b80710] w-full sm:w-auto uppercase tracking-wider font-bold border-none"
             >
               {saving ? (

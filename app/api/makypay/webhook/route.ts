@@ -163,15 +163,30 @@ async function activateSubscriptionFromTransaction(
     // (fuzzy %like% can match multiple plans and cause PGRST116 errors)
     const { data: plan } = await supabaseAdmin
       .from('plans')
-      .select('name, duration_in_days')
+      .select('name, duration_in_days, duration_in_hours, duration_in_months')
       .ilike('name', planName)
       .maybeSingle();
 
-    const durationDays = plan?.duration_in_days || 30;
+    // Calculate duration in milliseconds, prioritizing hours, then days, then months
+    let durationMs: number;
+    if (plan?.duration_in_hours && plan.duration_in_hours > 0) {
+      // Hours-based plan (e.g., 24-hour trial)
+      durationMs = plan.duration_in_hours * 60 * 60 * 1000;
+    } else if (plan?.duration_in_days && plan.duration_in_days > 0) {
+      // Days-based plan (most common)
+      durationMs = plan.duration_in_days * 24 * 60 * 60 * 1000;
+    } else if (plan?.duration_in_months && plan.duration_in_months > 0) {
+      // Months-based plan (approximate as 30 days per month)
+      durationMs = plan.duration_in_months * 30 * 24 * 60 * 60 * 1000;
+    } else {
+      // Default to 30 days if no duration specified
+      durationMs = 30 * 24 * 60 * 60 * 1000;
+    }
+
     // Use the canonical plan name from DB if found, otherwise use parsed name
     const canonicalPlanName = plan?.name?.toLowerCase() || planName;
     const now = new Date();
-    const expiryDate = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+    const expiryDate = new Date(now.getTime() + durationMs);
 
     // Update user profile FIRST — this is the critical write for access control
     const { error: profileError } = await supabaseAdmin

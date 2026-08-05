@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS plans (
   duration            TEXT,
   duration_in_months  INTEGER,
   duration_in_days    INTEGER,
+  duration_in_hours   INTEGER DEFAULT 0,
   recommended         BOOLEAN DEFAULT false,
   sort_order          INTEGER DEFAULT 0,
   features            TEXT[]  DEFAULT '{}',
