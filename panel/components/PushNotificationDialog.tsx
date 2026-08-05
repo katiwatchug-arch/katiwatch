@@ -12,6 +12,12 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { 
+  getReelplexiMovies, 
+  searchReelplexiMovies, 
+  getReelplexiSeries, 
+  searchReelplexiSeries 
+} from '@/lib/reelplexi';
 
 interface ContentItem {
   id: string;
@@ -28,6 +34,7 @@ interface PushNotificationDialogProps {
   contentType?: 'movie' | 'series';
   contentId?: string;
 }
+
 
 export default function PushNotificationDialog({
   open,
@@ -79,29 +86,28 @@ export default function PushNotificationDialog({
     }
   }, [open, initialContentTitle, initialContentImage, initialContentType, initialContentId]);
 
-  // Fetch catalog items for content selector dropdown
+  // Fetch catalog items for content selector dropdown from Reelplexi API
   const fetchCatalogItems = async (type: 'movie' | 'series', search: string) => {
     setIsFetchingItems(true);
     try {
-      const table = type === 'movie' ? 'movies' : 'series';
-      let query = supabase
-        .from(table)
-        .select('id, title, thumbnail_url, cover_image_url')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (search.trim()) {
-        query = query.ilike('title', `%${search.trim()}%`);
+      let result;
+      if (type === 'movie') {
+        result = search.trim() 
+          ? await searchReelplexiMovies(search.trim(), 1, 30) 
+          : await getReelplexiMovies(1, 30);
+      } else {
+        result = search.trim() 
+          ? await searchReelplexiSeries(search.trim(), 1, 30) 
+          : await getReelplexiSeries(1, 30);
       }
-
-      const { data } = await query;
-      setAvailableItems(data || []);
+      setAvailableItems(result.data || []);
     } catch (err) {
-      console.error('Error fetching catalog items:', err);
+      console.error('Error fetching catalog items from Reelplexi:', err);
     } finally {
       setIsFetchingItems(false);
     }
   };
+
 
   // When admin picks a movie/series from dropdown in modal
   const handleSelectItem = (itemId: string) => {
