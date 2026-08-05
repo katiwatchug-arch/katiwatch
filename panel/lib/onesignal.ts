@@ -1,14 +1,14 @@
 // OneSignal configuration
 const DEFAULT_APP_ID = '30e1c461-bc97-4079-aa3d-874150082a38';
 
-const getOneSignalAppId = () => 
-  process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 
-  process.env.ONESIGNAL_APP_ID || 
+const getOneSignalAppId = () =>
+  process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID ||
+  process.env.ONESIGNAL_APP_ID ||
   DEFAULT_APP_ID;
 
-const getOneSignalApiKey = () => 
-  process.env.ONESIGNAL_REST_API_KEY || 
-  process.env.NEXT_PUBLIC_ONESIGNAL_REST_API_KEY || 
+const getOneSignalApiKey = () =>
+  process.env.ONESIGNAL_REST_API_KEY ||
+  process.env.NEXT_PUBLIC_ONESIGNAL_REST_API_KEY ||
   '';
 
 const ONESIGNAL_API_URL = 'https://api.onesignal.com/notifications';
@@ -90,13 +90,13 @@ export class OneSignalService {
       ttl: 259200, // 3 days Time-To-Live
       priority: 10, // High priority for OS popups
     };
-    
-    const defaultLogo = 'https://www.katiwatch.com/logo.png';
+
+    const defaultLogo = 'https://www.katiwatch.com/katibadge.png';
 
     const effectiveIcon = (notificationData.iconUrl && !notificationData.iconUrl.includes('localhost') && !notificationData.iconUrl.includes('127.0.0.1'))
       ? notificationData.iconUrl
       : defaultLogo;
-    
+
     const defaultBadge = 'https://www.katiwatch.com/katibadge.png';
     payload.chrome_web_icon = effectiveIcon;
     payload.firefox_icon = effectiveIcon;
@@ -114,7 +114,7 @@ export class OneSignalService {
       payload.large_icon = effectiveIcon;
     }
 
-    
+
     if (notificationData.data) {
       payload.data = notificationData.data;
     }

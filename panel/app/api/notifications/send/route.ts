@@ -4,15 +4,15 @@ import { OneSignalService, PushNotificationData } from '@/lib/onesignal';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      title, 
-      message, 
-      imageUrl, 
+    const {
+      title,
+      message,
+      imageUrl,
       url,
-      data, 
-      targetType = 'all', 
-      targetUserIds, 
-      targetSegments 
+      data,
+      targetType = 'all',
+      targetUserIds,
+      targetSegments
     } = body;
 
     // Validate required fields
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://www.katiwatch.com';
     const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
-    const defaultIconUrl = isLocal ? 'https://www.katiwatch.com/logo.png' : `${origin.replace(/\/$/, '')}/logo.png`;
+    const defaultIconUrl = isLocal ? 'https://www.katiwatch.com/katibadge.png' : `${origin.replace(/\/$/, '')}/logo.png`;
 
 
     let finalImageUrl = imageUrl;
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     console.error('Error in push notification API:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
         details: errorMessage
       },
