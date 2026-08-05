@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
 
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://www.katiwatch.com';
     const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
-    const defaultIconUrl = isLocal ? 'https://www.katiwatch.com/katilogo.jpeg' : `${origin.replace(/\/$/, '')}/katilogo.jpeg`;
+    const defaultIconUrl = isLocal ? 'https://www.katiwatch.com/logo.png' : `${origin.replace(/\/$/, '')}/logo.png`;
+
 
     let finalImageUrl = imageUrl;
     if (finalImageUrl && finalImageUrl.startsWith('/')) {

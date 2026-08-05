@@ -91,7 +91,8 @@ export class OneSignalService {
       priority: 10, // High priority for OS popups
     };
     
-    const defaultLogo = 'https://www.katiwatch.com/katilogo.jpeg';
+    const defaultLogo = 'https://www.katiwatch.com/logo.png';
+
     const effectiveIcon = (notificationData.iconUrl && !notificationData.iconUrl.includes('localhost') && !notificationData.iconUrl.includes('127.0.0.1'))
       ? notificationData.iconUrl
       : defaultLogo;
