@@ -8,6 +8,7 @@ export async function POST(request: NextRequest) {
       title, 
       message, 
       imageUrl, 
+      url,
       data, 
       targetType = 'all', 
       targetUserIds, 
@@ -22,19 +23,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://nextfi.vercel.app';
-    const defaultIconUrl = `${origin.replace(/\/$/, '')}/icon.jpeg`;
+    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://www.katiwatch.com';
+    const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
+    const defaultIconUrl = isLocal ? 'https://www.katiwatch.com/katilogo.jpeg' : `${origin.replace(/\/$/, '')}/katilogo.jpeg`;
 
     let finalImageUrl = imageUrl;
     if (finalImageUrl && finalImageUrl.startsWith('/')) {
-      finalImageUrl = `${origin.replace(/\/$/, '')}${finalImageUrl}`;
+      finalImageUrl = isLocal ? `https://www.katiwatch.com${finalImageUrl}` : `${origin.replace(/\/$/, '')}${finalImageUrl}`;
     }
+
 
     const notificationData: PushNotificationData = {
       title,
       message,
       imageUrl: finalImageUrl,
       iconUrl: defaultIconUrl,
+      url,
       data,
     };
 
@@ -75,12 +79,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in push notification API:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { 
-        error: 'Failed to send push notification',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage,
+        details: errorMessage
       },
       { status: 500 }
     );
   }
 }
+

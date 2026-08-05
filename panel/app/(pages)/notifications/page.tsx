@@ -12,6 +12,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabaseClient";
+import PushNotificationDialog from "@/components/PushNotificationDialog";
 
 interface Notification {
   id: string;
@@ -27,7 +28,9 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [showMoviePushDialog, setShowMoviePushDialog] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
+
   
   // Form states
   const [newTitle, setNewTitle] = useState("");
@@ -262,13 +265,24 @@ export default function NotificationsPage() {
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-white uppercase tracking-wider">Notifications</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#E50914] hover:bg-[#b80710] text-white px-6 py-2 rounded-lg font-bold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(229,9,20,0.3)] w-full sm:w-auto">
-              + Add Notification
-            </Button>
-          </DialogTrigger>
+        <div>
+          <h1 className="text-2xl font-bold text-white uppercase tracking-wider">Notifications</h1>
+          <p className="text-xs text-gray-400 mt-1">Manage and send push notifications to website users</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button 
+            onClick={() => setShowMoviePushDialog(true)}
+            className="bg-transparent border border-[#E50914] text-[#E50914] hover:bg-[#E50914] hover:text-white px-5 py-2 rounded-lg font-bold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(229,9,20,0.15)] w-full sm:w-auto"
+          >
+            🎬 + Send Movie / TV Show Push
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#E50914] hover:bg-[#b80710] text-white px-6 py-2 rounded-lg font-bold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(229,9,20,0.3)] w-full sm:w-auto">
+                + Add Custom Notification
+              </Button>
+            </DialogTrigger>
+
           <DialogContent className="bg-[#1a1c21] border border-gray-800 text-white mx-4 sm:mx-0 max-w-md sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-white uppercase tracking-wider font-bold">Add Notification</DialogTitle>
@@ -305,7 +319,9 @@ export default function NotificationsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
 
       {/* Desktop Table View */}
       <div className="hidden md:block bg-[#1a1c21] rounded-2xl shadow-xl border border-gray-800 overflow-hidden mb-8">
@@ -536,7 +552,14 @@ export default function NotificationsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Push Notification Dialog for Movies & TV Shows */}
+      <PushNotificationDialog
+        open={showMoviePushDialog}
+        onOpenChange={setShowMoviePushDialog}
+      />
     </AdminPanelLayout>
   );
 }
+
 
