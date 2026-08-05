@@ -53,6 +53,7 @@ export default function HomePage() {
   const [filteredMovies, setFilteredMovies] = useState<any[]>([]);
   const [filteredSeries, setFilteredSeries] = useState<any[]>([]);
   const [genreRows, setGenreRows] = useState<{ name: string; movies: any[]; series: any[] }[]>([]);
+  const [animationContent, setAnimationContent] = useState<any[]>([]);
   const [heroLoading, setHeroLoading] = useState(true);
   const [contentLoading, setContentLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
@@ -66,7 +67,6 @@ export default function HomePage() {
   const [showSearchResults, setShowSearchResults] = useState(false);
 
   const { checkAuth } = useAuthCheck();
-  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useUserPreferences();
   const genresFetched = useRef(false);
 
   // Phase 1: Load hero immediately
@@ -118,7 +118,7 @@ export default function HomePage() {
   // Phase 2: Load movies + series in parallel (show as soon as ready)
   useEffect(() => {
     Promise.all([getMovies(24), getSeries(24)])
-      .then(([movies, series]) => {
+      .then(async ([movies, series]) => {
         setLatestMovies(movies);
         setLatestSeries(series);
         setFilteredMovies(movies);
@@ -137,8 +137,24 @@ export default function HomePage() {
     if (contentLoading || genresFetched.current) return;
     genresFetched.current = true;
     // Use setTimeout as a safe fallback — requestIdleCallback is not supported on iOS Safari
-    const id = setTimeout(() => {
-      getGenreRowsForHome(12).then(rows => setGenreRows(rows)).catch(() => {});
+    const id = setTimeout(async () => {
+      try {
+        const Reelplexi = await import('@/lib/reelplexi');
+        const [rows, animMovies, animSeries] = await Promise.all([
+          getGenreRowsForHome(12),
+          Reelplexi.getReelplexiMoviesByGenre('animation', 1, 12),
+          Reelplexi.getReelplexiSeriesByGenre('animation', 1, 12),
+        ]);
+        setGenreRows(rows);
+        // Interleave animation movies and series, mark type
+        const combined = [
+          ...(animMovies || []).map((m: any) => ({ ...m, type: 'movie' })),
+          ...(animSeries || []).map((s: any) => ({ ...s, type: 'series' })),
+        ];
+        setAnimationContent(combined);
+      } catch (error) {
+        console.error('Error loading genre rows:', error);
+      }
     }, 500);
     return () => clearTimeout(id);
   }, [contentLoading]);
@@ -588,6 +604,25 @@ export default function HomePage() {
             )}
           </React.Fragment>
         ))}
+
+        {/* Animation Row - from Reelplexi */}
+        {animationContent.length > 0 && (
+          <section className="mb-16 container mx-auto px-4 md:px-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold text-[#E50914]">Animation</h2>
+              <Link href="/movies?genre=animation" className="text-[#E50914] hover:text-[#b80710] font-semibold flex items-center gap-2 transition-colors">
+                See More <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <Swiper {...swiperProps} className="animation-swiper">
+              {animationContent.map(item => (
+                <SwiperSlide key={`anim-${item.id}`}>
+                  <NetflixCard content={item} type={item.type} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </section>
+        )}
       </div>
 
       <AuthRequiredModal

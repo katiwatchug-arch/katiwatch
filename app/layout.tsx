@@ -169,21 +169,51 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           strategy="afterInteractive"
         />
-        {/* Unregister non-OneSignal service workers (old TV compatibility) */}
+        {/* OneSignal Web SDK v16 */}
         <Script
-          id="unregister-sw"
+          id="onesignal-sdk"
+          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+          strategy="afterInteractive"
+          defer
+        />
+        <Script
+          id="onesignal-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.OneSignalDeferred = window.OneSignalDeferred || [];
+              OneSignalDeferred.push(async function(OneSignal) {
+                await OneSignal.init({
+                  appId: '${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || ''}',
+                  serviceWorkerPath: 'OneSignalSDKWorker.js',
+                  serviceWorkerParam: { scope: '/' },
+                  notifyButton: { enable: false },
+                });
+                // If the user already granted permission, opt them into OneSignal's
+                // push subscription. This is required in v16 SDK — permission alone
+                // is not enough; optIn() creates the active push token in OneSignal.
+                try {
+                  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                    await OneSignal.User.PushSubscription.optIn();
+                    console.log('[OneSignal] optIn() called. Subscription ID:', OneSignal.User.PushSubscription.id);
+                  }
+                } catch(e) {
+                  console.warn('[OneSignal] optIn error:', e);
+                }
+              });
+            `,
+          }}
+        />
+        {/* Register PWA service worker */}
+        <Script
+          id="register-sw"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) {
-                      if (registration.active && registration.active.scriptURL && registration.active.scriptURL.includes('OneSignal')) continue;
-                      registration.unregister();
-                    }
-                  }).catch(function(err) {
-                    console.warn('SW unregistration failed:', err);
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.warn('SW registration failed:', err);
                   });
                 });
               }
