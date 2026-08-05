@@ -94,10 +94,11 @@ export class OneSignalService {
       ? notificationData.iconUrl
       : defaultLogo;
     
+    const defaultBadge = 'https://www.katiwatch.com/katibadge.png';
     payload.chrome_web_icon = effectiveIcon;
     payload.firefox_icon = effectiveIcon;
-    // Note: Do NOT set chrome_web_badge to a solid JPEG image without transparent background!
-    // Android requires badge icons to be white-on-transparent PNGs; setting a solid JPEG causes Android to render a grey/white square.
+    payload.chrome_web_badge = defaultBadge;
+
 
 
     if (notificationData.imageUrl) {
