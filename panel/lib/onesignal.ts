@@ -98,6 +98,8 @@ export class OneSignalService {
     payload.chrome_web_icon = effectiveIcon;
     payload.firefox_icon = effectiveIcon;
     payload.chrome_web_badge = defaultBadge;
+    payload.small_icon = defaultBadge;
+
 
 
 
