@@ -38,8 +38,8 @@ interface OneSignalNotificationPayload {
   firefox_icon?: string;
   chrome_web_image?: string;
   chrome_web_badge?: string;
-  small_icon?: string;
   data?: Record<string, unknown>;
+
 
   ttl?: number;
   priority?: number;
@@ -100,7 +100,7 @@ export class OneSignalService {
     payload.chrome_web_icon = effectiveIcon;
     payload.firefox_icon = effectiveIcon;
     payload.chrome_web_badge = defaultBadge;
-    payload.small_icon = defaultBadge;
+
 
 
 
