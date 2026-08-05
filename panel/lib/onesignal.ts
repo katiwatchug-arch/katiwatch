@@ -38,7 +38,9 @@ interface OneSignalNotificationPayload {
   firefox_icon?: string;
   chrome_web_image?: string;
   chrome_web_badge?: string;
+  small_icon?: string;
   data?: Record<string, unknown>;
+
   ttl?: number;
   priority?: number;
 }
