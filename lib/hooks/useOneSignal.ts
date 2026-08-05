@@ -37,6 +37,39 @@ declare global {
 
 export type NotificationPermission = 'default' | 'granted' | 'denied' | 'loading' | 'unsupported';
 
+export interface StoredNotification {
+  id: string;
+  title: string;
+  message: string;
+  imageUrl?: string;
+  receivedAt: string;
+  read: boolean;
+  url?: string;
+}
+
+const STORAGE_KEY = 'katiwatch-notifications';
+const MAX_STORED = 50;
+
+// Notification storage utilities
+export function getStoredNotifications(): StoredNotification[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch { return []; }
+}
+
+export function saveNotification(notif: StoredNotification) {
+  const existing = getStoredNotifications();
+  if (existing.find(n => n.id === notif.id)) return;
+  const updated = [notif, ...existing].slice(0, MAX_STORED);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+}
+
+export function markAllRead() {
+  const existing = getStoredNotifications();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(existing.map(n => ({ ...n, read: true }))));
+}
+
 interface UseOneSignalReturn {
   permission: NotificationPermission;
   isSubscribed: boolean;

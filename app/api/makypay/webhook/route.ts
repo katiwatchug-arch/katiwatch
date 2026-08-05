@@ -217,7 +217,14 @@ async function activateSubscriptionFromTransaction(
       console.error('Webhook: Non-critical — Failed to insert subscription record:', subError);
     }
 
-    console.log(`✅ Webhook: Subscription activated for user ${txRecord.user_id} (${canonicalPlanName}, ${durationDays} days)`);
+    // Calculate duration for logging
+    const durationHours = durationMs / (60 * 60 * 1000);
+    const durationDays = durationMs / (24 * 60 * 60 * 1000);
+    const durationDisplay = durationHours < 24 
+      ? `${durationHours} hour${durationHours !== 1 ? 's' : ''}`
+      : `${durationDays} day${durationDays !== 1 ? 's' : ''}`;
+
+    console.log(`✅ Webhook: Subscription activated for user ${txRecord.user_id} (${canonicalPlanName}, ${durationDisplay})`);
   } catch (e) {
     console.error('Webhook: Error activating subscription:', e);
   }
