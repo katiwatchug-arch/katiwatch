@@ -19,7 +19,8 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
+  const desktopMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const { user, loading, isPremium, signOut } = useAuth();
   const isActive = (href: string) => pathname === href;
@@ -41,9 +42,10 @@ export default function Header() {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setShowUserMenu(false);
-      }
+      const target = e.target as Node;
+      const outsideDesktop = !desktopMenuRef.current || !desktopMenuRef.current.contains(target);
+      const outsideMobile = !mobileMenuRef.current || !mobileMenuRef.current.contains(target);
+      if (outsideDesktop && outsideMobile) setShowUserMenu(false);
     };
     if (showUserMenu) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -76,45 +78,7 @@ export default function Header() {
       </div>
     );
 
-  const UserDropdown = () => (
-    <div className="absolute right-0 top-full mt-2 w-52 bg-[#1a1a1a] border border-gray-800 rounded-xl shadow-2xl z-50 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-800">
-        <p className="text-sm font-semibold text-white truncate">
-          {user?.user_metadata?.full_name || "Account"}
-        </p>
-        <p className="text-xs text-gray-400 truncate">{user?.email}</p>
-        {isPremium && (
-          <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-yellow-400">
-            <Crown className="w-3 h-3" /> Premium
-          </span>
-        )}
-      </div>
-      <div className="py-1">
-        <Link
-          href="/profile"
-          onClick={() => setShowUserMenu(false)}
-          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
-        >
-          <User className="w-4 h-4" /> My Profile
-        </Link>
-        {!isPremium && (
-          <Link
-            href="/payment"
-            onClick={() => setShowUserMenu(false)}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/5 transition-colors"
-          >
-            <Crown className="w-4 h-4" /> Get Premium
-          </Link>
-        )}
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors"
-        >
-          <LogOut className="w-4 h-4" /> Sign Out
-        </button>
-      </div>
-    </div>
-  );
+
 
   const LoadingDots = () => (
     <span className="inline-flex items-center font-bold tracking-widest text-2xl text-[#E50914]">
@@ -169,7 +133,7 @@ export default function Header() {
                   </Link>
                 )}
                 {/* Avatar + dropdown */}
-                <div className="relative" ref={userMenuRef}>
+                <div className="relative" ref={desktopMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(v => !v)}
                     className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all cursor-pointer"
@@ -180,7 +144,35 @@ export default function Header() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  {showUserMenu && <UserDropdown />}
+                  {showUserMenu && (
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-[#1a1a1a] border border-gray-800 rounded-xl shadow-2xl z-50 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-gray-800">
+                        <p className="text-sm font-semibold text-white truncate">{user?.user_metadata?.full_name || "Account"}</p>
+                        <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                        {isPremium && (
+                          <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-yellow-400">
+                            <Crown className="w-3 h-3" /> Premium
+                          </span>
+                        )}
+                      </div>
+                      <div className="py-1">
+                        <Link href="/profile" onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                          <User className="w-4 h-4" /> My Profile
+                        </Link>
+                        {!isPremium && (
+                          <Link href="/payment" onClick={() => setShowUserMenu(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/5 transition-colors">
+                            <Crown className="w-4 h-4" /> Get Premium
+                          </Link>
+                        )}
+                        <button onClick={handleSignOut}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors">
+                          <LogOut className="w-4 h-4" /> Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -204,7 +196,7 @@ export default function Header() {
 
             {loading ? <LoadingDots /> : user ? (
               /* Mobile avatar → tap to open dropdown */
-              <div className="relative" ref={userMenuRef}>
+              <div className="relative" ref={mobileMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(v => !v)}
                   className="flex items-center justify-center rounded-full min-w-[40px] min-h-[40px] cursor-pointer"
@@ -212,7 +204,35 @@ export default function Header() {
                 >
                   <AvatarCircle size={40} />
                 </button>
-                {showUserMenu && <UserDropdown />}
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-[#1a1a1a] border border-gray-800 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-800">
+                      <p className="text-sm font-semibold text-white truncate">{user?.user_metadata?.full_name || "Account"}</p>
+                      <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                      {isPremium && (
+                        <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-yellow-400">
+                          <Crown className="w-3 h-3" /> Premium
+                        </span>
+                      )}
+                    </div>
+                    <div className="py-1">
+                      <Link href="/profile" onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                        <User className="w-4 h-4" /> My Profile
+                      </Link>
+                      {!isPremium && (
+                        <Link href="/payment" onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/5 transition-colors">
+                          <Crown className="w-4 h-4" /> Get Premium
+                        </Link>
+                      )}
+                      <button onClick={handleSignOut}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors">
+                        <LogOut className="w-4 h-4" /> Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <Link href="/signin" onClick={() => setRedirectCookie(pathname)}
