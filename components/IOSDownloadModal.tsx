@@ -24,7 +24,7 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">iOS Download Instructions</h2>
-              <p className="text-xs text-white/80">Safari requires special steps</p>
+              <p className="text-xs text-white/80">iPhone & iPad require special steps</p>
             </div>
           </div>
         </div>
@@ -35,7 +35,7 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
           <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
             <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-amber-200">
-              iOS Safari doesn't support direct downloads. Please follow the steps below.
+              iOS doesn't support direct MKV downloads. Tap "Open Link" then long-press the video to save it.
             </p>
           </div>
 
