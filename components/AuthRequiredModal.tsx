@@ -116,7 +116,7 @@ export default function AuthRequiredModal({ isOpen, onClose, action, requirePrem
 
 function NetflixModal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[1000] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[1000] flex items-start justify-center p-4 pt-16" onClick={onClose}>
       <div className="bg-[#1a1a1a] rounded-2xl p-8 max-w-sm w-full border border-gray-800 shadow-2xl relative" onClick={e => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
           <X className="w-5 h-5" />

@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: '**' },
     ],
   },
-  serverExternalPackages: [],
+  serverExternalPackages: ['ffmpeg-static', 'fluent-ffmpeg'],
   transpilePackages: ['swiper', 'artplayer', 'lucide-react', 'clsx', 'tailwind-merge'],
   turbopack: {},
   async rewrites() {
