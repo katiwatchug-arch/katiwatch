@@ -11,7 +11,6 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: ['ffmpeg-static', 'fluent-ffmpeg'],
   transpilePackages: ['swiper', 'artplayer', 'lucide-react', 'clsx', 'tailwind-merge'],
-  turbopack: {},
   async rewrites() {
     const panelUrl = process.env.PANEL_URL || 'http://localhost:3001';
     return [
