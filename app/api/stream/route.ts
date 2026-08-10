@@ -85,15 +85,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Video URL is required' }, { status: 400 });
     }
 
-    // iOS cannot decode MKV — return a clear error so the client can show the download modal
+    // iOS cannot decode MKV — remux to fMP4 on the fly via /api/ios-stream
     const userAgent = request.headers.get('user-agent') || '';
     const isIOS = /iPad|iPhone|iPod/i.test(userAgent);
     const isMKV = videoUrl.toLowerCase().includes('.mkv');
     if (isIOS && isMKV) {
-      return NextResponse.json(
-        { error: 'mkv_not_supported_ios', message: 'MKV streaming is not supported on iOS. Please use the download option.' },
-        { status: 415 }
-      );
+      const remuxUrl = new URL('/api/ios-stream', request.url);
+      remuxUrl.searchParams.set('url', videoUrl);
+      return NextResponse.redirect(remuxUrl.toString());
     }
 
     // SECURITY: Validate the URL against the allowlist to prevent SSRF

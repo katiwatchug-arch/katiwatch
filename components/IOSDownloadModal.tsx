@@ -14,8 +14,8 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-gray-900 rounded-2xl border border-[#E50914]/30 shadow-2xl max-w-md w-full overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-16 bg-black/80 backdrop-blur-sm">
+      <div className="bg-gray-900 rounded-2xl border border-[#E50914]/30 shadow-2xl max-w-md w-full">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#E50914] to-[#b80710] p-4">
           <div className="flex items-center gap-3">

@@ -31,6 +31,8 @@ export default function MovieDetailsClient() {
   const [trailerUrl, setTrailerUrl] = useState("");
   const [streamUrl, setStreamUrl] = useState("");
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloadState, setDownloadState] = useState<'idle' | 'fetching' | 'done' | 'error'>('idle');
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authAction, setAuthAction] = useState<"play" | "download">("play");
   const [activeTab, setActiveTab] = useState<"more" | "cast">("more");
@@ -283,7 +285,7 @@ export default function MovieDetailsClient() {
 
       {/* Download Modal */}
       {showDownloadModal && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[1000] flex items-center justify-center p-4" onClick={() => setShowDownloadModal(false)}>
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[1000] flex items-center justify-center p-4" onClick={() => { setShowDownloadModal(false); setDownloadState('idle'); setDownloadError(null); }}>
           <div className="bg-[#1a1a1a] rounded-2xl p-8 max-w-sm w-full text-center border border-gray-800 shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="w-14 h-14 bg-[#E50914]/10 border border-[#E50914]/30 rounded-full flex items-center justify-center mx-auto mb-5">
               <Download className="w-6 h-6 text-[#E50914]" />
@@ -291,16 +293,49 @@ export default function MovieDetailsClient() {
             <h2 className="text-xl font-bold text-white mb-2">Download Movie</h2>
             <p className="text-gray-400 text-sm mb-6">{movie.title}</p>
             <button
-              className="w-full bg-[#E50914] hover:bg-[#b80710] text-white font-bold py-3 rounded-lg mb-3 transition-colors"
-              onClick={() => {
-                const clean = movie.title.replace(/[^a-zA-Z0-9\s\-_.]/g, "").trim();
-                window.open(`/api/download?id=${movie.id}&type=movie&filename=${encodeURIComponent(clean + ".mp4")}`, "_blank");
-                setShowDownloadModal(false);
+              className="w-full bg-[#E50914] hover:bg-[#b80710] disabled:opacity-60 text-white font-bold py-3 rounded-lg mb-3 transition-colors"
+              disabled={downloadState === 'fetching'}
+              onClick={async () => {
+                setDownloadError(null);
+                setDownloadState('fetching');
+                try {
+                  const clean = movie.title.replace(/[^a-zA-Z0-9\s\-_.]/g, "").trim();
+                  const filename = clean + ".mp4";
+                  const res = await fetch(`/api/download?id=${movie.id}&type=movie&filename=${encodeURIComponent(filename)}`);
+                  const data = await res.json();
+                  // API returns { downloadUrl: "...", filename: "..." } for iOS
+                  // and redirects (non-JSON) for other browsers — but fetch follows
+                  // redirects automatically so data will always be JSON here.
+                  const fileUrl = data.downloadUrl;
+                  if (!fileUrl) throw new Error(data.error || 'No download URL returned');
+                  const a = document.createElement('a');
+                  a.href = fileUrl;
+                  a.download = data.filename || filename;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  setDownloadState('done');
+                  setTimeout(() => {
+                    setDownloadState('idle');
+                    setShowDownloadModal(false);
+                  }, 2000);
+                } catch (err: any) {
+                  setDownloadError(err.message || 'Download failed. Please try again.');
+                  setDownloadState('error');
+                }
               }}
             >
-              Download Now
+              {downloadState === 'fetching' ? 'Loading…' : downloadState === 'done' ? 'Starting…' : 'Download Now'}
             </button>
-            <button className="w-full text-gray-400 hover:text-white text-sm py-2 transition-colors" onClick={() => setShowDownloadModal(false)}>Cancel</button>
+            {downloadState === 'fetching' && (
+              <p className="text-amber-400 text-xs text-center mb-3 leading-snug">
+                ⚠️ Do not lock your screen, switch apps, or turn off your phone until the download finishes.
+              </p>
+            )}
+            {downloadState === 'error' && downloadError && (
+              <p className="text-red-400 text-xs text-center mb-3">{downloadError}</p>
+            )}
+            <button className="w-full text-gray-400 hover:text-white text-sm py-2 transition-colors" onClick={() => { setShowDownloadModal(false); setDownloadState('idle'); setDownloadError(null); }}>Cancel</button>
           </div>
         </div>
       )}

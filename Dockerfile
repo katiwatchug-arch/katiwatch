@@ -31,6 +31,9 @@ RUN npm run build
 FROM node:22-slim AS runner
 WORKDIR /app
 
+# Install ffmpeg (provides both ffmpeg and ffprobe binaries)
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
 # Install concurrently to run both servers
 RUN npm install -g concurrently
 
