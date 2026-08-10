@@ -12,7 +12,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['ffmpeg-static', 'fluent-ffmpeg'],
   transpilePackages: ['swiper', 'artplayer', 'lucide-react', 'clsx', 'tailwind-merge'],
   async rewrites() {
-    const panelUrl = process.env.PANEL_URL || 'http://localhost:3001';
+    const panelUrl = process.env.PANEL_URL;
+    if (!panelUrl) return [];
     return [
       { source: '/panel', destination: `${panelUrl}/panel` },
       { source: '/panel/:path*', destination: `${panelUrl}/panel/:path*` },
