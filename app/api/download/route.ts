@@ -8,38 +8,26 @@ import {
  * Download route that fetches a presigned download URL from the backend
  * and redirects the user to it.
  *
- * iOS Safari Handling:
- * - iOS doesn't respect Content-Disposition headers from redirects
- * - Instead, we return the URL in JSON for client-side handling
- * - Client should use <a download> or show instructions
+ * This relies on the Reelplexi backend properly signing the URL with Wasabi keys
+ * so that the resulting S3 URL contains the `response-content-disposition=attachment`
+ * query parameter. When the browser follows the redirect to that signed URL, Wasabi
+ * forces the download.
  *
  * Two modes:
  *
  * 1. Direct redirect (url already known):
  *    ?url=<signed-url>
- *    Redirects to the provided URL (or JSON for iOS).
+ *    Redirects to the provided URL.
  *
  * 2. Reelplexi lookup:
  *    ?id=<id>&type=movie|episode&season=<n>&episode=<n>
  *    Resolves the dedicated download URL from Reelplexi server-side, then redirects.
  */
 export async function GET(req: NextRequest) {
-  // Detect iOS devices
-  const userAgent = req.headers.get('user-agent') || '';
-  const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-
   const url = req.nextUrl.searchParams.get('url');
 
   // Mode 1: Direct redirect — url is already known
   if (url) {
-    // For any iOS device, return JSON — iOS ignores Content-Disposition on redirects
-    if (isIOS) {
-      return NextResponse.json({
-        downloadUrl: url,
-        platform: 'ios',
-        instructions: 'Long-press the download link and select "Download Linked File"',
-      });
-    }
     return NextResponse.redirect(url);
   }
 
@@ -48,7 +36,6 @@ export async function GET(req: NextRequest) {
   const type = req.nextUrl.searchParams.get('type') || 'movie';
   const season = req.nextUrl.searchParams.get('season');
   const episode = req.nextUrl.searchParams.get('episode');
-  const filename = req.nextUrl.searchParams.get('filename');
 
   if (!id) {
     return NextResponse.json({ error: 'Either url or id is required' }, { status: 400 });
@@ -79,17 +66,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Download URL not available, resolvedUrl was null' }, { status: 404 });
     }
 
-    // For any iOS device, return JSON — iOS ignores Content-Disposition on redirects
-    if (isIOS) {
-      return NextResponse.json({
-        downloadUrl: resolvedUrl,
-        filename: filename || 'video.mp4',
-        platform: 'ios',
-        instructions: 'Tap the download button below, then long-press and select "Download Linked File"',
-      });
-    }
-
-    // For other browsers, redirect directly to the Wasabi presigned URL
+    // Redirect the browser directly to the Wasabi presigned URL.
     return NextResponse.redirect(resolvedUrl);
   } catch (error: any) {
     console.error('[Download API] Reelplexi lookup error:', error);

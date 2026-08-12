@@ -231,6 +231,20 @@ export function ArtPlayer({ url, poster, title, className, onEnded, episodes = [
         } catch (e) {
           // Ignore buffer info errors
         }
+
+        // Explicitly attempt to play after player is ready
+        // This helps overcome autoplay restrictions on some browsers
+        const playPromise = art.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              console.log('Video autoplay successful');
+            })
+            .catch((error) => {
+              console.log('Autoplay was prevented, requiring user interaction:', error);
+              // The user will need to click play manually if autoplay is blocked
+            });
+        }
       }
 
       // Add Netflix-style episodes button if we have episodes and it's series content

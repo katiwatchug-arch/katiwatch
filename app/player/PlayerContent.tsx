@@ -617,35 +617,13 @@ export default function PlayerContent() {
                             {canAccess && (
                               <button
                                 className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-white transition-opacity shrink-0"
-                                onClick={async (e) => {
+                                onClick={(e) => {
                                   e.stopPropagation();
                                   const cleanTitle = episode.title ? episode.title.replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim() : 'episode';
                                   const filename = `${cleanTitle}.mp4`;
-                                  
-                                  // Detect iOS
-                                  const isIOS = isIOSDevice();
-                                  
-                                  if (isIOS) {
-                                    // For iOS: Fetch the download URL and show modal with instructions
-                                    try {
-                                      const response = await fetch(`/api/download?id=${seriesId || contentId}&type=episode&season=${episode.seasonOrder}&episode=${episode.episode_number}&filename=${encodeURIComponent(filename)}`);
-                                      const data = await response.json();
-                                      
-                                      if (data.downloadUrl) {
-                                        setIOSDownloadInfo({
-                                          url: data.downloadUrl,
-                                          filename: filename
-                                        });
-                                        setShowIOSDownloadModal(true);
-                                      }
-                                    } catch (error) {
-                                      alert('Failed to get download link. Please try again.');
-                                    }
-                                  } else {
-                                    // For non-iOS: Direct download redirect
-                                    const proxyUrl = `/api/download?id=${seriesId || contentId}&type=episode&season=${episode.seasonOrder}&episode=${episode.episode_number}&filename=${encodeURIComponent(filename)}`;
-                                    window.open(proxyUrl, '_blank');
-                                  }
+                                  // The API route redirects to the signed S3 URL which enforces the download
+                                  const proxyUrl = `/api/download?id=${seriesId || contentId}&type=episode&season=${episode.seasonOrder}&episode=${episode.episode_number}&filename=${encodeURIComponent(filename)}`;
+                                  window.open(proxyUrl, '_blank');
                                 }}
                                 title="Download"
                               >

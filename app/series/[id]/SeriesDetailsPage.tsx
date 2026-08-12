@@ -203,7 +203,9 @@ export default function SeriesDetailsPage() {
     const cleanTitle = series?.title.replace(/[^a-zA-Z0-9\s\-_.]/g, "").trim() || "Series";
     const cleanEp = selectedEpisode.title.replace(/[^a-zA-Z0-9\s\-_.]/g, "").trim();
     const filename = `${cleanTitle} - S${selectedEpisode.seasonOrder}E${selectedEpisode.episode_number} - ${cleanEp}.mp4`;
-    window.open(`/api/download?id=${params.id}&type=episode&season=${selectedEpisode.seasonOrder || 1}&episode=${selectedEpisode.episode_number}&filename=${encodeURIComponent(filename)}`, "_blank");
+    // The API route redirects to the signed S3 URL which enforces the download
+    const proxyUrl = `/api/download?id=${params.id}&type=episode&season=${selectedEpisode.seasonOrder || 1}&episode=${selectedEpisode.episode_number}&filename=${encodeURIComponent(filename)}`;
+    window.open(proxyUrl, '_blank');
     setShowDownloadModal(false);
   };
 
@@ -522,20 +524,106 @@ export default function SeriesDetailsPage() {
         )}
       </section>
 
-      {/* Download Modal — Netflix style */}
+      {/* Download Modal - Improved Modern Design */}
       {showDownloadModal && selectedEpisode && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[1000] flex items-center justify-center p-4" onClick={() => setShowDownloadModal(false)}>
-          <div className="bg-[#1a1a1a] rounded-2xl p-8 max-w-sm w-full text-center border border-gray-800 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="w-14 h-14 bg-[#E50914]/10 border border-[#E50914]/30 rounded-full flex items-center justify-center mx-auto mb-5">
-              <Download className="w-6 h-6 text-[#E50914]" />
+        <div 
+          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setShowDownloadModal(false)}
+          style={{ 
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <div 
+            className="w-full sm:max-w-md bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] sm:rounded-2xl rounded-t-3xl shadow-2xl transform transition-all duration-300 ease-out animate-slide-up"
+            onClick={e => e.stopPropagation()}
+            style={{
+              border: '1px solid rgba(229, 9, 20, 0.1)',
+              boxShadow: '0 0 40px rgba(229, 9, 20, 0.15), 0 20px 60px rgba(0, 0, 0, 0.8)',
+            }}
+          >
+            {/* Drag Handle (Mobile) */}
+            <div className="sm:hidden flex justify-center pt-3 pb-2">
+              <div className="w-12 h-1 bg-gray-700 rounded-full"></div>
             </div>
-            <h2 className="text-xl font-bold text-white mb-1">Download Episode</h2>
-            <p className="text-gray-400 text-sm mb-6">S{selectedEpisode.seasonOrder}E{selectedEpisode.episode_number}: {selectedEpisode.title}</p>
-            <button className="w-full bg-[#E50914] hover:bg-[#b80710] text-white font-bold py-3 rounded-lg mb-3 transition-colors" onClick={handleDownloadNow}>Download Now</button>
-            <button className="w-full text-gray-400 hover:text-white text-sm py-2 transition-colors" onClick={() => setShowDownloadModal(false)}>Cancel</button>
+
+            {/* Content */}
+            <div className="p-6 sm:p-8">
+              {/* Icon with Pulse Animation */}
+              <div className="relative mx-auto w-20 h-20 mb-6">
+                <div className="absolute inset-0 bg-[#E50914]/20 rounded-full animate-ping"></div>
+                <div 
+                  className="relative w-full h-full rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.15), rgba(229, 9, 20, 0.05))',
+                    border: '2px solid rgba(229, 9, 20, 0.3)',
+                  }}
+                >
+                  <Download className="w-9 h-9 text-[#E50914]" strokeWidth={2.5} />
+                </div>
+              </div>
+
+              {/* Title & Description */}
+              <h2 className="text-2xl font-bold text-white mb-2 text-center">
+                Ready to Download
+              </h2>
+              <p className="text-gray-400 text-sm mb-1 text-center font-medium">
+                {series?.title}
+              </p>
+              <p className="text-gray-500 text-xs mb-6 text-center">
+                S{selectedEpisode.seasonOrder}E{selectedEpisode.episode_number}: {selectedEpisode.title}
+              </p>
+
+              {/* Download Button - Enhanced */}
+              <button
+                className="w-full bg-gradient-to-r from-[#E50914] to-[#b80710] hover:from-[#c8000f] hover:to-[#a00610] text-white font-bold py-4 rounded-xl mb-3 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                style={{
+                  boxShadow: '0 4px 20px rgba(229, 9, 20, 0.4)',
+                }}
+                onClick={handleDownloadNow}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <Download className="w-5 h-5" />
+                  <span>Start Download</span>
+                </span>
+              </button>
+
+              {/* Cancel Button */}
+              <button 
+                className="w-full text-gray-400 hover:text-white text-sm font-medium py-3 transition-colors rounded-xl hover:bg-white/5"
+                onClick={() => setShowDownloadModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+        @keyframes ping {
+          75%, 100% {
+            transform: scale(2);
+            opacity: 0;
+          }
+        }
+        .animate-ping {
+          animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+      `}</style>
 
       <AuthRequiredModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} action={authAction} requirePremium={Boolean(selectedEpisode?.premium)} />
     </div>
