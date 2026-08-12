@@ -27,15 +27,13 @@ export async function GET(req: NextRequest) {
   // Detect iOS devices
   const userAgent = req.headers.get('user-agent') || '';
   const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-  const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
-  const isIOSSafari = isIOS && isSafari;
 
   const url = req.nextUrl.searchParams.get('url');
 
   // Mode 1: Direct redirect — url is already known
   if (url) {
-    // For iOS Safari, return JSON with instructions
-    if (isIOSSafari) {
+    // For any iOS device, return JSON — iOS ignores Content-Disposition on redirects
+    if (isIOS) {
       return NextResponse.json({
         downloadUrl: url,
         platform: 'ios',
@@ -81,8 +79,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Download URL not available, resolvedUrl was null' }, { status: 404 });
     }
 
-    // For iOS Safari, return JSON with download info
-    if (isIOSSafari) {
+    // For any iOS device, return JSON — iOS ignores Content-Disposition on redirects
+    if (isIOS) {
       return NextResponse.json({
         downloadUrl: resolvedUrl,
         filename: filename || 'video.mp4',

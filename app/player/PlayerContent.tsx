@@ -177,6 +177,18 @@ export default function PlayerContent() {
         // Mark this content as successfully fetched so the guard above
         // blocks any subsequent redundant re-fetches from auth state changes.
         streamFetchedRef.current = fetchKey;
+
+        // iOS cannot play MKV — show download modal immediately instead of loading the player
+        if (isIOSDevice() && finalStreamUrl.toLowerCase().includes('.mkv')) {
+          const cleanTitle = (contentTitle || 'video').replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim();
+          // Pass the direct video URL so window.open in the modal opens the actual file,
+          // not the /api/download route (which returns JSON on iOS)
+          setIOSDownloadInfo({ url: finalStreamUrl, filename: cleanTitle + '.mkv' });
+          setShowIOSDownloadModal(true);
+          setLoading(false);
+          return;
+        }
+
         setStreamUrl(finalStreamUrl);
         setTitle(contentTitle);
         setLoading(false);

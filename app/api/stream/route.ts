@@ -85,6 +85,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Video URL is required' }, { status: 400 });
     }
 
+    // iOS cannot decode MKV — remux to fMP4 on the fly via /api/ios-stream
+    const userAgent = request.headers.get('user-agent') || '';
+    const isIOS = /iPad|iPhone|iPod/i.test(userAgent);
+    const isMKV = videoUrl.toLowerCase().includes('.mkv');
+    if (isIOS && isMKV) {
+      const remuxUrl = new URL('/api/ios-stream', request.url);
+      remuxUrl.searchParams.set('url', videoUrl);
+      return NextResponse.redirect(remuxUrl.toString());
+    }
+
     // SECURITY: Validate the URL against the allowlist to prevent SSRF
     if (!isAllowedVideoUrl(videoUrl)) {
       console.error('Stream API: Blocked request to non-allowed host');
