@@ -94,7 +94,7 @@ export function useUserPreferences() {
             localStorage.setItem('streamit_history', JSON.stringify(profileData.watch_history));
           }
         } catch (e) {
-          console.error("Error loading preferences from database:", e);
+          logger.error("Error loading preferences from database:", e);
         }
       }
       
@@ -105,6 +105,8 @@ export function useUserPreferences() {
   }, [user]);
 
   // Debounced sync to reduce database writes
+import { logger } from '@/lib/logger';
+
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const syncWatchHistoryToDb = useCallback(async (newHistory: Record<string, WatchProgress>) => {
@@ -122,9 +124,9 @@ export function useUserPreferences() {
           .from('profiles')
           .update({ watch_history: newHistory })
           .eq('id', user.id);
-        console.log('Watch history synced to database');
+        logger.log('Watch history synced to database');
       } catch (e) {
-        console.warn("Failed to sync watch history to DB:", e);
+        logger.warn("Failed to sync watch history to DB:", e);
       }
     }, 30000); // 30 second debounce
   }, [user]);
@@ -132,7 +134,7 @@ export function useUserPreferences() {
   const addToWatchlist = useCallback(async (id: string, type: 'movie' | 'series') => {
     // Check if already in watchlist
     if (watchlist.some(item => item.id === id)) {
-      console.log(`Item ${id} already in watchlist`);
+      logger.log(`Item ${id} already in watchlist`);
       return;
     }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { supabase } from '@/lib/supabase';
 import { checkRateLimit, getClientIp } from '@/lib/video-protection';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     const { error: logError } = await db.from('view_logs').insert(logEntry);
 
     if (logError) {
-      console.error('Error inserting view log:', logError);
+      logger.error('Error inserting view log:', logError);
       // Don't fail the request — still try to increment the counter
     }
 
@@ -62,10 +63,10 @@ export async function POST(request: NextRequest) {
       });
       
       if (updateError) {
-        console.error('Error calling increment_views RPC:', updateError);
+        logger.error('Error calling increment_views RPC:', updateError);
       }
     } catch (err) {
-      console.error('Error incrementing views:', err);
+      logger.error('Error incrementing views:', err);
     }
 
     return NextResponse.json({ success: true });

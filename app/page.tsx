@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
@@ -153,7 +155,7 @@ export default function HomePage() {
         ];
         setAnimationContent(combined);
       } catch (error) {
-        console.error('Error loading genre rows:', error);
+        logger.error('Error loading genre rows:', error);
       }
     }, 500);
     return () => clearTimeout(id);
@@ -196,7 +198,7 @@ export default function HomePage() {
         setShowSearchResults(true);
         setIsSearching(false);
       } catch (error) {
-        console.error("Search error:", error);
+        logger.error("Search error:", error);
         setSearchResults([]);
         setIsSearching(false);
       }

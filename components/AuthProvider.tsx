@@ -30,6 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isPremium, setIsPremium] = useState(false)
+import { logger } from '@/lib/logger';
+
   const router = useRouter()
   
   // Cache premium status to avoid repeated database queries
@@ -53,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (premiumCheckCache.current && 
         premiumCheckCache.current.userId === currentUser.id &&
         (now - premiumCheckCache.current.timestamp) < CACHE_TTL) {
-      console.log('Using cached premium status');
+      logger.log('Using cached premium status');
       setIsPremium(premiumCheckCache.current.isPremium);
       return;
     }
@@ -74,13 +76,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as any
       
       if (error) {
-        console.error('Error fetching profile for premium check:', error)
+        logger.error('Error fetching profile for premium check:', error)
         // Keep previous state on network/timeout errors to avoid dropping premium
         return
       }
 
       if (!profile) {
-        console.log('No profile found')
+        logger.log('No profile found')
         setIsPremium(false)
         premiumCheckCache.current = null;
         return
@@ -93,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const isPremiumUser = hasSubscription && isNotExpired
       
-      console.log('Premium status check:', {
+      logger.log('Premium status check:', {
         hasSubscription,
         subscription: profile.subscription,
         expiryDate: profile.subscription_expiry_date,
@@ -110,13 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       setIsPremium(isPremiumUser)
     } catch (error) {
-      console.error('Error checking premium status:', error)
+      logger.error('Error checking premium status:', error)
       // Do NOT let subscription errors or timeouts block the auth flow or drop state
     }
   }
 
   useEffect(() => {
-    console.log('AuthProvider: Initializing auth state')
+    logger.log('AuthProvider: Initializing auth state')
     
     // Add a fallback timeout to ensure loading never gets stuck
     const loadingTimeout = setTimeout(() => {
