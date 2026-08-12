@@ -343,7 +343,9 @@ function PaymentPageContent() {
                   <div className="mb-5">
                     <h3 className="text-xl font-bold capitalize mb-1">{plan.name}</h3>
                     <p className="text-gray-400 text-sm">
-                      {plan.duration_in_days === 1 ? '1 Day Access' : `${plan.duration_in_days} Days Access`}
+                      {plan.duration_in_hours && plan.duration_in_hours > 0 
+                        ? plan.duration_in_hours === 1 ? '1 Hour Access' : `${plan.duration_in_hours} Hours Access`
+                        : plan.duration_in_days === 1 ? '1 Day Access' : `${plan.duration_in_days} Days Access`}
                     </p>
                     {plan.description && <p className="text-gray-500 text-xs mt-1">{plan.description}</p>}
                   </div>
