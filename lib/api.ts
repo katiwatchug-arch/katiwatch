@@ -197,15 +197,16 @@ export async function getGenreRowsForHome(limit = 12) {
     let genreRows: any[] = [];
     
     if (genres && genres.length > 0) {
-      // Take top 3 genres
+      // Take top 3 genres and fetch in parallel for speed
       const topGenres = genres.slice(0, 3);
       
       const fetchedRows = await Promise.all(
         topGenres.map(async (genre) => {
           try {
+            // Fetch movies and series in parallel
             const [movies, series] = await Promise.all([
-              Reelplexi.getReelplexiMoviesByGenre(genre.id, 1, limit),
-              Reelplexi.getReelplexiSeriesByGenre(genre.id, 1, limit)
+              Reelplexi.getReelplexiMoviesByGenre(genre.id, 1, limit).catch(() => []),
+              Reelplexi.getReelplexiSeriesByGenre(genre.id, 1, limit).catch(() => [])
             ]);
             return {
               name: genre.name,
@@ -219,40 +220,49 @@ export async function getGenreRowsForHome(limit = 12) {
         })
       );
       
+      // Only include genres that have content
       genreRows = fetchedRows.filter(row => row.movies.length > 0 || row.series.length > 0);
+      
+      // Return immediately if we have genre rows
+      if (genreRows.length > 0) {
+        return genreRows;
+      }
     }
     
-    // Fallback: If API returned no genres, build them from recent content like blog_site
-    if (!genreRows || genreRows.length === 0) {
-      console.log('Using fallback genre row generation from recent content');
-      const allMovies = await getMovies(limit * 2);
-      const allSeries = await getSeries(limit * 2);
-      const allContent = [...allMovies, ...allSeries];
+    // Fallback: If API returned no genres, build them from recent content
+    console.log('Using fallback genre row generation from recent content');
+    
+    // Fetch movies and series in parallel for speed
+    const [allMovies, allSeries] = await Promise.all([
+      getMovies(limit * 2),
+      getSeries(limit * 2)
+    ]);
+    
+    const allContent = [...allMovies, ...allSeries];
+    
+    const genreMap = new Map<string, any[]>();
+    allContent.forEach(item => {
+      if (item.genre_ids && Array.isArray(item.genre_ids)) {
+        item.genre_ids.forEach((g: string) => {
+          const prettyName = g.charAt(0).toUpperCase() + g.slice(1);
+          if (!genreMap.has(prettyName)) genreMap.set(prettyName, []);
+          if (!genreMap.get(prettyName)!.find(existing => existing.id === item.id)) {
+            genreMap.get(prettyName)!.push(item);
+          }
+        });
+      }
+    });
+    
+    const extractedGenres = Array.from(genreMap.entries())
+      .map(([name, content]) => ({
+        name,
+        movies: content.filter(item => item.type === 'movie'),
+        series: content.filter(item => item.type === 'series')
+      }))
+      .sort((a, b) => (b.movies.length + b.series.length) - (a.movies.length + a.series.length))
+      .slice(0, 3);
       
-      const genreMap = new Map<string, any[]>();
-      allContent.forEach(item => {
-        if (item.genre_ids && Array.isArray(item.genre_ids)) {
-          item.genre_ids.forEach((g: string) => {
-            const prettyName = g.charAt(0).toUpperCase() + g.slice(1);
-            if (!genreMap.has(prettyName)) genreMap.set(prettyName, []);
-            if (!genreMap.get(prettyName)!.find(existing => existing.id === item.id)) {
-              genreMap.get(prettyName)!.push(item);
-            }
-          });
-        }
-      });
-      
-      const extractedGenres = Array.from(genreMap.entries())
-        .map(([name, content]) => ({
-          name,
-          movies: content.filter(item => item.type === 'movie'),
-          series: content.filter(item => item.type === 'series')
-        }))
-        .sort((a, b) => (b.movies.length + b.series.length) - (a.movies.length + a.series.length))
-        .slice(0, 3);
-        
-      genreRows = extractedGenres.filter(g => g.movies.length >= 2 || g.series.length >= 2);
-    }
+    genreRows = extractedGenres.filter(g => g.movies.length >= 2 || g.series.length >= 2);
     
     return genreRows;
   } catch (error) {
@@ -264,10 +274,8 @@ export async function getGenreRowsForHome(limit = 12) {
 // Search API using Reelplexi API filters
 export async function searchMovies(query: string, limit = 20, page = 1, vjName?: string, genre?: string) {
   try {
-    if (!query.trim() && !vjName) {
-      return await getMovies(limit, page, genre);
-    }
     const q = query.trim();
+    // Always use search endpoint to ensure genre filter works
     const movies = await Reelplexi.searchReelplexiMovies(q, page, limit, vjName, genre);
     return movies as Movie[];
   } catch (error) {
@@ -278,10 +286,8 @@ export async function searchMovies(query: string, limit = 20, page = 1, vjName?:
 
 export async function searchSeries(query: string, limit = 20, page = 1, vjName?: string, genre?: string) {
   try {
-    if (!query.trim() && !vjName) {
-      return await getSeries(limit, page, genre);
-    }
     const q = query.trim();
+    // Always use search endpoint to ensure genre filter works
     const series = await Reelplexi.searchReelplexiSeries(q, page, limit, vjName, genre);
     return series as Series[];
   } catch (error) {

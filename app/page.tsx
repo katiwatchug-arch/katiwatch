@@ -122,10 +122,14 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [heroSlides]);
 
-  // Phase 2: Load movies + series in parallel (show as soon as ready)
+  // Phase 2: Load movies + series + genre rows in parallel (show as soon as ready)
   useEffect(() => {
-    Promise.all([getMovies(24), getSeries(24)])
-      .then(async ([movies, series]) => {
+    Promise.all([
+      getMovies(24), 
+      getSeries(24),
+      getGenreRowsForHome(12) // Start loading genre rows early
+    ])
+      .then(async ([movies, series, genres]) => {
         setLatestMovies(movies);
         setLatestSeries(series);
         setFilteredMovies(movies);
@@ -135,55 +139,66 @@ export default function HomePage() {
           ...series.slice(0, 3).map((s: any) => ({ ...s, type: 'series', trending: 'today' })),
         ]);
         setContentLoading(false);
+        
+        // Set genre rows immediately
+        setGenreRows(genres);
+        genresFetched.current = true;
+        
+        // Load animation content separately
+        try {
+          const Reelplexi = await import('@/lib/reelplexi');
+          const [animMovies, animSeries] = await Promise.all([
+            Reelplexi.getReelplexiMoviesByGenre('animation', 1, 12),
+            Reelplexi.getReelplexiSeriesByGenre('animation', 1, 12),
+          ]);
+          const combined = [
+            ...(animMovies || []).map((m: any) => ({ ...m, type: 'movie' })),
+            ...(animSeries || []).map((s: any) => ({ ...s, type: 'series' })),
+          ];
+          setAnimationContent(combined);
+        } catch (error) {
+          logger.error('Error loading animation content:', error);
+        }
       })
       .catch(() => setContentLoading(false));
   }, []);
 
-  // Phase 3: Load genre rows after content is visible (deferred)
-  useEffect(() => {
-    if (contentLoading || genresFetched.current) return;
-    genresFetched.current = true;
-    // Use setTimeout as a safe fallback — requestIdleCallback is not supported on iOS Safari
-    const id = setTimeout(async () => {
-      try {
-        const Reelplexi = await import('@/lib/reelplexi');
-        const [rows, animMovies, animSeries] = await Promise.all([
-          getGenreRowsForHome(12),
-          Reelplexi.getReelplexiMoviesByGenre('animation', 1, 12),
-          Reelplexi.getReelplexiSeriesByGenre('animation', 1, 12),
-        ]);
-        setGenreRows(rows);
-        // Interleave animation movies and series, mark type
-        const combined = [
-          ...(animMovies || []).map((m: any) => ({ ...m, type: 'movie' })),
-          ...(animSeries || []).map((s: any) => ({ ...s, type: 'series' })),
-        ];
-        setAnimationContent(combined);
-      } catch (error) {
-        logger.error('Error loading genre rows:', error);
-      }
-    }, 500);
-    return () => clearTimeout(id);
-  }, [contentLoading]);
-
   // Genre filter - movies
   useEffect(() => {
-    if (selectedFilter === 'All') { setFilteredMovies(latestMovies); return; }
+    if (selectedFilter === 'All') { 
+      setFilteredMovies(latestMovies); 
+      setFilterLoading(false);
+      return; 
+    }
     setFilterLoading(true);
     searchMovies('', 16, 1, undefined, selectedFilter.toLowerCase())
-      .then(r => setFilteredMovies(r.length > 0 ? r : latestMovies))
-      .catch(() => setFilteredMovies(latestMovies))
-      .finally(() => setFilterLoading(false));
+      .then(r => {
+        setFilteredMovies(r.length > 0 ? r : []);
+        setFilterLoading(false);
+      })
+      .catch(() => {
+        setFilteredMovies([]);
+        setFilterLoading(false);
+      });
   }, [selectedFilter, latestMovies]);
 
   // Genre filter - series
   useEffect(() => {
-    if (selectedSeriesFilter === 'All') { setFilteredSeries(latestSeries); return; }
+    if (selectedSeriesFilter === 'All') { 
+      setFilteredSeries(latestSeries); 
+      setSeriesFilterLoading(false);
+      return; 
+    }
     setSeriesFilterLoading(true);
     searchSeries('', 16, 1, undefined, selectedSeriesFilter.toLowerCase())
-      .then(r => setFilteredSeries(r.length > 0 ? r : latestSeries))
-      .catch(() => setFilteredSeries(latestSeries))
-      .finally(() => setSeriesFilterLoading(false));
+      .then(r => {
+        setFilteredSeries(r.length > 0 ? r : []);
+        setSeriesFilterLoading(false);
+      })
+      .catch(() => {
+        setFilteredSeries([]);
+        setSeriesFilterLoading(false);
+      });
   }, [selectedSeriesFilter, latestSeries]);
 
   // Search functionality with debounce
