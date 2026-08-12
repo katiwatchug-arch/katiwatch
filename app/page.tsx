@@ -1,6 +1,6 @@
-import { logger } from '@/lib/logger';
-
 "use client";
+
+import { logger } from '@/lib/logger';
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -25,6 +25,11 @@ type VJContent = (Movie | Series) & {
   is_premium?: boolean;
 };
 
+type TrendingContent = (Movie | Series) & {
+  type: 'movie' | 'series';
+  trending?: 'hot' | 'trending';
+};
+
 const filterOptions = [
   'All', 'Action', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime',
   'Documentary', 'Drama', 'Fantasy', 'History', 'Horror', 'Music', 'Mystery',
@@ -47,15 +52,15 @@ export default function HomePage() {
   const [featuredItem, setFeaturedItem] = useState<VJContent | null>(null);
   const [heroSlides, setHeroSlides] = useState<VJContent[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [latestMovies, setLatestMovies] = useState<any[]>([]);
-  const [latestSeries, setLatestSeries] = useState<any[]>([]);
-  const [trendingContent, setTrendingContent] = useState<any[]>([]);
+  const [latestMovies, setLatestMovies] = useState<Movie[]>([]);
+  const [latestSeries, setLatestSeries] = useState<Series[]>([]);
+  const [trendingContent, setTrendingContent] = useState<TrendingContent[]>([]);
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [selectedSeriesFilter, setSelectedSeriesFilter] = useState('All');
-  const [filteredMovies, setFilteredMovies] = useState<any[]>([]);
-  const [filteredSeries, setFilteredSeries] = useState<any[]>([]);
+  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
+  const [filteredSeries, setFilteredSeries] = useState<Series[]>([]);
   const [genreRows, setGenreRows] = useState<{ name: string; movies: any[]; series: any[] }[]>([]);
-  const [animationContent, setAnimationContent] = useState<any[]>([]);
+  const [animationContent, setAnimationContent] = useState<TrendingContent[]>([]);
   const [heroLoading, setHeroLoading] = useState(true);
   const [contentLoading, setContentLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
@@ -451,7 +456,7 @@ export default function HomePage() {
                       <div className="absolute bottom-3 left-3 right-3 z-10">
                         <div className="flex items-center gap-2 mb-1 text-xs text-gray-300">
                           {item.release_date && <span>{new Date(typeof item.release_date === "string" ? item.release_date.replace(/ /g, "T") : item.release_date).getFullYear()}</span>}
-                          {item.duration && <><span>•</span><span>{Math.floor(item.duration / 60)}h {item.duration % 60}m</span></>}
+                          {'duration' in item && item.duration && <><span>•</span><span>{Math.floor(item.duration / 60)}h {item.duration % 60}m</span></>}
                           {item.type === 'series' && <><span>•</span><span>(Season 1)</span></>}
                         </div>
                         <h3 className="text-white font-bold text-base line-clamp-1">{item.title}</h3>

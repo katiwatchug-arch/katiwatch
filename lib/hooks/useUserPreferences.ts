@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+import { logger } from '@/lib/logger';
 
 export interface WatchProgress {
   id: string; // Movie or Series ID
@@ -105,8 +106,6 @@ export function useUserPreferences() {
   }, [user]);
 
   // Debounced sync to reduce database writes
-import { logger } from '@/lib/logger';
-
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const syncWatchHistoryToDb = useCallback(async (newHistory: Record<string, WatchProgress>) => {

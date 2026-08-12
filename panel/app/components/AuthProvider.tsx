@@ -105,7 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       listener.subscription.unsubscribe();
       cleanupInactivityTimer();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, router]);
 
   if (loading) {

@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { User } from '@supabase/supabase-js'
+import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { getUserSubscription } from '@/lib/subscriptions'
+import { logger } from '@/lib/logger'
 
 // Import debug utilities for development
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
@@ -30,7 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isPremium, setIsPremium] = useState(false)
-import { logger } from '@/lib/logger';
 
   const router = useRouter()
   
@@ -73,7 +73,7 @@ import { logger } from '@/lib/logger';
         .eq('id', currentUser.id)
         .maybeSingle()
       
-      const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as any
+      const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as { data: { subscription: string | null; subscription_expiry_date: string | null } | null; error: Error | null }
       
       if (error) {
         logger.error('Error fetching profile for premium check:', error)
@@ -93,7 +93,7 @@ import { logger } from '@/lib/logger';
       const isNotExpired = profile.subscription_expiry_date && 
                           new Date(profile.subscription_expiry_date) > new Date()
       
-      const isPremiumUser = hasSubscription && isNotExpired
+      const isPremiumUser = !!(hasSubscription && isNotExpired)
       
       logger.log('Premium status check:', {
         hasSubscription,
