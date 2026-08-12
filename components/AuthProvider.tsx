@@ -33,60 +33,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isPremium, setIsPremium] = useState(false)
 
   const router = useRouter()
-  
-  // Cache premium status to avoid repeated database queries
-  const premiumCheckCache = useRef<{
-    userId: string;
-    isPremium: boolean;
-    timestamp: number;
-  } | null>(null);
-  const CACHE_TTL = 2 * 60 * 1000; // 2 minutes (reduced from 5)
 
   // Check premium status when user changes
   const checkPremiumStatus = async (currentUser: User | null) => {
     if (!currentUser) {
       setIsPremium(false)
-      premiumCheckCache.current = null;
       return
     }
 
-    // Check cache first - but allow force refresh if cache shows non-premium
-    const now = Date.now();
-    if (premiumCheckCache.current && 
-        premiumCheckCache.current.userId === currentUser.id &&
-        (now - premiumCheckCache.current.timestamp) < CACHE_TTL &&
-        premiumCheckCache.current.isPremium) { // Only trust cache if it's premium
-      logger.log('Using cached premium status');
-      setIsPremium(premiumCheckCache.current.isPremium);
-      return;
-    }
-
     try {
-      // Reduce timeout to 5s (was 15s)
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Subscription check timeout')), 5000)
-      )
-      
       // Get user profile with subscription details including expiry date
-      const profilePromise = supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('subscription, subscription_expiry_date')
         .eq('id', currentUser.id)
         .maybeSingle()
       
-      const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as { data: { subscription: string | null; subscription_expiry_date: string | null } | null; error: Error | null }
-      
       if (error) {
         logger.error('Error fetching profile for premium check:', error)
-        // Clear cache on error and use previous state
-        premiumCheckCache.current = null;
         return
       }
 
       if (!profile) {
         logger.log('No profile found')
         setIsPremium(false)
-        premiumCheckCache.current = null;
         return
       }
 
@@ -105,18 +75,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isPremiumUser
       })
       
-      // Cache the result
-      premiumCheckCache.current = {
-        userId: currentUser.id,
-        isPremium: isPremiumUser,
-        timestamp: now
-      };
-      
       setIsPremium(isPremiumUser)
     } catch (error) {
       logger.error('Error checking premium status:', error)
-      // Clear cache on error
-      premiumCheckCache.current = null;
     }
   }
 

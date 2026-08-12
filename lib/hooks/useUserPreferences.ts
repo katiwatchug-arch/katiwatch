@@ -116,7 +116,7 @@ export function useUserPreferences() {
       clearTimeout(syncTimeoutRef.current);
     }
     
-    // Debounce: only sync after 30 seconds of no updates
+    // Debounce: only sync after 10 seconds of no updates (reduced from 30)
     syncTimeoutRef.current = setTimeout(async () => {
       try {
         await supabase
@@ -127,7 +127,7 @@ export function useUserPreferences() {
       } catch (e) {
         logger.warn("Failed to sync watch history to DB:", e);
       }
-    }, 30000); // 30 second debounce
+    }, 10000); // 10 second debounce (was 30)
   }, [user]);
 
   const addToWatchlist = useCallback(async (id: string, type: 'movie' | 'series') => {
