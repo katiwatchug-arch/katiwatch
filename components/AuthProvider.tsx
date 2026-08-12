@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isPremium: boolean;
     timestamp: number;
   } | null>(null);
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  const CACHE_TTL = 2 * 60 * 1000; // 2 minutes (reduced from 5)
 
   // Check premium status when user changes
   const checkPremiumStatus = async (currentUser: User | null) => {
@@ -50,11 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    // Check cache first
+    // Check cache first - but allow force refresh if cache shows non-premium
     const now = Date.now();
     if (premiumCheckCache.current && 
         premiumCheckCache.current.userId === currentUser.id &&
-        (now - premiumCheckCache.current.timestamp) < CACHE_TTL) {
+        (now - premiumCheckCache.current.timestamp) < CACHE_TTL &&
+        premiumCheckCache.current.isPremium) { // Only trust cache if it's premium
       logger.log('Using cached premium status');
       setIsPremium(premiumCheckCache.current.isPremium);
       return;
@@ -77,7 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         logger.error('Error fetching profile for premium check:', error)
-        // Keep previous state on network/timeout errors to avoid dropping premium
+        // Clear cache on error and use previous state
+        premiumCheckCache.current = null;
         return
       }
 
@@ -113,7 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsPremium(isPremiumUser)
     } catch (error) {
       logger.error('Error checking premium status:', error)
-      // Do NOT let subscription errors or timeouts block the auth flow or drop state
+      // Clear cache on error
+      premiumCheckCache.current = null;
     }
   }
 
