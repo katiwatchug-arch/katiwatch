@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
@@ -31,18 +31,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isPremium, setIsPremium] = useState(false)
   const router = useRouter()
+  
+  // Cache premium status to avoid repeated database queries
+  const premiumCheckCache = useRef<{
+    userId: string;
+    isPremium: boolean;
+    timestamp: number;
+  } | null>(null);
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   // Check premium status when user changes
   const checkPremiumStatus = async (currentUser: User | null) => {
     if (!currentUser) {
       setIsPremium(false)
+      premiumCheckCache.current = null;
       return
     }
 
+    // Check cache first
+    const now = Date.now();
+    if (premiumCheckCache.current && 
+        premiumCheckCache.current.userId === currentUser.id &&
+        (now - premiumCheckCache.current.timestamp) < CACHE_TTL) {
+      console.log('Using cached premium status');
+      setIsPremium(premiumCheckCache.current.isPremium);
+      return;
+    }
+
     try {
-      // Increase timeout to 15s to prevent hanging on slow networks, but give enough time
+      // Reduce timeout to 5s (was 15s)
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Subscription check timeout')), 15000)
+        setTimeout(() => reject(new Error('Subscription check timeout')), 5000)
       )
       
       // Get user profile with subscription details including expiry date
@@ -63,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!profile) {
         console.log('No profile found')
         setIsPremium(false)
+        premiumCheckCache.current = null;
         return
       }
 
@@ -80,6 +100,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isNotExpired,
         isPremiumUser
       })
+      
+      // Cache the result
+      premiumCheckCache.current = {
+        userId: currentUser.id,
+        isPremium: isPremiumUser,
+        timestamp: now
+      };
       
       setIsPremium(isPremiumUser)
     } catch (error) {

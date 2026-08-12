@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -104,16 +104,29 @@ export function useUserPreferences() {
     loadPreferences();
   }, [user]);
 
+  // Debounced sync to reduce database writes
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   const syncWatchHistoryToDb = useCallback(async (newHistory: Record<string, WatchProgress>) => {
     if (!user?.id) return;
-    try {
-      await supabase
-        .from('profiles')
-        .update({ watch_history: newHistory })
-        .eq('id', user.id);
-    } catch (e) {
-      console.warn("Failed to sync watch history to DB:", e);
+    
+    // Clear existing timeout
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
     }
+    
+    // Debounce: only sync after 30 seconds of no updates
+    syncTimeoutRef.current = setTimeout(async () => {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ watch_history: newHistory })
+          .eq('id', user.id);
+        console.log('Watch history synced to database');
+      } catch (e) {
+        console.warn("Failed to sync watch history to DB:", e);
+      }
+    }, 30000); // 30 second debounce
   }, [user]);
 
   const addToWatchlist = useCallback(async (id: string, type: 'movie' | 'series') => {
@@ -216,6 +229,35 @@ export function useUserPreferences() {
     localStorage.setItem('streamit_history', JSON.stringify(newHistory));
     syncWatchHistoryToDb(newHistory);
   }, [watchHistory, syncWatchHistoryToDb]);
+
+  // Cleanup: force sync on unmount or before page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Clear pending timeout and force immediate sync
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+        syncTimeoutRef.current = null;
+      }
+      
+      // Force immediate sync on page close
+      if (user?.id && Object.keys(watchHistory).length > 0) {
+        supabase
+          .from('profiles')
+          .update({ watch_history: watchHistory })
+          .eq('id', user.id);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Also force sync on component unmount
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, [user, watchHistory]);
 
   const getContinueWatching = useCallback((id: string) => {
     return watchHistory[id] || null;

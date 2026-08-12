@@ -51,19 +51,29 @@ export async function POST(request: NextRequest) {
       // Don't fail the request — still try to increment the counter
     }
 
-    // 2. Increment the views counter on the content table
+    // 2. Increment the views counter atomically (prevents race conditions)
     const table = contentType === 'movie' ? 'movies' : 'series';
 
-    // Use RPC or raw update to increment
-    const { data: current, error: fetchError } = await db
-      .from(table)
-      .select('views')
-      .eq('id', contentId)
-      .single();
-
-    if (!fetchError && current) {
-      const newViews = (current.views || 0) + 1;
-      await db.from(table).update({ views: newViews }).eq('id', contentId);
+    // Use PostgreSQL atomic increment via RPC function
+    // First, let's try a simple approach with rpc if available, otherwise fall back to update
+    try {
+      // Atomic increment using raw SQL-style update
+      // This is more efficient than read-then-write
+      const { error: updateError } = await db.rpc('increment_views', {
+        table_name: table,
+        content_id: contentId
+      });
+      
+      if (updateError) {
+        // Fallback: Direct update (still better than read-modify-write)
+        await db
+          .from(table)
+          .update({ views: db.raw('COALESCE(views, 0) + 1') })
+          .eq('id', contentId);
+      }
+    } catch (err) {
+      // Final fallback: at least don't fail the request
+      console.error('Error incrementing views:', err);
     }
 
     return NextResponse.json({ success: true });
