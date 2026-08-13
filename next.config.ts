@@ -15,8 +15,8 @@ const nextConfig: NextConfig = {
     const panelUrl = process.env.PANEL_URL;
     if (!panelUrl) return [];
     return [
-      { source: '/panel', destination: `${panelUrl}` },
-      { source: '/panel/:path*', destination: `${panelUrl}/:path*` },
+      { source: '/panel', destination: `${panelUrl}/panel` },
+      { source: '/panel/:path*', destination: `${panelUrl}/panel/:path*` },
     ];
   },
 };
