@@ -61,6 +61,7 @@ export default function HomePage() {
   const [filteredSeries, setFilteredSeries] = useState<Series[]>([]);
   const [genreRows, setGenreRows] = useState<{ name: string; movies: any[]; series: any[] }[]>([]);
   const [animationContent, setAnimationContent] = useState<TrendingContent[]>([]);
+  const [movies2026, setMovies2026] = useState<Movie[]>([]);
   const [heroLoading, setHeroLoading] = useState(true);
   const [contentLoading, setContentLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
@@ -75,6 +76,23 @@ export default function HomePage() {
 
   const { checkAuth } = useAuthCheck();
   const genresFetched = useRef(false);
+
+  const fetchMovies2026Catalog = async () => {
+    const pageSize = 100;
+    const maxPages = 5;
+    const allMovies: Movie[] = [];
+
+    for (let page = 1; page <= maxPages; page += 1) {
+      const pageMovies = await searchMovies('', pageSize, page);
+      allMovies.push(...pageMovies);
+
+      if (pageMovies.length < pageSize) {
+        break;
+      }
+    }
+
+    return allMovies;
+  };
 
   // Phase 1: Load hero immediately
   useEffect(() => {
@@ -125,13 +143,19 @@ export default function HomePage() {
   // Phase 2: Load movies + series + genre rows in parallel (show as soon as ready)
   useEffect(() => {
     Promise.all([
-      getMovies(24), 
+      searchMovies('', 100, 1),
       getSeries(24),
       getGenreRowsForHome(12) // Start loading genre rows early
     ])
       .then(async ([movies, series, genres]) => {
+        const allMovies = await fetchMovies2026Catalog();
         setLatestMovies(movies);
         setLatestSeries(series);
+        setMovies2026(
+          allMovies
+            .filter((m: Movie) => m.release_date && new Date(String(m.release_date).replace(/ /g, 'T')).getFullYear() === 2026)
+            .sort((a: Movie, b: Movie) => new Date(String(b.release_date).replace(/ /g, 'T')).getTime() - new Date(String(a.release_date).replace(/ /g, 'T')).getTime())
+        );
         setFilteredMovies(movies);
         setFilteredSeries(series);
         setTrendingContent([
@@ -425,6 +449,34 @@ export default function HomePage() {
                 <p className="text-gray-400 text-lg">No results found for &quot;{searchQuery}&quot;</p>
                 <p className="text-gray-500 text-sm mt-2">Try different keywords or browse our catalog below</p>
               </div>
+            )}
+          </section>
+        )}
+
+        {/* New 2026 Movies */}
+        {movies2026.length > 0 && (
+          <section className="mb-16 container mx-auto px-4 md:px-12">
+            <Link href="/movies?year=2026" className="flex items-center gap-3 mb-6 group">
+              <h2 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 group-hover:opacity-80 transition-opacity">
+                New 2026 Movies
+              </h2>
+              <span className="text-2xl">🆕</span>
+            </Link>
+            {contentLoading ? <SwiperSkeleton /> : (
+              <Swiper
+                modules={[Navigation]}
+                navigation
+                spaceBetween={16}
+                slidesPerView={1.5}
+                breakpoints={{ 480: { slidesPerView: 2 }, 768: { slidesPerView: 3 }, 1024: { slidesPerView: 4 }, 1280: { slidesPerView: 4.5 } }}
+                className="movies-2026-swiper"
+              >
+                {movies2026.map(movie => (
+                  <SwiperSlide key={movie.id}>
+                    <NetflixCard content={movie} type="movie" />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             )}
           </section>
         )}
