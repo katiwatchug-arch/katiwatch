@@ -290,14 +290,21 @@ export default function MovieDetailsClient() {
 
       {/* Download Modal - Improved Modern Design */}
       {showDownloadModal && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
-          onClick={() => setShowDownloadModal(false)}
-          style={{ 
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(8px)',
-          }}
-        >
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={() => setShowDownloadModal(false)}
+            style={{
+              background: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(8px)',
+            }}
+          />
+          {/* Card */}
+          <div
+            className="fixed inset-x-0 bottom-0 z-[9999] flex justify-center sm:inset-0 sm:items-center sm:p-4"
+            onClick={() => setShowDownloadModal(false)}
+          >
           <div 
             className="w-full sm:max-w-md bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] sm:rounded-2xl rounded-t-3xl shadow-2xl transform transition-all duration-300 ease-out animate-slide-up"
             onClick={e => e.stopPropagation()}
@@ -367,7 +374,8 @@ export default function MovieDetailsClient() {
               </button>
             </div>
           </div>
-        </div>
+          </div>
+        </>
       )}
 
       <style jsx>{`
