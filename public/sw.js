@@ -1,16 +1,13 @@
 // katiwatch Service Worker
 // Handles caching for PWA offline support
-
 const CACHE_NAME = 'katiwatch-v1';
 const OFFLINE_URL = '/';
-
 // Assets to precache for offline shell
 const PRECACHE_ASSETS = [
   '/',
   '/logo.png',
   '/manifest.json',
 ];
-
 // Install: precache the app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -20,7 +17,6 @@ self.addEventListener('install', (event) => {
   );
   self.skipWaiting();
 });
-
 // Activate: clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -34,21 +30,18 @@ self.addEventListener('activate', (event) => {
   );
   self.clients.claim();
 });
-
 // Fetch: network-first strategy for API calls, cache-first for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-
+  // Never intercept the panel — let it handle its own network/caching
+  if (url.pathname.startsWith('/panel')) return;
   // Skip non-GET requests
   if (request.method !== 'GET') return;
-
   // Skip cross-origin requests except images
   if (url.origin !== location.origin && !request.destination === 'image') return;
-
   // Skip API routes — always network
   if (url.pathname.startsWith('/api/')) return;
-
   event.respondWith(
     fetch(request)
       .then((response) => {
@@ -77,5 +70,3 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
-
-

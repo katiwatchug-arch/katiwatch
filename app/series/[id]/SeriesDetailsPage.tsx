@@ -550,9 +550,9 @@ export default function SeriesDetailsPage() {
             }}
           >
             {/* Content */}
-            <div className="p-6 sm:p-8">
+            <div className="p-4 sm:p-8" style={{ paddingBottom: 'max(1rem, calc(1rem + env(safe-area-inset-bottom)))' }}>
               {/* Icon with Pulse Animation */}
-              <div className="relative mx-auto w-20 h-20 mb-6">
+              <div className="relative mx-auto w-14 h-14 sm:w-20 sm:h-20 mb-3 sm:mb-6">
                 <div className="absolute inset-0 bg-[#E50914]/20 rounded-full animate-ping"></div>
                 <div 
                   className="relative w-full h-full rounded-full flex items-center justify-center"
@@ -561,18 +561,18 @@ export default function SeriesDetailsPage() {
                     border: '2px solid rgba(229, 9, 20, 0.3)',
                   }}
                 >
-                  <Download className="w-9 h-9 text-[#E50914]" strokeWidth={2.5} />
+                  <Download className="w-7 h-7 sm:w-9 sm:h-9 text-[#E50914]" strokeWidth={2.5} />
                 </div>
               </div>
 
               {/* Title & Description */}
-              <h2 className="text-2xl font-bold text-white mb-2 text-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2 text-center">
                 Ready to Download
               </h2>
               <p className="text-gray-400 text-sm mb-1 text-center font-medium">
                 {series?.title}
               </p>
-              <p className="text-gray-500 text-xs mb-6 text-center">
+              <p className="text-gray-500 text-xs mb-4 sm:mb-6 text-center">
                 S{selectedEpisode.seasonOrder}E{selectedEpisode.episode_number}: {selectedEpisode.title}
               </p>
 
@@ -601,31 +601,6 @@ export default function SeriesDetailsPage() {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes modal-appear {
-          from {
-            transform: scale(0.9);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        .animate-modal-appear {
-          animation: modal-appear 0.3s ease-out;
-        }
-        @keyframes ping {
-          75%, 100% {
-            transform: scale(2);
-            opacity: 0;
-          }
-        }
-        .animate-ping {
-          animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-      `}</style>
 
       <AuthRequiredModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} action={authAction} requirePremium={Boolean(selectedEpisode?.premium)} />
     </div>

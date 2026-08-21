@@ -1,6 +1,7 @@
 "use client";
-import { Search, Filter, X, Film } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { Search, Filter, X } from "lucide-react";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Movie } from "@/lib/supabase";
 import { NetflixCard } from "@/components/NetflixCard";
 import { ModernSearchBar } from "@/components/ModernSearchBar";
@@ -28,7 +29,10 @@ const LoadingGrid = () => (
   </div>
 );
 
-export default function MoviesPage() {
+function MoviesPageInner() {
+  const searchParams = useSearchParams();
+  const yearFromUrl = searchParams.get('year');
+  const [selectedYear, setSelectedYear] = useState<string>(yearFromUrl || "");
   const [movies, setMovies] = useState<MovieWithVJ[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,22 +57,26 @@ export default function MoviesPage() {
     }
   }, []);
 
-  const fetchMovies = useCallback(async (page: number, query = "", vjName = "", genre = "All") => {
+  const fetchMovies = useCallback(async (page: number, query = "", vjName = "", genre = "All", year = "") => {
     setLoading(true);
     try {
-      const moviesData = await searchMovies(
-        query, 
-        moviesPerPage, 
-        page, 
-        vjName || undefined,
-        genre !== "All" ? genre.toLowerCase() : undefined
-      );
-      setMovies(moviesData as any);
-      setTotalMovies(
-        moviesData.length === moviesPerPage
-          ? page * moviesPerPage + 1
-          : (page - 1) * moviesPerPage + moviesData.length
-      );
+      if (year) {
+        const res = await fetch('/api/movies/full-catalog');
+        const allMovies: any[] = await res.json();
+        const filtered = allMovies
+          .filter(m => m.release_date && new Date(m.release_date).getFullYear().toString() === year)
+          .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+        setTotalMovies(filtered.length);
+        setMovies(filtered.slice((page - 1) * moviesPerPage, page * moviesPerPage) as any);
+      } else {
+        const moviesData = await searchMovies(query, moviesPerPage, page, vjName || undefined, genre !== "All" ? genre.toLowerCase() : undefined);
+        setMovies(moviesData as any);
+        setTotalMovies(
+          moviesData.length === moviesPerPage
+            ? page * moviesPerPage + 1
+            : (page - 1) * moviesPerPage + moviesData.length
+        );
+      }
     } catch (error) {
       console.error("Error fetching movies:", error);
     } finally {
@@ -76,19 +84,19 @@ export default function MoviesPage() {
     }
   }, [moviesPerPage]);
 
-  useEffect(() => { fetchMovies(1); fetchAvailableVJs(); }, [fetchMovies, fetchAvailableVJs]);
+  useEffect(() => { fetchMovies(1, "", "", "All", selectedYear); fetchAvailableVJs(); }, [fetchMovies, fetchAvailableVJs]);
 
   useEffect(() => {
-    if (currentPage > 1) fetchMovies(currentPage, searchQuery, selectedVJ, selectedGenre);
-  }, [currentPage, fetchMovies, searchQuery, selectedVJ, selectedGenre]);
+    if (currentPage > 1) fetchMovies(currentPage, searchQuery, selectedVJ, selectedGenre, selectedYear);
+  }, [currentPage, fetchMovies, searchQuery, selectedVJ, selectedGenre, selectedYear]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       if (currentPage !== 1) setCurrentPage(1);
-      else fetchMovies(1, searchQuery, selectedVJ, selectedGenre);
+      else fetchMovies(1, searchQuery, selectedVJ, selectedGenre, selectedYear);
     }, 400);
     return () => clearTimeout(handler);
-  }, [searchQuery, selectedVJ, selectedGenre, fetchMovies]);
+  }, [searchQuery, selectedVJ, selectedGenre, selectedYear, fetchMovies]);
 
   const clearFilters = () => { 
     setSelectedVJ(""); 
@@ -101,26 +109,28 @@ export default function MoviesPage() {
   const isFiltering = searchQuery.trim().length > 0 || !!selectedVJ || selectedGenre !== "All";
   const selectedVJLabel = availableVJs.find(vj => vj.id === selectedVJ)?.name;
 
+  const displayedMovies = movies;
+
   const vjOptions = [
     { value: '', label: 'All VJs' },
     ...availableVJs.map(vj => ({ value: vj.id, label: vj.name }))
   ];
 
+  const yearOptions = [
+    { value: '', label: 'All Years' },
+    ...Array.from(
+      new Set(
+        movies
+          .filter(movie => movie.release_date)
+          .map(movie => new Date(movie.release_date!).getFullYear().toString())
+      )
+    )
+      .sort((a, b) => Number(b) - Number(a))
+      .map(year => ({ value: year, label: year }))
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
-      {/* Page header */}
-      <div className="bg-gradient-to-b from-[#141414] to-[#0a0a0a] pt-8 pb-6 px-4 border-b border-gray-800/50 pt-safe">
-        <div className="container mx-auto sm:px-6">
-          <div className="flex items-center gap-3 mb-1">
-            <Film className="w-5 h-5 sm:w-6 sm:h-6 text-[#E50914]" />
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">Movies</h1>
-          </div>
-          <p className="text-gray-500 text-xs sm:text-sm ml-8 sm:ml-9">
-            Browse all translated movies
-          </p>
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 sm:px-6 py-8">
         {/* Modern Search + Filter bar */}
         <div className="flex flex-col gap-4 mb-8">
@@ -141,6 +151,15 @@ export default function MoviesPage() {
               options={vjOptions}
               value={selectedVJ}
               onChange={setSelectedVJ}
+            />
+
+            {/* Modern Year Filter */}
+            <ModernFilterDropdown
+              label="Year"
+              icon={<Filter className="w-4 h-4" />}
+              options={yearOptions}
+              value={selectedYear}
+              onChange={setSelectedYear}
             />
 
             {/* Clear filters */}
@@ -190,16 +209,16 @@ export default function MoviesPage() {
         {loading && <LoadingGrid />}
 
         {/* Grid */}
-        {!loading && movies.length > 0 && (
+        {!loading && displayedMovies.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-2 gap-y-4">
-            {movies.map((movie) => (
+            {displayedMovies.map((movie) => (
               <NetflixCard key={movie.id} content={movie} type="movie" />
             ))}
           </div>
         )}
 
         {/* Empty state */}
-        {!loading && movies.length === 0 && (
+        {!loading && displayedMovies.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-16 h-16 rounded-full bg-gray-800/60 flex items-center justify-center mb-5">
               <Search className="w-7 h-7 text-gray-600" />
@@ -265,5 +284,13 @@ export default function MoviesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MoviesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a]" />}>
+      <MoviesPageInner />
+    </Suspense>
   );
 }

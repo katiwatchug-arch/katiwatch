@@ -372,31 +372,6 @@ export default function MovieDetailsClient() {
         </div>
       )}
 
-      <style jsx>{`
-        @keyframes modal-appear {
-          from {
-            transform: scale(0.9);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        .animate-modal-appear {
-          animation: modal-appear 0.3s ease-out;
-        }
-        @keyframes ping {
-          75%, 100% {
-            transform: scale(2);
-            opacity: 0;
-          }
-        }
-        .animate-ping {
-          animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-      `}</style>
-
       <AuthRequiredModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} action={authAction} requirePremium={false} />
     </div>
   );
