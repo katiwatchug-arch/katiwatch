@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Movie, Series } from "@/lib/supabase";
 import { Play, Star, Crown } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 
 // Streamit-style card component for both movies and series
 type TMDBGenreMovie = {
@@ -24,11 +24,23 @@ type NetflixCardProps = {
 };
 
 export const NetflixCard = ({ content, type, isNonTranslated = false, variant = "default" }: NetflixCardProps) => {
+  const [isShattered, setIsShattered] = useState(false);
+
   const getHref = () => {
     if (isNonTranslated) {
       return `/non-translated/${type === "movie" ? "movies" : "series"}/${content.id}`;
     }
     return `/${type === "movie" ? "movies" : "series"}/${content.id}`;
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (variant === 'cinematic') {
+      e.preventDefault();
+      setIsShattered(true);
+      setTimeout(() => {
+        window.location.href = getHref();
+      }, 500); // 500ms delay for shatter animation
+    }
   };
 
   const getRating = () => {
@@ -42,10 +54,10 @@ export const NetflixCard = ({ content, type, isNonTranslated = false, variant = 
   const vjName: string | null = ('vjs' in content && (content.vjs as any)?.name) ? (content.vjs as any).name : null;
 
   return (
-    <Link href={getHref()} className={`group block ${variant === 'cinematic' ? 'relative transition-transform duration-500 hover:scale-[1.03]' : ''}`}>
+    <Link href={getHref()} onClick={handleClick} className={`group block ${variant === 'cinematic' ? 'relative transition-transform duration-500 hover:scale-[1.03]' : ''}`}>
       <div className={`relative pt-[150%] rounded-md overflow-hidden bg-gray-900 ${
         variant === 'cinematic' 
-          ? 'shadow-lg ring-1 ring-white/10 group-hover:ring-[#FFD700]/50 group-hover:shadow-[0_0_20px_rgba(255,215,0,0.15)] transition-all duration-500'
+          ? 'shadow-lg group-hover:shadow-[0_0_20px_rgba(255,215,0,0.15)] transition-all duration-500'
           : ''
       }`}>
         <Image
@@ -65,15 +77,38 @@ export const NetflixCard = ({ content, type, isNonTranslated = false, variant = 
           }}
         />
 
+        {/* Glassmorphic overlay for cinematic variant */}
+        {variant === 'cinematic' && (
+          <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+            {/* Top-left shard */}
+            <div className={`absolute inset-0 bg-white/10 backdrop-blur-[2px] border-l border-t border-white/30 transition-all duration-500 ease-out origin-bottom-right ${isShattered ? 'translate-x-[-30%] translate-y-[-30%] rotate-[-25deg] opacity-0' : 'opacity-100'}`} style={{ clipPath: 'polygon(0 0, 50% 0, 40% 50%, 0 40%)' }} />
+            {/* Top-right shard */}
+            <div className={`absolute inset-0 bg-white/10 backdrop-blur-[2px] border-r border-t border-white/30 transition-all duration-500 ease-out origin-bottom-left ${isShattered ? 'translate-x-[30%] translate-y-[-30%] rotate-[25deg] opacity-0' : 'opacity-100'}`} style={{ clipPath: 'polygon(50% 0, 100% 0, 100% 60%, 40% 50%)' }} />
+            {/* Bottom-left shard */}
+            <div className={`absolute inset-0 bg-white/10 backdrop-blur-[2px] border-l border-b border-white/30 transition-all duration-500 ease-out origin-top-right ${isShattered ? 'translate-x-[-30%] translate-y-[30%] rotate-[25deg] opacity-0' : 'opacity-100'}`} style={{ clipPath: 'polygon(0 40%, 40% 50%, 60% 100%, 0 100%)' }} />
+            {/* Bottom-right shard */}
+            <div className={`absolute inset-0 bg-white/10 backdrop-blur-[2px] border-r border-b border-white/30 transition-all duration-500 ease-out origin-top-left ${isShattered ? 'translate-x-[30%] translate-y-[30%] rotate-[-25deg] opacity-0' : 'opacity-100'}`} style={{ clipPath: 'polygon(40% 50%, 100% 60%, 100% 100%, 60% 100%)' }} />
+            
+            {/* Flash crack line upon shatter */}
+            {isShattered && (
+               <div className="absolute inset-0 z-30 pointer-events-none">
+                 <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                   <path d="M 0 40 L 40 50 L 50 0 M 40 50 L 60 100 M 40 50 L 100 60" stroke="white" strokeWidth="1" fill="none" opacity="0.8" className="animate-pulse" />
+                 </svg>
+               </div>
+            )}
+          </div>
+        )}
+
         {/* Rating badge - bottom left */}
-        <div className="absolute bottom-2 left-2 flex items-center gap-1">
+        <div className="absolute bottom-2 left-2 flex items-center gap-1 z-30">
           <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-          <span className="text-xs font-bold text-white">{getRating()}</span>
+          <span className="text-xs font-bold text-white drop-shadow-md">{getRating()}</span>
         </div>
 
         {/* Premium badge - top right corner if premium */}
         {isPremium && (
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 right-2 z-30">
             <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[8px] font-bold text-yellow-400 shadow-lg flex items-center gap-1 uppercase">
               <Crown className="w-2.5 h-2.5" style={{ color: '#FFD700', filter: 'drop-shadow(0 0 2px #FFD700)' }} />
               <span>Premium</span>

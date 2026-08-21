@@ -467,11 +467,7 @@ export default function HomePage() {
             </Link>
             {contentLoading ? <SwiperSkeleton /> : (
               <Swiper
-                modules={[Navigation]}
-                navigation
-                spaceBetween={16}
-                slidesPerView={1.5}
-                breakpoints={{ 480: { slidesPerView: 2 }, 768: { slidesPerView: 3 }, 1024: { slidesPerView: 4 }, 1280: { slidesPerView: 4.5 } }}
+                {...swiperProps}
                 className="movies-2026-swiper !pb-4"
               >
                 {movies2026.map(movie => (
