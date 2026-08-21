@@ -534,7 +534,7 @@ export default function SeriesDetailsPage() {
       {/* Download Modal - Always Centered in Viewport */}
       {showDownloadModal && selectedEpisode && (
         <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-[15vh] sm:pt-[20vh]"
           onClick={() => setShowDownloadModal(false)}
           style={{ 
             background: 'rgba(0, 0, 0, 0.85)',
