@@ -24,8 +24,6 @@ type NetflixCardProps = {
 };
 
 export const NetflixCard = ({ content, type, isNonTranslated = false, variant = "default" }: NetflixCardProps) => {
-  const [isShattered, setIsShattered] = useState(false);
-
   const getHref = () => {
     if (isNonTranslated) {
       return `/non-translated/${type === "movie" ? "movies" : "series"}/${content.id}`;
@@ -34,13 +32,7 @@ export const NetflixCard = ({ content, type, isNonTranslated = false, variant = 
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (variant === 'cinematic') {
-      e.preventDefault();
-      setIsShattered(true);
-      setTimeout(() => {
-        window.location.href = getHref();
-      }, 500); // 500ms delay for shatter animation
-    }
+    // If we need specialized click handling for cinematic variant in the future, it goes here.
   };
 
   const getRating = () => {
@@ -54,10 +46,10 @@ export const NetflixCard = ({ content, type, isNonTranslated = false, variant = 
   const vjName: string | null = ('vjs' in content && (content.vjs as any)?.name) ? (content.vjs as any).name : null;
 
   return (
-    <Link href={getHref()} onClick={handleClick} className={`group block ${variant === 'cinematic' ? 'relative transition-transform duration-500 hover:scale-[1.03]' : ''}`}>
+    <Link href={getHref()} onClick={handleClick} className={`group block ${variant === 'cinematic' ? 'relative transition-transform duration-300 hover:scale-105' : ''}`}>
       <div className={`relative pt-[150%] rounded-md overflow-hidden bg-gray-900 ${
         variant === 'cinematic' 
-          ? 'shadow-lg group-hover:shadow-[0_0_20px_rgba(255,215,0,0.15)] transition-all duration-500'
+          ? 'shadow-lg group-hover:shadow-[0_0_25px_rgba(229,9,20,0.5)] transition-all duration-300 ring-1 ring-white/10 group-hover:ring-[#E50914]/50'
           : ''
       }`}>
         <Image
@@ -77,28 +69,6 @@ export const NetflixCard = ({ content, type, isNonTranslated = false, variant = 
           }}
         />
 
-        {/* Glassmorphic overlay for cinematic variant */}
-        {variant === 'cinematic' && (
-          <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
-            {/* Top-left shard */}
-            <div className={`absolute inset-0 bg-white/10 backdrop-blur-[2px] border-l border-t border-white/30 transition-all duration-500 ease-out origin-bottom-right ${isShattered ? 'translate-x-[-30%] translate-y-[-30%] rotate-[-25deg] opacity-0' : 'opacity-100'}`} style={{ clipPath: 'polygon(0 0, 50% 0, 40% 50%, 0 40%)' }} />
-            {/* Top-right shard */}
-            <div className={`absolute inset-0 bg-white/10 backdrop-blur-[2px] border-r border-t border-white/30 transition-all duration-500 ease-out origin-bottom-left ${isShattered ? 'translate-x-[30%] translate-y-[-30%] rotate-[25deg] opacity-0' : 'opacity-100'}`} style={{ clipPath: 'polygon(50% 0, 100% 0, 100% 60%, 40% 50%)' }} />
-            {/* Bottom-left shard */}
-            <div className={`absolute inset-0 bg-white/10 backdrop-blur-[2px] border-l border-b border-white/30 transition-all duration-500 ease-out origin-top-right ${isShattered ? 'translate-x-[-30%] translate-y-[30%] rotate-[25deg] opacity-0' : 'opacity-100'}`} style={{ clipPath: 'polygon(0 40%, 40% 50%, 60% 100%, 0 100%)' }} />
-            {/* Bottom-right shard */}
-            <div className={`absolute inset-0 bg-white/10 backdrop-blur-[2px] border-r border-b border-white/30 transition-all duration-500 ease-out origin-top-left ${isShattered ? 'translate-x-[30%] translate-y-[30%] rotate-[-25deg] opacity-0' : 'opacity-100'}`} style={{ clipPath: 'polygon(40% 50%, 100% 60%, 100% 100%, 60% 100%)' }} />
-            
-            {/* Flash crack line upon shatter */}
-            {isShattered && (
-               <div className="absolute inset-0 z-30 pointer-events-none">
-                 <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                   <path d="M 0 40 L 40 50 L 50 0 M 40 50 L 60 100 M 40 50 L 100 60" stroke="white" strokeWidth="1" fill="none" opacity="0.8" className="animate-pulse" />
-                 </svg>
-               </div>
-            )}
-          </div>
-        )}
 
         {/* Rating badge - bottom left */}
         <div className="absolute bottom-2 left-2 flex items-center gap-1 z-30">
