@@ -182,6 +182,10 @@ export async function getVJContent(limit = 12) {
 }
 
 // Genres API
+let genreRowsCache: any[] | null = null;
+let genreRowsCacheTime: number = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export async function getGenres() {
   try {
     return await Reelplexi.getReelplexiGenres() as Genre[];
@@ -192,6 +196,10 @@ export async function getGenres() {
 }
 
 export async function getGenreRowsForHome(limit = 12) {
+  if (genreRowsCache && Date.now() - genreRowsCacheTime < CACHE_TTL && genreRowsCache.length > 0) {
+    return genreRowsCache;
+  }
+
   try {
     const genres = await getGenres();
     let genreRows: any[] = [];
@@ -225,6 +233,8 @@ export async function getGenreRowsForHome(limit = 12) {
       
       // Return immediately if we have genre rows
       if (genreRows.length > 0) {
+        genreRowsCache = genreRows;
+        genreRowsCacheTime = Date.now();
         return genreRows;
       }
     }
@@ -264,6 +274,8 @@ export async function getGenreRowsForHome(limit = 12) {
       
     genreRows = extractedGenres.filter(g => g.movies.length >= 2 || g.series.length >= 2);
     
+    genreRowsCache = genreRows;
+    genreRowsCacheTime = Date.now();
     return genreRows;
   } catch (error) {
     console.error('Error fetching genre rows for home:', error);

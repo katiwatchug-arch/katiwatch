@@ -80,18 +80,12 @@ export default function HomePage() {
   const fetchMovies2026Catalog = async () => {
     const pageSize = 100;
     const maxPages = 5;
-    const allMovies: Movie[] = [];
-
-    for (let page = 1; page <= maxPages; page += 1) {
-      const pageMovies = await searchMovies('', pageSize, page);
-      allMovies.push(...pageMovies);
-
-      if (pageMovies.length < pageSize) {
-        break;
-      }
-    }
-
-    return allMovies;
+    
+    // Fetch all pages in parallel to significantly reduce total load time
+    const pagePromises = Array.from({ length: maxPages }, (_, i) => searchMovies('', pageSize, i + 1));
+    const results = await Promise.all(pagePromises);
+    
+    return results.flat() as Movie[];
   };
 
   // Phase 1: Load hero immediately
@@ -140,51 +134,54 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [heroSlides]);
 
-  // Phase 2: Load movies + series + genre rows in parallel (show as soon as ready)
+  // Phase 2: Load core content first to unblock UI, then load heavy/secondary rows independently
   useEffect(() => {
+    // 1. Core Content (Fast)
     Promise.all([
       searchMovies('', 100, 1),
-      getSeries(24),
-      getGenreRowsForHome(12) // Start loading genre rows early
-    ])
-      .then(async ([movies, series, genres]) => {
-        const allMovies = await fetchMovies2026Catalog();
-        setLatestMovies(movies);
-        setLatestSeries(series);
-        setMovies2026(
-          allMovies
-            .filter((m: Movie) => m.release_date && new Date(String(m.release_date).replace(/ /g, 'T')).getFullYear() === 2026)
-            .sort((a: Movie, b: Movie) => new Date(String(b.release_date).replace(/ /g, 'T')).getTime() - new Date(String(a.release_date).replace(/ /g, 'T')).getTime())
-        );
-        setFilteredMovies(movies);
-        setFilteredSeries(series);
-        setTrendingContent([
-          ...movies.slice(0, 3).map((m: any) => ({ ...m, type: 'movie', trending: 'hot' })),
-          ...series.slice(0, 3).map((s: any) => ({ ...s, type: 'series', trending: 'today' })),
-        ]);
-        setContentLoading(false);
-        
-        // Set genre rows immediately
+      getSeries(24)
+    ]).then(([movies, series]) => {
+      setLatestMovies(movies);
+      setLatestSeries(series);
+      setFilteredMovies(movies);
+      setFilteredSeries(series);
+      setTrendingContent([
+        ...movies.slice(0, 3).map((m: any) => ({ ...m, type: 'movie', trending: 'hot' })),
+        ...series.slice(0, 3).map((s: any) => ({ ...s, type: 'series', trending: 'today' })),
+      ]);
+      setContentLoading(false); // Unblock UI immediately!
+    }).catch(() => setContentLoading(false));
+
+    // 2. Genre Rows (Medium)
+    if (!genresFetched.current) {
+      getGenreRowsForHome(12).then(genres => {
         setGenreRows(genres);
         genresFetched.current = true;
-        
-        // Load animation content separately
-        try {
-          const Reelplexi = await import('@/lib/reelplexi');
-          const [animMovies, animSeries] = await Promise.all([
-            Reelplexi.getReelplexiMoviesByGenre('animation', 1, 12),
-            Reelplexi.getReelplexiSeriesByGenre('animation', 1, 12),
-          ]);
-          const combined = [
-            ...(animMovies || []).map((m: any) => ({ ...m, type: 'movie' })),
-            ...(animSeries || []).map((s: any) => ({ ...s, type: 'series' })),
-          ];
-          setAnimationContent(combined);
-        } catch (error) {
-          logger.error('Error loading animation content:', error);
-        }
-      })
-      .catch(() => setContentLoading(false));
+      }).catch(err => logger.error('Error loading genre rows:', err));
+    }
+
+    // 3. 2026 Movies (Slow - up to 500 items)
+    fetchMovies2026Catalog().then(allMovies => {
+      setMovies2026(
+        allMovies
+          .filter((m: Movie) => m.release_date && new Date(String(m.release_date).replace(/ /g, 'T')).getFullYear() === 2026)
+          .sort((a: Movie, b: Movie) => new Date(String(b.release_date).replace(/ /g, 'T')).getTime() - new Date(String(a.release_date).replace(/ /g, 'T')).getTime())
+      );
+    }).catch(err => logger.error('Error loading 2026 catalog:', err));
+
+    // 4. Animation Content (Medium)
+    import('@/lib/reelplexi').then(Reelplexi => {
+      Promise.all([
+        Reelplexi.getReelplexiMoviesByGenre('animation', 1, 12),
+        Reelplexi.getReelplexiSeriesByGenre('animation', 1, 12),
+      ]).then(([animMovies, animSeries]) => {
+        const combined = [
+          ...(animMovies || []).map((m: any) => ({ ...m, type: 'movie' })),
+          ...(animSeries || []).map((s: any) => ({ ...s, type: 'series' })),
+        ];
+        setAnimationContent(combined as TrendingContent[]);
+      }).catch(error => logger.error('Error loading animation content:', error));
+    });
   }, []);
 
   // Genre filter - movies
