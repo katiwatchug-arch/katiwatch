@@ -120,7 +120,14 @@ export default function MovieDetailsClient() {
     if (movie?.premium && !isPremium) { router.push("/payment"); return; }
     const allowed = await canUserDownload(user.id);
     if (!allowed) { router.push("/payment"); return; }
-    setShowDownloadModal(true);
+    
+    // Scroll to top to ensure modal is visible
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    
+    // Show modal after brief delay to let scroll complete
+    setTimeout(() => {
+      setShowDownloadModal(true);
+    }, 100);
   };
 
   if (loading || authLoading) return <FullPageSpinner text="Loading movie details..." />;
@@ -288,10 +295,10 @@ export default function MovieDetailsClient() {
         )}
       </section>
 
-      {/* Download Modal - Improved Modern Design */}
+      {/* Download Modal - Always Centered in Viewport */}
       {showDownloadModal && (
         <div 
-          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowDownloadModal(false)}
           style={{ 
             background: 'rgba(0, 0, 0, 0.85)',
@@ -299,18 +306,13 @@ export default function MovieDetailsClient() {
           }}
         >
           <div 
-            className="w-full sm:max-w-md bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] sm:rounded-2xl rounded-t-3xl shadow-2xl transform transition-all duration-300 ease-out animate-slide-up"
+            className="w-full max-w-md bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] rounded-2xl shadow-2xl transform transition-all duration-300 ease-out animate-modal-appear"
             onClick={e => e.stopPropagation()}
             style={{
               border: '1px solid rgba(229, 9, 20, 0.1)',
               boxShadow: '0 0 40px rgba(229, 9, 20, 0.15), 0 20px 60px rgba(0, 0, 0, 0.8)',
             }}
           >
-            {/* Drag Handle (Mobile) */}
-            <div className="sm:hidden flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1 bg-gray-700 rounded-full"></div>
-            </div>
-
             {/* Content */}
             <div className="p-6 sm:p-8">
               {/* Icon with Pulse Animation */}
@@ -371,18 +373,18 @@ export default function MovieDetailsClient() {
       )}
 
       <style jsx>{`
-        @keyframes slide-up {
+        @keyframes modal-appear {
           from {
-            transform: translateY(100%);
+            transform: scale(0.9);
             opacity: 0;
           }
           to {
-            transform: translateY(0);
+            transform: scale(1);
             opacity: 1;
           }
         }
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
+        .animate-modal-appear {
+          animation: modal-appear 0.3s ease-out;
         }
         @keyframes ping {
           75%, 100% {
