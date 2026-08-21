@@ -452,12 +452,18 @@ export default function HomePage() {
 
         {/* New 2026 Movies */}
         {movies2026.length > 0 && (
-          <section className="mb-16 container mx-auto px-4 md:px-12">
-            <Link href="/movies?year=2026" className="flex items-center gap-3 mb-6 group">
-              <h2 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 group-hover:opacity-80 transition-opacity">
-                New 2026 Movies
+          <section className="mb-16 container mx-auto px-4 md:px-12 relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#FFD700]/5 to-transparent pointer-events-none rounded-t-3xl -z-10" />
+            <Link href="/movies?year=2026" className="flex flex-col gap-1 mb-8 group w-max">
+              <h2 className="text-[10px] md:text-xs font-semibold tracking-[0.3em] text-gray-400 uppercase">
+                Exclusive Premieres
               </h2>
-              <span className="text-2xl">🆕</span>
+              <div className="flex items-center gap-4">
+                <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-white to-gray-300 uppercase tracking-wide drop-shadow-sm group-hover:brightness-110 transition-all duration-300">
+                  New Movies 2026
+                </span>
+                <div className="h-[2px] w-16 bg-gradient-to-r from-white/40 to-transparent rounded-full mt-1 group-hover:w-24 transition-all duration-500" />
+              </div>
             </Link>
             {contentLoading ? <SwiperSkeleton /> : (
               <Swiper
@@ -466,11 +472,11 @@ export default function HomePage() {
                 spaceBetween={16}
                 slidesPerView={1.5}
                 breakpoints={{ 480: { slidesPerView: 2 }, 768: { slidesPerView: 3 }, 1024: { slidesPerView: 4 }, 1280: { slidesPerView: 4.5 } }}
-                className="movies-2026-swiper"
+                className="movies-2026-swiper !pb-4"
               >
                 {movies2026.map(movie => (
                   <SwiperSlide key={movie.id}>
-                    <NetflixCard content={movie} type="movie" />
+                    <NetflixCard content={movie} type="movie" variant="cinematic" />
                   </SwiperSlide>
                 ))}
               </Swiper>

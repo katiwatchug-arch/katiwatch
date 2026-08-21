@@ -20,9 +20,10 @@ type NetflixCardProps = {
   content: Movie | Series | TMDBGenreMovie;
   type: "movie" | "series";
   isNonTranslated?: boolean;
+  variant?: "default" | "cinematic";
 };
 
-export const NetflixCard = ({ content, type, isNonTranslated = false }: NetflixCardProps) => {
+export const NetflixCard = ({ content, type, isNonTranslated = false, variant = "default" }: NetflixCardProps) => {
   const getHref = () => {
     if (isNonTranslated) {
       return `/non-translated/${type === "movie" ? "movies" : "series"}/${content.id}`;
@@ -41,8 +42,12 @@ export const NetflixCard = ({ content, type, isNonTranslated = false }: NetflixC
   const vjName: string | null = ('vjs' in content && (content.vjs as any)?.name) ? (content.vjs as any).name : null;
 
   return (
-    <Link href={getHref()} className="group block">
-      <div className="relative pt-[150%] rounded-md overflow-hidden bg-gray-900">
+    <Link href={getHref()} className={`group block ${variant === 'cinematic' ? 'relative transition-transform duration-500 hover:scale-[1.03]' : ''}`}>
+      <div className={`relative pt-[150%] rounded-md overflow-hidden bg-gray-900 ${
+        variant === 'cinematic' 
+          ? 'shadow-lg ring-1 ring-white/10 group-hover:ring-[#FFD700]/50 group-hover:shadow-[0_0_20px_rgba(255,215,0,0.15)] transition-all duration-500'
+          : ''
+      }`}>
         <Image
           src={
             content.thumbnail_url ||
@@ -78,7 +83,11 @@ export const NetflixCard = ({ content, type, isNonTranslated = false }: NetflixC
       </div>
 
       {/* Title - below card */}
-      <h3 className="text-xs font-medium text-white mt-2 truncate">
+      <h3 className={`text-xs font-medium mt-2 truncate ${
+        variant === 'cinematic'
+          ? 'text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-400 group-hover:from-white group-hover:to-gray-200 tracking-wide uppercase font-semibold'
+          : 'text-white'
+      }`}>
         {content.title}
       </h3>
       
