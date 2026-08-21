@@ -284,15 +284,24 @@ export async function getGenreRowsForHome(limit = 12) {
 }
 
 // Search API using Reelplexi API filters
-export async function searchMovies(query: string, limit = 20, page = 1, vjName?: string, genre?: string) {
+const genreSearchCache = new Map<string, { data: any, timestamp: number }>();
+const GENRE_CACHE_TTL = 5 * 60 * 1000;
+
+export async function searchMovies(query: string, limit = 20, page = 1, vjName?: string, genre?: string, year?: string) {
   try {
     const q = query.trim();
     if (!q && !vjName && genre) {
+      const cacheKey = `movies_genre_${genre}_p${page}_l${limit}`;
+      const cached = genreSearchCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < GENRE_CACHE_TTL) {
+        return cached.data as Movie[];
+      }
       const movies = await Reelplexi.getReelplexiMoviesByGenre(genre, page, limit);
+      genreSearchCache.set(cacheKey, { data: movies, timestamp: Date.now() });
       return movies as Movie[];
     }
     // Always use search endpoint to ensure genre filter works
-    const movies = await Reelplexi.searchReelplexiMovies(q, page, limit, vjName, genre);
+    const movies = await Reelplexi.searchReelplexiMovies(q, page, limit, vjName, genre, year);
     return movies as Movie[];
   } catch (error) {
     console.error('Error searching movies:', error);
@@ -300,15 +309,21 @@ export async function searchMovies(query: string, limit = 20, page = 1, vjName?:
   }
 }
 
-export async function searchSeries(query: string, limit = 20, page = 1, vjName?: string, genre?: string) {
+export async function searchSeries(query: string, limit = 20, page = 1, vjName?: string, genre?: string, year?: string) {
   try {
     const q = query.trim();
     if (!q && !vjName && genre) {
+      const cacheKey = `series_genre_${genre}_p${page}_l${limit}`;
+      const cached = genreSearchCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < GENRE_CACHE_TTL) {
+        return cached.data as Series[];
+      }
       const series = await Reelplexi.getReelplexiSeriesByGenre(genre, page, limit);
+      genreSearchCache.set(cacheKey, { data: series, timestamp: Date.now() });
       return series as Series[];
     }
     // Always use search endpoint to ensure genre filter works
-    const series = await Reelplexi.searchReelplexiSeries(q, page, limit, vjName, genre);
+    const series = await Reelplexi.searchReelplexiSeries(q, page, limit, vjName, genre, year);
     return series as Series[];
   } catch (error) {
     console.error('Error searching series:', error);

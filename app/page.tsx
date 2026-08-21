@@ -78,14 +78,10 @@ export default function HomePage() {
   const genresFetched = useRef(false);
 
   const fetchMovies2026Catalog = async () => {
-    const pageSize = 100;
-    const maxPages = 5;
-    
-    // Fetch all pages in parallel to significantly reduce total load time
-    const pagePromises = Array.from({ length: maxPages }, (_, i) => searchMovies('', pageSize, i + 1));
-    const results = await Promise.all(pagePromises);
-    
-    return results.flat() as Movie[];
+    // Optimised: Only fetch exactly 20 items using the backend's year filter
+    // INSTEAD of fetching 500 items and filtering locally.
+    const results = await searchMovies('', 20, 1, undefined, undefined, '2026');
+    return results;
   };
 
   // Phase 1: Load hero immediately
@@ -96,9 +92,26 @@ export default function HomePage() {
         return; 
       }
 
-      // Fetch full details for all hero items
-      const itemsWithDetails = await Promise.all(
-        vjData.map(async (item: any) => {
+      // Fetch full details for ONLY the first hero item to unblock the UI instantly
+      const firstItem = vjData[0] as any;
+      if (!firstItem.description?.trim()) {
+        try {
+          const details = firstItem.type === 'movie'
+            ? await getMovieById(firstItem.id)
+            : await getSeriesById(firstItem.id);
+          if (details?.description) {
+            firstItem.description = details.description;
+          }
+        } catch {}
+      }
+
+      setHeroSlides(vjData as any);
+      setFeaturedItem(firstItem);
+      setHeroLoading(false);
+
+      // Fetch the rest of the descriptions in the background
+      Promise.all(
+        vjData.slice(1).map(async (item: any) => {
           if (!item.description?.trim()) {
             try {
               const details = item.type === 'movie'
@@ -111,11 +124,9 @@ export default function HomePage() {
           }
           return item;
         })
-      );
-
-      setHeroSlides(itemsWithDetails as any);
-      setFeaturedItem(itemsWithDetails[0] as any);
-      setHeroLoading(false);
+      ).then(restWithDetails => {
+        setHeroSlides([firstItem, ...restWithDetails] as any);
+      });
     }).catch(() => setHeroLoading(false));
   }, []);
 
@@ -138,7 +149,7 @@ export default function HomePage() {
   useEffect(() => {
     // 1. Core Content (Fast)
     Promise.all([
-      searchMovies('', 100, 1),
+      searchMovies('', 24, 1),
       getSeries(24)
     ]).then(([movies, series]) => {
       setLatestMovies(movies);
@@ -160,13 +171,9 @@ export default function HomePage() {
       }).catch(err => logger.error('Error loading genre rows:', err));
     }
 
-    // 3. 2026 Movies (Slow - up to 500 items)
-    fetchMovies2026Catalog().then(allMovies => {
-      setMovies2026(
-        allMovies
-          .filter((m: Movie) => m.release_date && new Date(String(m.release_date).replace(/ /g, 'T')).getFullYear() === 2026)
-          .sort((a: Movie, b: Movie) => new Date(String(b.release_date).replace(/ /g, 'T')).getTime() - new Date(String(a.release_date).replace(/ /g, 'T')).getTime())
-      );
+    // 3. 2026 Movies (Fast - 1 single API call)
+    fetchMovies2026Catalog().then(movies => {
+      setMovies2026(movies);
     }).catch(err => logger.error('Error loading 2026 catalog:', err));
 
     // 4. Animation Content (Medium)

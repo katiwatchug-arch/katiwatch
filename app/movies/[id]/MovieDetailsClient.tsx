@@ -176,6 +176,66 @@ export default function MovieDetailsClient() {
             </button>
           </div>
         )}
+        {/* Download Modal - Anchored over Player */}
+        {showDownloadModal && (
+          <div 
+            className="absolute inset-0 z-[90] flex items-center justify-center p-4"
+            onClick={() => setShowDownloadModal(false)}
+            style={{ 
+              background: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <div 
+              className="w-full max-w-md bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] rounded-2xl shadow-2xl transform transition-all duration-300 ease-out animate-modal-appear"
+              onClick={e => e.stopPropagation()}
+              style={{
+                border: '1px solid rgba(229, 9, 20, 0.1)',
+                boxShadow: '0 0 40px rgba(229, 9, 20, 0.15), 0 20px 60px rgba(0, 0, 0, 0.8)',
+              }}
+            >
+              <div className="p-6 sm:p-8">
+                <div className="relative mx-auto w-20 h-20 mb-6">
+                  <div className="absolute inset-0 bg-[#E50914]/20 rounded-full animate-ping"></div>
+                  <div 
+                    className="relative w-full h-full rounded-full flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.15), rgba(229, 9, 20, 0.05))',
+                      border: '2px solid rgba(229, 9, 20, 0.3)',
+                    }}
+                  >
+                    <Download className="w-9 h-9 text-[#E50914]" strokeWidth={2.5} />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2 text-center">Ready to Download</h2>
+                <p className="text-gray-400 text-sm mb-1 text-center font-medium">{movie.title}</p>
+                <p className="text-gray-500 text-xs mb-6 text-center">Download will start in a new tab</p>
+                <button
+                  className="w-full bg-gradient-to-r from-[#E50914] to-[#b80710] hover:from-[#c8000f] hover:to-[#a00610] text-white font-bold py-4 rounded-xl mb-3 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                  style={{ boxShadow: '0 4px 20px rgba(229, 9, 20, 0.4)' }}
+                  onClick={() => {
+                    const clean = movie.title.replace(/[^a-zA-Z0-9\s\-_.]/g, "").trim();
+                    const filename = clean + ".mp4";
+                    const proxyUrl = `/api/download?id=${movie.id}&type=movie&filename=${encodeURIComponent(filename)}`;
+                    window.open(proxyUrl, '_blank');
+                    setShowDownloadModal(false);
+                  }}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <Download className="w-5 h-5" />
+                    <span>Start Download</span>
+                  </span>
+                </button>
+                <button 
+                  className="w-full text-gray-400 hover:text-white text-sm font-medium py-3 transition-colors rounded-xl hover:bg-white/5"
+                  onClick={() => setShowDownloadModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Details */}
@@ -295,84 +355,12 @@ export default function MovieDetailsClient() {
         )}
       </section>
 
-      {/* Download Modal - Always Centered in Viewport */}
-      {showDownloadModal && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-[15vh] sm:pt-[20vh]"
-          onClick={() => setShowDownloadModal(false)}
-          style={{ 
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <div 
-            className="w-full max-w-md bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] rounded-2xl shadow-2xl transform transition-all duration-300 ease-out animate-modal-appear"
-            onClick={e => e.stopPropagation()}
-            style={{
-              border: '1px solid rgba(229, 9, 20, 0.1)',
-              boxShadow: '0 0 40px rgba(229, 9, 20, 0.15), 0 20px 60px rgba(0, 0, 0, 0.8)',
-            }}
-          >
-            {/* Content */}
-            <div className="p-6 sm:p-8">
-              {/* Icon with Pulse Animation */}
-              <div className="relative mx-auto w-20 h-20 mb-6">
-                <div className="absolute inset-0 bg-[#E50914]/20 rounded-full animate-ping"></div>
-                <div 
-                  className="relative w-full h-full rounded-full flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.15), rgba(229, 9, 20, 0.05))',
-                    border: '2px solid rgba(229, 9, 20, 0.3)',
-                  }}
-                >
-                  <Download className="w-9 h-9 text-[#E50914]" strokeWidth={2.5} />
-                </div>
-              </div>
-
-              {/* Title & Description */}
-              <h2 className="text-2xl font-bold text-white mb-2 text-center">
-                Ready to Download
-              </h2>
-              <p className="text-gray-400 text-sm mb-1 text-center font-medium">
-                {movie.title}
-              </p>
-              <p className="text-gray-500 text-xs mb-6 text-center">
-                Download will start in a new tab
-              </p>
-
-              {/* Download Button - Enhanced */}
-              <button
-                className="w-full bg-gradient-to-r from-[#E50914] to-[#b80710] hover:from-[#c8000f] hover:to-[#a00610] text-white font-bold py-4 rounded-xl mb-3 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
-                style={{
-                  boxShadow: '0 4px 20px rgba(229, 9, 20, 0.4)',
-                }}
-                onClick={() => {
-                  const clean = movie.title.replace(/[^a-zA-Z0-9\s\-_.]/g, "").trim();
-                  const filename = clean + ".mp4";
-                  const proxyUrl = `/api/download?id=${movie.id}&type=movie&filename=${encodeURIComponent(filename)}`;
-                  window.open(proxyUrl, '_blank');
-                  setShowDownloadModal(false);
-                }}
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <Download className="w-5 h-5" />
-                  <span>Start Download</span>
-                </span>
-              </button>
-
-              {/* Cancel Button */}
-              <button 
-                className="w-full text-gray-400 hover:text-white text-sm font-medium py-3 transition-colors rounded-xl hover:bg-white/5"
-                onClick={() => setShowDownloadModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <AuthRequiredModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} action={authAction} requirePremium={false} />
+      <AuthRequiredModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        action={authAction}
+        requirePremium={authAction === 'download'}
+      />
     </div>
   );
 }
