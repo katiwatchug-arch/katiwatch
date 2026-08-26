@@ -171,7 +171,7 @@ export default function MakyPayButton({
       </button>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-6 sm:pt-12 overflow-y-auto">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl max-w-md w-full">
             {/* Header */}
             <div className="p-6 border-b border-gray-700">
