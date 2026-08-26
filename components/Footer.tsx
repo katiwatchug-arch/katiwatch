@@ -164,9 +164,9 @@ export default function Footer() {
             © {currentYear} Katiwatch — We Are Entertainment. All rights reserved.
           </p>
           <div className="flex items-center gap-1">
-            <span className="text-gray-700 text-xs">Made with</span>
-            <span className="text-[#E50914] text-xs">❤</span>
-            <span className="text-gray-700 text-xs">in Uganda</span>
+            <span className="text-gray-700 text-xs">Made by</span>
+            <span className="text-gray-700 text-xs">Solveware all rights</span>
+            <span className="text-gray-700 text-xs">reserved</span>
           </div>
         </div>
       </div>
