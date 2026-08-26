@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { AlertCircle, Download, ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -11,11 +12,30 @@ interface IOSDownloadModalProps {
 }
 
 export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOSDownloadModalProps) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-gray-900 rounded-2xl border border-[#E50914]/30 shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto flex flex-col">
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div 
+        className="bg-gray-900 rounded-2xl border border-[#E50914]/30 shadow-2xl max-w-md w-full my-auto max-h-[90dvh] overflow-y-auto flex flex-col animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-[#E50914] to-[#b80710] p-4">
           <div className="flex items-center gap-3">

@@ -195,15 +195,19 @@ export default function SeriesDetailsPage() {
     if (episode.premium && !isPremium) { router.push("/payment"); return; }
     const allowed = await canUserDownload(user.id);
     if (!allowed) { router.push("/payment"); return; }
-    
-    // Scroll to top to ensure modal is visible
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    
-    // Show modal after brief delay to let scroll complete
-    setTimeout(() => {
-      setShowDownloadModal(true);
-    }, 100);
+    setShowDownloadModal(true);
   };
+
+  useEffect(() => {
+    if (showDownloadModal) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [showDownloadModal]);
 
   const handleDownloadNow = async () => {
     if (!selectedEpisode) return;
@@ -277,63 +281,6 @@ export default function SeriesDetailsPage() {
                 <Play className="w-7 h-7 text-white fill-white ml-1" />
               </div>
             </button>
-          </div>
-        )}
-
-        {/* Download Modal - Anchored over Player */}
-        {showDownloadModal && selectedEpisode && (
-          <div 
-            className="absolute inset-0 z-[90] flex items-center justify-center p-4"
-            onClick={() => setShowDownloadModal(false)}
-            style={{ 
-              background: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(8px)',
-            }}
-          >
-            <div 
-              className="w-full max-w-md bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] rounded-2xl shadow-2xl transform transition-all duration-300 ease-out animate-modal-appear"
-              onClick={e => e.stopPropagation()}
-              style={{
-                border: '1px solid rgba(229, 9, 20, 0.1)',
-                boxShadow: '0 0 40px rgba(229, 9, 20, 0.15), 0 20px 60px rgba(0, 0, 0, 0.8)',
-              }}
-            >
-              <div className="p-4 sm:p-8" style={{ paddingBottom: 'max(1rem, calc(1rem + env(safe-area-inset-bottom)))' }}>
-                <div className="relative mx-auto w-14 h-14 sm:w-20 sm:h-20 mb-3 sm:mb-6">
-                  <div className="absolute inset-0 bg-[#E50914]/20 rounded-full animate-ping"></div>
-                  <div 
-                    className="relative w-full h-full rounded-full flex items-center justify-center"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.15), rgba(229, 9, 20, 0.05))',
-                      border: '2px solid rgba(229, 9, 20, 0.3)',
-                    }}
-                  >
-                    <Download className="w-7 h-7 sm:w-9 sm:h-9 text-[#E50914]" strokeWidth={2.5} />
-                  </div>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2 text-center">Ready to Download</h2>
-                <p className="text-gray-400 text-sm mb-1 text-center font-medium">{series?.title}</p>
-                <p className="text-gray-500 text-xs mb-4 sm:mb-6 text-center">
-                  S{selectedEpisode.seasonOrder}E{selectedEpisode.episode_number}: {selectedEpisode.title}
-                </p>
-                <button
-                  className="w-full bg-gradient-to-r from-[#E50914] to-[#b80710] hover:from-[#c8000f] hover:to-[#a00610] text-white font-bold py-4 rounded-xl mb-3 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
-                  style={{ boxShadow: '0 4px 20px rgba(229, 9, 20, 0.4)' }}
-                  onClick={handleDownloadNow}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <Download className="w-5 h-5" />
-                    <span>Start Download</span>
-                  </span>
-                </button>
-                <button 
-                  className="w-full text-gray-400 hover:text-white text-sm font-medium py-3 transition-colors rounded-xl hover:bg-white/5"
-                  onClick={() => setShowDownloadModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </section>
@@ -594,6 +541,60 @@ export default function SeriesDetailsPage() {
         action={authAction}
         requirePremium={authAction === 'download'}
       />
+
+      {/* Download Modal - Global Viewport Centered */}
+      {showDownloadModal && selectedEpisode && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowDownloadModal(false);
+          }}
+        >
+          <div 
+            className="w-full max-w-md bg-gradient-to-br from-[#1c1c1c] to-[#121212] rounded-2xl shadow-2xl border border-gray-800 my-auto max-h-[90dvh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            onClick={e => e.stopPropagation()}
+            style={{
+              boxShadow: '0 0 40px rgba(229, 9, 20, 0.15), 0 20px 60px rgba(0, 0, 0, 0.9)',
+            }}
+          >
+            <div className="p-6 sm:p-8 overflow-y-auto">
+              <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-5">
+                <div className="absolute inset-0 bg-[#E50914]/20 rounded-full animate-ping"></div>
+                <div 
+                  className="relative w-full h-full rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.2), rgba(229, 9, 20, 0.05))',
+                    border: '2px solid rgba(229, 9, 20, 0.4)',
+                  }}
+                >
+                  <Download className="w-8 h-8 sm:w-9 sm:h-9 text-[#E50914]" strokeWidth={2.5} />
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-1.5 text-center">Ready to Download</h2>
+              <p className="text-gray-300 text-sm mb-1 text-center font-semibold">{series?.title}</p>
+              <p className="text-gray-500 text-xs mb-6 text-center">
+                S{selectedEpisode.seasonOrder}E{selectedEpisode.episode_number}: {selectedEpisode.title}
+              </p>
+              
+              <button
+                type="button"
+                className="w-full bg-[#E50914] hover:bg-[#b80710] text-white font-bold py-4 rounded-xl mb-3 transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-[#E50914]/25 flex items-center justify-center gap-2"
+                onClick={handleDownloadNow}
+              >
+                <Download className="w-5 h-5" />
+                <span>Start Download</span>
+              </button>
+              <button 
+                type="button"
+                className="w-full text-gray-400 hover:text-white text-sm font-medium py-3 transition-colors rounded-xl hover:bg-white/5"
+                onClick={() => setShowDownloadModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
