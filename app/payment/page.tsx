@@ -406,7 +406,7 @@ function PaymentPageContent() {
 
         {/* Payment Modal */}
         {showPaymentModal && selectedPlan && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-[#111] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
               {/* Modal Header */}
               <div className="flex items-center justify-between p-5 border-b border-gray-800">
