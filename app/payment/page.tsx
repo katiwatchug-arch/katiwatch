@@ -114,9 +114,6 @@ function PaymentPageContent() {
     setModalPhoneNumber(phoneNumber);
     setModalDetectedMNO(detectedMNO);
     setShowPaymentModal(true);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
   };
 
   const closePaymentModal = () => {
@@ -426,20 +423,23 @@ function PaymentPageContent() {
         {/* Payment Modal */}
         {showPaymentModal && selectedPlan && (
           <div
-            className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto"
+            style={{
+              paddingTop: 'max(1rem, env(safe-area-inset-top))',
+            }}
             onClick={(e) => {
               if (e.target === e.currentTarget) closePaymentModal();
             }}
           >
             <div
-              className="bg-[#141414] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden my-auto max-h-[90dvh] flex flex-col animate-in fade-in zoom-in-95 duration-200"
+              className="bg-[#141414] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-5 border-b border-gray-800 flex-shrink-0">
-                <div>
-                  <h3 className="text-lg font-bold text-white">Complete Payment</h3>
-                  <p className="text-gray-400 text-xs mt-0.5">Secure mobile money transaction</p>
+              <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-gray-800 flex-shrink-0 bg-white/[0.02]">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#E50914] animate-pulse" />
+                  <h3 className="text-base sm:text-lg font-bold text-white">Complete Payment</h3>
                 </div>
                 <button
                   onClick={closePaymentModal}
@@ -452,28 +452,27 @@ function PaymentPageContent() {
                 </button>
               </div>
 
-              <div className="p-5 space-y-5 overflow-y-auto flex-1">
-                {/* Plan summary */}
-                <div className="flex items-center justify-between bg-[#E50914]/10 border border-[#E50914]/20 rounded-xl p-4">
+              <div className="p-4 sm:p-5 space-y-3.5 sm:space-y-4 overflow-y-auto flex-1">
+                {/* Plan summary - Sleek Compact Badge */}
+                <div className="flex items-center justify-between bg-[#E50914]/10 border border-[#E50914]/25 rounded-xl px-4 py-2.5 sm:p-4">
                   <div>
-                    <p className="text-xs text-[#E50914] font-semibold uppercase tracking-wider mb-1">Selected Plan</p>
-                    <p className="text-white font-bold capitalize text-base">{selectedPlan.name}</p>
-                    <p className="text-gray-400 text-xs mt-0.5">
+                    <span className="text-[#E50914] text-[10px] sm:text-xs font-bold uppercase tracking-wider block">Selected Plan</span>
+                    <span className="text-white font-bold capitalize text-sm sm:text-base">{selectedPlan.name}</span>
+                    <span className="text-gray-400 text-[11px] sm:text-xs block">
                       {selectedPlan.duration_in_hours && selectedPlan.duration_in_hours > 0
-                        ? selectedPlan.duration_in_hours === 1 ? '1 Hour Access' : `${selectedPlan.duration_in_hours} Hours Access`
-                        : selectedPlan.duration_in_days === 1 ? '1 Day Access' : `${selectedPlan.duration_in_days} Days Access`}
-                    </p>
+                        ? selectedPlan.duration_in_hours === 1 ? '1 Hour' : `${selectedPlan.duration_in_hours} Hours`
+                        : selectedPlan.duration_in_days === 1 ? '1 Day' : `${selectedPlan.duration_in_days} Days`}
+                    </span>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-400 font-semibold mb-0.5">TOTAL</p>
-                    <p className="text-2xl font-black text-white">UGX {selectedPlan.amount?.toLocaleString()}</p>
+                    <span className="text-xl sm:text-2xl font-black text-white">UGX {selectedPlan.amount?.toLocaleString()}</span>
                   </div>
                 </div>
 
                 {/* Phone number input */}
                 <div>
-                  <label htmlFor="modal-phone" className="block text-sm font-semibold text-gray-200 mb-2">
-                    Enter Mobile Money Number
+                  <label htmlFor="modal-phone" className="block text-xs sm:text-sm font-semibold text-gray-300 mb-1.5">
+                    Mobile Money Number
                   </label>
                   <div className="relative">
                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -488,13 +487,13 @@ function PaymentPageContent() {
                       inputMode="numeric"
                       value={modalPhoneNumber}
                       onChange={(e) => handleModalPhoneNumberChange(e.target.value)}
-                      placeholder="e.g. 0771234567 or 0701234567"
-                      className="w-full pl-10 pr-28 py-3.5 bg-white/10 border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#E50914] focus:border-[#E50914] text-white placeholder-gray-500 text-base font-medium transition-all outline-none"
+                      placeholder="0771234567 or 0701234567"
+                      className="w-full pl-10 pr-28 py-3 bg-white/10 border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#E50914] focus:border-[#E50914] text-white placeholder-gray-500 text-base font-medium transition-all outline-none"
                       maxLength={15}
                     />
                     {modalDetectedMNO && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
                           modalDetectedMNO === 'Invalid number'
                             ? 'bg-red-900/80 text-red-300 border border-red-700'
                             : 'bg-emerald-900/80 text-emerald-300 border border-emerald-700'
@@ -504,15 +503,15 @@ function PaymentPageContent() {
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">MTN or Airtel Money — Uganda only</p>
+                  <p className="text-[11px] text-gray-400 mt-1">MTN / Airtel Uganda</p>
                 </div>
 
                 {/* CTA buttons */}
-                <div className="flex gap-3 pt-1">
+                <div className="flex gap-2.5 pt-0.5">
                   <button
                     type="button"
                     onClick={closePaymentModal}
-                    className="flex-1 py-3.5 bg-white/10 hover:bg-white/15 text-gray-300 rounded-xl font-semibold text-sm transition-colors"
+                    className="flex-1 py-3 bg-white/10 hover:bg-white/15 text-gray-300 rounded-xl font-semibold text-sm transition-colors"
                   >
                     Cancel
                   </button>
@@ -520,7 +519,7 @@ function PaymentPageContent() {
                     type="button"
                     onClick={proceedWithPayment}
                     disabled={!modalPhoneNumber || modalPhoneNumber.length < 10 || modalDetectedMNO === 'Invalid number'}
-                    className="flex-1 py-3.5 bg-[#E50914] hover:bg-[#b80710] disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-[#E50914]/25 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-[#E50914] hover:bg-[#b80710] disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-[#E50914]/25 flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v2a2 2 0 002 2z" />
@@ -529,8 +528,8 @@ function PaymentPageContent() {
                   </button>
                 </div>
 
-                <p className="text-center text-xs text-gray-400">
-                  💡 You&apos;ll receive a payment prompt on your phone to confirm.
+                <p className="text-center text-[11px] text-gray-400 pb-0.5">
+                  💡 A prompt will appear on your phone to enter your PIN.
                 </p>
               </div>
             </div>
