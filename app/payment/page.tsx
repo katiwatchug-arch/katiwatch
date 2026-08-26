@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { getProviderFromPhone, getProviderDisplayName } from '@/lib/phone-utils';
@@ -40,6 +40,22 @@ function PaymentPageContent() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [modalPhoneNumber, setModalPhoneNumber] = useState('');
   const [modalDetectedMNO, setModalDetectedMNO] = useState<string>('');
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showPaymentModal) {
+      document.body.style.overflow = 'hidden';
+      const timer = setTimeout(() => {
+        phoneInputRef.current?.focus();
+      }, 100);
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = '';
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [showPaymentModal]);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/signin');
@@ -98,6 +114,9 @@ function PaymentPageContent() {
     setModalPhoneNumber(phoneNumber);
     setModalDetectedMNO(detectedMNO);
     setShowPaymentModal(true);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const closePaymentModal = () => {
@@ -406,79 +425,102 @@ function PaymentPageContent() {
 
         {/* Payment Modal */}
         {showPaymentModal && selectedPlan && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-start justify-center z-50 p-4 pt-6 sm:pt-12 overflow-y-auto">
-            <div className="bg-[#111] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+          <div
+            className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closePaymentModal();
+            }}
+          >
+            <div
+              className="bg-[#141414] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden my-auto max-h-[90dvh] flex flex-col animate-in fade-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-5 border-b border-gray-800">
+              <div className="flex items-center justify-between p-5 border-b border-gray-800 flex-shrink-0">
                 <div>
                   <h3 className="text-lg font-bold text-white">Complete Payment</h3>
-                  <p className="text-gray-500 text-xs mt-0.5">Secure mobile money transaction</p>
+                  <p className="text-gray-400 text-xs mt-0.5">Secure mobile money transaction</p>
                 </div>
-                <button onClick={closePaymentModal} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors" aria-label="Close">
+                <button
+                  onClick={closePaymentModal}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                  aria-label="Close"
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
-              <div className="p-5 space-y-5">
+              <div className="p-5 space-y-5 overflow-y-auto flex-1">
                 {/* Plan summary */}
-                <div className="flex items-center justify-between bg-[#E50914]/8 border border-[#E50914]/15 rounded-xl p-4">
+                <div className="flex items-center justify-between bg-[#E50914]/10 border border-[#E50914]/20 rounded-xl p-4">
                   <div>
                     <p className="text-xs text-[#E50914] font-semibold uppercase tracking-wider mb-1">Selected Plan</p>
-                    <p className="text-white font-bold capitalize">{selectedPlan.name}</p>
-                    <p className="text-gray-400 text-xs">{selectedPlan.duration_in_days} day{selectedPlan.duration_in_days !== 1 ? 's' : ''}</p>
+                    <p className="text-white font-bold capitalize text-base">{selectedPlan.name}</p>
+                    <p className="text-gray-400 text-xs mt-0.5">
+                      {selectedPlan.duration_in_hours && selectedPlan.duration_in_hours > 0
+                        ? selectedPlan.duration_in_hours === 1 ? '1 Hour Access' : `${selectedPlan.duration_in_hours} Hours Access`
+                        : selectedPlan.duration_in_days === 1 ? '1 Day Access' : `${selectedPlan.duration_in_days} Days Access`}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-black text-white">UGX</p>
-                    <p className="text-2xl font-black text-white">{selectedPlan.amount?.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 font-semibold mb-0.5">TOTAL</p>
+                    <p className="text-2xl font-black text-white">UGX {selectedPlan.amount?.toLocaleString()}</p>
                   </div>
                 </div>
 
                 {/* Phone number input */}
                 <div>
-                  <label htmlFor="modal-phone" className="block text-sm font-medium text-gray-300 mb-2">
-                    Mobile Money Number
+                  <label htmlFor="modal-phone" className="block text-sm font-semibold text-gray-200 mb-2">
+                    Enter Mobile Money Number
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2">
-                      <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
                     </div>
                     <input
+                      ref={phoneInputRef}
                       id="modal-phone"
                       type="tel"
+                      inputMode="numeric"
                       value={modalPhoneNumber}
                       onChange={(e) => handleModalPhoneNumberChange(e.target.value)}
-                      placeholder="e.g. 0771234567"
-                      className="w-full pl-10 pr-28 py-3.5 bg-white/5 border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#E50914] focus:border-transparent text-white placeholder-gray-600 text-sm transition-all outline-none"
+                      placeholder="e.g. 0771234567 or 0701234567"
+                      className="w-full pl-10 pr-28 py-3.5 bg-white/10 border border-gray-700 rounded-xl focus:ring-2 focus:ring-[#E50914] focus:border-[#E50914] text-white placeholder-gray-500 text-base font-medium transition-all outline-none"
                       maxLength={15}
                     />
                     {modalDetectedMNO && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                         <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
                           modalDetectedMNO === 'Invalid number'
-                            ? 'bg-red-900/60 text-red-300'
-                            : 'bg-emerald-900/60 text-emerald-300'
+                            ? 'bg-red-900/80 text-red-300 border border-red-700'
+                            : 'bg-emerald-900/80 text-emerald-300 border border-emerald-700'
                         }`}>
                           {modalDetectedMNO}
                         </span>
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">MTN or Airtel number — Uganda only</p>
+                  <p className="text-xs text-gray-400 mt-2">MTN or Airtel Money — Uganda only</p>
                 </div>
 
                 {/* CTA buttons */}
-                <div className="flex gap-3">
-                  <button onClick={closePaymentModal} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl font-semibold text-sm transition-colors">
+                <div className="flex gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={closePaymentModal}
+                    className="flex-1 py-3.5 bg-white/10 hover:bg-white/15 text-gray-300 rounded-xl font-semibold text-sm transition-colors"
+                  >
                     Cancel
                   </button>
                   <button
+                    type="button"
                     onClick={proceedWithPayment}
                     disabled={!modalPhoneNumber || modalPhoneNumber.length < 10 || modalDetectedMNO === 'Invalid number'}
-                    className="flex-1 py-3 bg-[#E50914] hover:bg-[#b80710] disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-[#E50914]/20 flex items-center justify-center gap-2"
+                    className="flex-1 py-3.5 bg-[#E50914] hover:bg-[#b80710] disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-[#E50914]/25 flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v2a2 2 0 002 2z" />
@@ -487,7 +529,7 @@ function PaymentPageContent() {
                   </button>
                 </div>
 
-                <p className="text-center text-xs text-gray-600">
+                <p className="text-center text-xs text-gray-400">
                   💡 You&apos;ll receive a payment prompt on your phone to confirm.
                 </p>
               </div>
