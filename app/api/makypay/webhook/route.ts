@@ -159,13 +159,12 @@ async function activateSubscriptionFromTransaction(
     // Parse plan name from the description (format: "Subscription: Plan Name")
     const planName = txRecord.description?.replace(/^Subscription:\s*/i, '').toLowerCase().trim() || 'basic';
 
-    // Look up the plan to get the duration — use exact match with lowercase normalization
-    // Using .eq() is more efficient than .ilike() and prevents PGRST116 errors
-    const { data: plan } = await supabaseAdmin
+    // Look up the plan to get the duration — fetch all plans and match with whitespace trimming
+    const { data: plans } = await supabaseAdmin
       .from('plans')
-      .select('name, duration_in_days, duration_in_hours, duration_in_months')
-      .eq('name', planName)
-      .maybeSingle();
+      .select('name, duration_in_days, duration_in_hours, duration_in_months');
+
+    const plan = plans?.find(p => p.name?.trim().toLowerCase() === planName);
 
     // Calculate duration in milliseconds, prioritizing hours, then days, then months
     let durationMs: number;
@@ -184,7 +183,7 @@ async function activateSubscriptionFromTransaction(
     }
 
     // Use the canonical plan name from DB if found, otherwise use parsed name
-    const canonicalPlanName = plan?.name?.toLowerCase() || planName;
+    const canonicalPlanName = plan?.name?.trim().toLowerCase() || planName;
     const now = new Date();
     const expiryDate = new Date(now.getTime() + durationMs);
 

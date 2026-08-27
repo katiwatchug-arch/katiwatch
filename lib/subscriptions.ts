@@ -93,9 +93,13 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
     }
 
     // Check if subscription exists and is not expired
-    const hasSubscription = profile.subscription && profile.subscription !== 'free'
-    const isNotExpired = profile.subscription_expiry_date && 
-                        new Date(profile.subscription_expiry_date) > new Date()
+    const rawSub = profile.subscription?.trim();
+    const hasSubscription = Boolean(rawSub && rawSub.toLowerCase() !== 'free')
+    const expiryStr = profile.subscription_expiry_date;
+    const isNotExpired = Boolean(
+      expiryStr && 
+      new Date(typeof expiryStr === 'string' ? expiryStr.replace(/ /g, 'T') : expiryStr) > new Date()
+    )
     
     return hasSubscription && isNotExpired
   } catch (error) {
@@ -128,11 +132,13 @@ export async function getUserSubscriptionStatus(userId: string): Promise<{
       }
     }
 
-    const hasSubscription = profile.subscription && profile.subscription !== 'free'
-    const expiryDate = profile.subscription_expiry_date ? new Date(profile.subscription_expiry_date) : null
+    const rawSub = profile.subscription?.trim();
+    const hasSubscription = Boolean(rawSub && rawSub.toLowerCase() !== 'free')
+    const expiryStr = profile.subscription_expiry_date;
+    const expiryDate = expiryStr ? new Date(typeof expiryStr === 'string' ? expiryStr.replace(/ /g, 'T') : expiryStr) : null
     const now = new Date()
-    const isNotExpired = expiryDate && expiryDate > now
-    const isExpired = expiryDate && expiryDate <= now
+    const isNotExpired = Boolean(expiryDate && expiryDate > now)
+    const isExpired = Boolean(expiryDate && expiryDate <= now)
     const daysRemaining = expiryDate ? Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : undefined
 
     return {
@@ -169,9 +175,13 @@ export async function forceRefreshSubscription(userId: string): Promise<boolean>
     }
 
     // Check if subscription is active
-    const hasSubscription = profile.subscription && profile.subscription !== 'free'
-    const isNotExpired = profile.subscription_expiry_date && 
-                        new Date(profile.subscription_expiry_date) > new Date()
+    const rawSub = profile.subscription?.trim();
+    const hasSubscription = Boolean(rawSub && rawSub.toLowerCase() !== 'free')
+    const expiryStr = profile.subscription_expiry_date;
+    const isNotExpired = Boolean(
+      expiryStr && 
+      new Date(typeof expiryStr === 'string' ? expiryStr.replace(/ /g, 'T') : expiryStr) > new Date()
+    )
     
     console.log('✅ Subscription refreshed - access granted immediately')
     return hasSubscription && isNotExpired
@@ -195,27 +205,37 @@ export async function canUserDownload(userId: string): Promise<boolean> {
     }
 
     // Must have an active, non-expired subscription
-    const hasSubscription = profile.subscription && profile.subscription !== 'free'
-    const isNotExpired = profile.subscription_expiry_date && 
-                        new Date(profile.subscription_expiry_date) > new Date()
+    const rawSub = profile.subscription?.trim();
+    const hasSubscription = Boolean(rawSub && rawSub.toLowerCase() !== 'free')
+    const expiryStr = profile.subscription_expiry_date;
+    const isNotExpired = Boolean(
+      expiryStr && 
+      new Date(typeof expiryStr === 'string' ? expiryStr.replace(/ /g, 'T') : expiryStr) > new Date()
+    )
 
     if (!hasSubscription || !isNotExpired) {
       return false
     }
 
-    // Look up the plan in the plans table to check allow_downloads
-    const { data: plan, error: planError } = await supabase
+    // Look up all plans and match with trimmed case-insensitive comparison
+    const { data: plans, error: planError } = await supabase
       .from('plans')
-      .select('allow_downloads')
-      .ilike('name', profile.subscription)
-      .single()
+      .select('name, allow_downloads');
 
-    if (planError || !plan) {
-      console.warn('canUserDownload: Could not find plan:', profile.subscription)
-      return false
+    if (planError || !plans || plans.length === 0) {
+      console.warn('canUserDownload: Could not fetch plans table, defaulting to active subscription status:', planError);
+      return true; // Active paying subscriber fallback
     }
 
-    return plan.allow_downloads === true
+    const subNameClean = rawSub!.toLowerCase();
+    const matchedPlan = plans.find(p => p.name?.trim().toLowerCase() === subNameClean);
+
+    if (!matchedPlan) {
+      console.warn('canUserDownload: Plan not explicitly matched in plans table:', rawSub);
+      return true; // Active paying subscriber fallback
+    }
+
+    return matchedPlan.allow_downloads === true
   } catch (error) {
     console.error('Error checking download permission:', error)
     return false

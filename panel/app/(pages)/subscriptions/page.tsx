@@ -137,7 +137,8 @@ export default function SubscriptionsPage() {
             const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
             // Find matching plan based on name and duration
-            const matchingPlans = plansData?.filter(p => p.name === profile.subscription) || [];
+            const subClean = profile.subscription?.trim().toLowerCase() || '';
+            const matchingPlans = plansData?.filter(p => p.name?.trim().toLowerCase() === subClean) || [];
             const exactMatch = matchingPlans.find(p => p.duration_in_days === totalDays);
 
             if (exactMatch) {
@@ -151,7 +152,8 @@ export default function SubscriptionsPage() {
             }
           } else {
             // Fallback: just use the first plan with matching name
-            const planInfo = plansData?.find(p => p.name === profile.subscription);
+            const subClean = profile.subscription?.trim().toLowerCase() || '';
+            const planInfo = plansData?.find(p => p.name?.trim().toLowerCase() === subClean);
             planDuration = planInfo?.duration || 'Unknown';
           }
         }

@@ -380,11 +380,12 @@ export class YoPaymentsService {
 
       if (result.isCompleted) {
         // Look up the plan from database to get accurate duration
-        const { data: plan, error: planError } = await supabase
+        const cleanPlanName = subscriptionPlan.trim().toLowerCase();
+        const { data: plans } = await supabase
           .from('plans')
-          .select('duration_in_hours, duration_in_days, duration_in_months')
-          .ilike('name', subscriptionPlan)
-          .maybeSingle();
+          .select('name, duration_in_hours, duration_in_days, duration_in_months');
+
+        const plan = plans?.find(p => p.name?.trim().toLowerCase() === cleanPlanName);
 
         // Calculate duration in milliseconds, prioritizing hours, then days, then months
         let durationMs: number;

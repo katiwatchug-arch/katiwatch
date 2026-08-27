@@ -121,22 +121,23 @@ export async function POST(request: NextRequest) {
     let planDurationDays = subscriptionDuration ? parseInt(subscriptionDuration) : 30;
 
     try {
-      const { data: planRecord, error: planError } = await db
+      const { data: planRecords, error: planError } = await db
         .from('plans')
-        .select('name, duration_in_days, amount, active')
-        .ilike('name', planNameNormalized)
-        .maybeSingle();
+        .select('name, duration_in_days, amount, active');
 
       if (planError) {
-        console.warn('Could not look up plan from DB:', planError.message);
+        console.warn('Could not look up plans from DB:', planError.message);
         // Fall through — use client-sent duration as fallback
-      } else if (planRecord) {
-        if (!planRecord.active) {
-          console.warn(`Plan "${planRecord.name}" is inactive in admin dashboard`);
+      } else if (planRecords) {
+        const planRecord = planRecords.find(p => p.name?.trim().toLowerCase() === planNameNormalized);
+        if (planRecord) {
+          if (!planRecord.active) {
+            console.warn(`Plan "${planRecord.name}" is inactive in admin dashboard`);
+          }
+          // Use the admin dashboard's authoritative duration
+          planDurationDays = planRecord.duration_in_days || planDurationDays;
+          console.log(`Plan lookup: "${planRecord.name}" → ${planDurationDays} days (from admin dashboard)`);
         }
-        // Use the admin dashboard's authoritative duration
-        planDurationDays = planRecord.duration_in_days || planDurationDays;
-        console.log(`Plan lookup: "${planRecord.name}" → ${planDurationDays} days (from admin dashboard)`);
       }
     } catch (e) {
       console.warn('Plan lookup threw, using client-sent duration as fallback:', e);

@@ -144,7 +144,8 @@ export default function PlansPage() {
     // Validation: Must have at least one duration specified
     const hasDuration = formData.duration_in_days > 0 || formData.duration_in_hours > 0 || formData.duration_in_months > 0;
     
-    if (!formData.name || !formData.amount || !hasDuration) {
+    const trimmedName = formData.name?.trim();
+    if (!trimmedName || !formData.amount || !hasDuration) {
       setMessage({ type: 'error', text: 'Name, amount, and at least one duration (hours, days, or months) are required.' });
       return;
     }
@@ -161,7 +162,7 @@ export default function PlansPage() {
       }
 
       // Auto-generate duration label if not provided
-      let durationLabel = formData.duration;
+      let durationLabel = formData.duration?.trim();
       if (!durationLabel) {
         if (formData.duration_in_hours > 0) {
           durationLabel = `${formData.duration_in_hours} Hour${formData.duration_in_hours !== 1 ? 's' : ''}`;
@@ -173,16 +174,16 @@ export default function PlansPage() {
       }
 
       const planData = {
-        name: formData.name,
+        name: trimmedName,
         amount: formData.amount,
-        description: formData.description || null,
-        duration: durationLabel,
+        description: formData.description?.trim() || null,
+        duration: durationLabel || null,
         duration_in_months: formData.duration_in_months || null,
         duration_in_days: formData.duration_in_days || null,
         duration_in_hours: formData.duration_in_hours || null,
         recommended: formData.recommended,
         sort_order: formData.sort_order,
-        features: formData.features,
+        features: (formData.features || []).map(f => f.trim()).filter(Boolean),
         active: formData.active,
         allow_downloads: formData.allow_downloads,
       };
@@ -194,14 +195,14 @@ export default function PlansPage() {
           .update(planData)
           .eq('id', editingPlan.id);
         if (error) throw error;
-        setMessage({ type: 'success', text: `Plan "${formData.name}" updated successfully!` });
+        setMessage({ type: 'success', text: `Plan "${trimmedName}" updated successfully!` });
       } else {
         // Create new
         const { error } = await supabase
           .from('plans')
           .insert(planData);
         if (error) throw error;
-        setMessage({ type: 'success', text: `Plan "${formData.name}" created successfully!` });
+        setMessage({ type: 'success', text: `Plan "${trimmedName}" created successfully!` });
       }
 
       await fetchPlans();
