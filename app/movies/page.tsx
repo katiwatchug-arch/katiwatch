@@ -1,5 +1,5 @@
 "use client";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Movie } from "@/lib/supabase";
@@ -63,11 +63,33 @@ function MoviesPageInner() {
       if (year) {
         const res = await fetch('/api/movies/full-catalog');
         const allMovies: any[] = await res.json();
-        const filtered = allMovies
-          .filter(m => m.release_date && new Date(m.release_date).getFullYear().toString() === year)
-          .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
-        setTotalMovies(filtered.length);
-        setMovies(filtered.slice((page - 1) * moviesPerPage, page * moviesPerPage) as any);
+        let filtered = allMovies
+          .filter(m => m.release_date && new Date(m.release_date).getFullYear().toString() === year);
+        if (query.trim()) {
+          const q = query.trim().toLowerCase();
+          filtered = filtered.filter(m => m.title?.toLowerCase().includes(q) || m.vjs?.name?.toLowerCase().includes(q));
+        }
+        if (vjName) {
+          const v = vjName.toLowerCase();
+          filtered = filtered.filter(m => m.vjs?.name?.toLowerCase() === v || m.vj_id?.toLowerCase() === v);
+        }
+        if (genre !== "All") {
+          const g = genre.toLowerCase();
+          filtered = filtered.filter(m => m.genre_ids?.includes(g));
+        }
+        filtered.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+
+        if (query.trim()) {
+          setTotalMovies(filtered.length);
+          setMovies(filtered as any);
+        } else {
+          setTotalMovies(filtered.length);
+          setMovies(filtered.slice((page - 1) * moviesPerPage, page * moviesPerPage) as any);
+        }
+      } else if (query.trim()) {
+        const moviesData = await searchMovies(query, 500, 1, vjName || undefined, genre !== "All" ? genre.toLowerCase() : undefined);
+        setMovies(moviesData as any);
+        setTotalMovies(moviesData.length);
       } else {
         const moviesData = await searchMovies(query, moviesPerPage, page, vjName || undefined, genre !== "All" ? genre.toLowerCase() : undefined);
         setMovies(moviesData as any);
@@ -107,7 +129,6 @@ function MoviesPageInner() {
 
   const totalPages = Math.ceil(totalMovies / moviesPerPage);
   const isFiltering = searchQuery.trim().length > 0 || !!selectedVJ || selectedGenre !== "All";
-  const selectedVJLabel = availableVJs.find(vj => vj.id === selectedVJ)?.name;
 
   const displayedMovies = movies;
 
@@ -161,17 +182,6 @@ function MoviesPageInner() {
               value={selectedYear}
               onChange={setSelectedYear}
             />
-
-            {/* Clear filters */}
-            {isFiltering && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl border-2 border-gray-800 bg-black/40 backdrop-blur-xl text-gray-400 hover:border-[#E50914]/60 hover:text-white hover:bg-black/50 transition-all duration-300 whitespace-nowrap"
-              >
-                <X className="w-4 h-4" />
-                <span className="hidden sm:inline">Clear</span>
-              </button>
-            )}
           </div>
 
           {/* Genre Filter Chips */}
@@ -181,29 +191,6 @@ function MoviesPageInner() {
             onSelectGenre={setSelectedGenre}
           />
         </div>
-
-        {/* Active filter chips */}
-        {isFiltering && !loading && (
-          <div className="flex items-center gap-2 mb-6 flex-wrap">
-            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Active Filters:</span>
-            <span className="text-white text-sm font-medium">{movies.length} movie{movies.length !== 1 ? "s" : ""}</span>
-            {searchQuery && (
-              <span className="px-3 py-1.5 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914] font-medium">
-                &quot;{searchQuery}&quot;
-              </span>
-            )}
-            {selectedVJ && (
-              <span className="px-3 py-1.5 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914] font-medium">
-                {selectedVJLabel}
-              </span>
-            )}
-            {selectedGenre !== "All" && (
-              <span className="px-3 py-1.5 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914] font-medium">
-                {selectedGenre}
-              </span>
-            )}
-          </div>
-        )}
 
         {/* Loading */}
         {loading && <LoadingGrid />}
@@ -236,7 +223,7 @@ function MoviesPageInner() {
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && !loading && (
+        {!searchQuery.trim() && totalPages > 1 && !loading && (
           <div className="flex justify-center items-center mt-14 gap-1.5 flex-wrap">
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Search movies
     if (filter === 'all' || filter === 'movies') {
-      let movies = await searchMovies(query, 50);
+      let movies = await searchMovies(query, 500);
 
       if (genre !== 'all') {
         movies = movies.filter(m => m.genre_ids?.includes(genre));
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     // Search series
     if (filter === 'all' || filter === 'series') {
-      let series = await searchSeries(query, 50);
+      let series = await searchSeries(query, 500);
 
       if (genre !== 'all') {
         series = series.filter(s => s.genre_ids?.includes(genre));

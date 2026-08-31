@@ -287,7 +287,7 @@ export async function getGenreRowsForHome(limit = 12) {
 const genreSearchCache = new Map<string, { data: any, timestamp: number }>();
 const GENRE_CACHE_TTL = 5 * 60 * 1000;
 
-export async function searchMovies(query: string, limit = 20, page = 1, vjName?: string, genre?: string, year?: string) {
+export async function searchMovies(query: string, limit = 500, page = 1, vjName?: string, genre?: string, year?: string) {
   try {
     const q = query.trim();
     if (!q && !vjName && genre) {
@@ -309,7 +309,7 @@ export async function searchMovies(query: string, limit = 20, page = 1, vjName?:
   }
 }
 
-export async function searchSeries(query: string, limit = 20, page = 1, vjName?: string, genre?: string, year?: string) {
+export async function searchSeries(query: string, limit = 500, page = 1, vjName?: string, genre?: string, year?: string) {
   try {
     const q = query.trim();
     if (!q && !vjName && genre) {
@@ -331,7 +331,7 @@ export async function searchSeries(query: string, limit = 20, page = 1, vjName?:
   }
 }
 
-export async function searchAllContent(query: string, limit = 50, page = 1, vjName?: string, genre?: string) {
+export async function searchAllContent(query: string, limit = 500, page = 1, vjName?: string, genre?: string) {
   try {
     if (!query.trim() && !vjName) {
       const [m, s] = await Promise.all([

@@ -53,8 +53,10 @@ export default function MakyPayButton({
     if (cleaned.length >= 10) {
       const prefix = cleaned.startsWith('256') ? cleaned.substring(3, 5) : cleaned.substring(1, 3);
       
-      if (['77', '78', '76', '39', '31', '79'].includes(prefix)) {
+      // MTN: 77, 78, 76, 79, 39 — per MakyPay live API spec
+      if (['77', '78', '76', '79', '39'].includes(prefix)) {
         setDetectedProvider('MTN Mobile Money');
+      // Airtel: 70, 73, 74, 75 — per MakyPay live API spec
       } else if (['70', '73', '74', '75'].includes(prefix)) {
         setDetectedProvider('Airtel Money');
       } else {

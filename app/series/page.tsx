@@ -1,5 +1,5 @@
 "use client";
-import { Search, Filter, X, Tv } from "lucide-react";
+import { Search, Filter, Tv } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { Series } from "@/lib/supabase";
 import { NetflixCard } from "@/components/NetflixCard";
@@ -57,19 +57,31 @@ export default function SeriesPage() {
   const fetchSeries = useCallback(async (page: number, query = "", vjName = "", genre = "All") => {
     setLoading(true);
     try {
-      const seriesData = await searchSeries(
-        query, 
-        seriesPerPage, 
-        page, 
-        vjName || undefined,
-        genre !== "All" ? genre.toLowerCase() : undefined
-      );
-      setSeries(seriesData as any[]);
-      setTotalSeries(
-        seriesData.length === seriesPerPage
-          ? page * seriesPerPage + 1
-          : (page - 1) * seriesPerPage + seriesData.length
-      );
+      if (query.trim()) {
+        const seriesData = await searchSeries(
+          query, 
+          500, 
+          1, 
+          vjName || undefined,
+          genre !== "All" ? genre.toLowerCase() : undefined
+        );
+        setSeries(seriesData as any[]);
+        setTotalSeries(seriesData.length);
+      } else {
+        const seriesData = await searchSeries(
+          query, 
+          seriesPerPage, 
+          page, 
+          vjName || undefined,
+          genre !== "All" ? genre.toLowerCase() : undefined
+        );
+        setSeries(seriesData as any[]);
+        setTotalSeries(
+          seriesData.length === seriesPerPage
+            ? page * seriesPerPage + 1
+            : (page - 1) * seriesPerPage + seriesData.length
+        );
+      }
     } catch (error) {
       console.error("Error fetching series:", error);
     } finally {
@@ -100,7 +112,6 @@ export default function SeriesPage() {
 
   const totalPages = Math.ceil(totalSeries / seriesPerPage);
   const isFiltering = searchQuery.trim().length > 0 || !!selectedVJ || selectedGenre !== "All";
-  const selectedVJLabel = availableVJs.find(vj => vj.id === selectedVJ)?.name;
 
   const vjOptions = [
     { value: '', label: 'All VJs' },
@@ -143,17 +154,6 @@ export default function SeriesPage() {
               value={selectedVJ}
               onChange={setSelectedVJ}
             />
-
-            {/* Clear filters */}
-            {isFiltering && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl border-2 border-gray-800 bg-black/40 backdrop-blur-xl text-gray-400 hover:border-[#E50914]/60 hover:text-white hover:bg-black/50 transition-all duration-300 whitespace-nowrap"
-              >
-                <X className="w-4 h-4" />
-                <span className="hidden sm:inline">Clear</span>
-              </button>
-            )}
           </div>
 
           {/* Genre Filter Chips */}
@@ -163,29 +163,6 @@ export default function SeriesPage() {
             onSelectGenre={setSelectedGenre}
           />
         </div>
-
-        {/* Active filter chips */}
-        {isFiltering && !loading && (
-          <div className="flex items-center gap-2 mb-6 flex-wrap">
-            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Active Filters:</span>
-            <span className="text-white text-sm font-medium">{series.length} show{series.length !== 1 ? "s" : ""}</span>
-            {searchQuery && (
-              <span className="px-3 py-1.5 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914] font-medium">
-                &quot;{searchQuery}&quot;
-              </span>
-            )}
-            {selectedVJ && (
-              <span className="px-3 py-1.5 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914] font-medium">
-                {selectedVJLabel}
-              </span>
-            )}
-            {selectedGenre !== "All" && (
-              <span className="px-3 py-1.5 bg-[#E50914]/10 border border-[#E50914]/20 rounded-full text-xs text-[#E50914] font-medium">
-                {selectedGenre}
-              </span>
-            )}
-          </div>
-        )}
 
         {/* Loading */}
         {loading && <LoadingGrid />}
@@ -218,7 +195,7 @@ export default function SeriesPage() {
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && !loading && (
+        {!searchQuery.trim() && totalPages > 1 && !loading && (
           <div className="flex justify-center items-center mt-14 gap-1.5 flex-wrap">
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}

@@ -229,28 +229,46 @@ export async function getReelplexiMovies(page = 1, perPage = 50, genre?: string)
   return (res.data || []).map(normalizeReelplexiMovie);
 }
 
-export async function searchReelplexiMovies(query: string, page = 1, perPage = 50, vj?: string, genre?: string, year?: string) {
-  const params: Record<string, string | number> = { page, per_page: perPage };
-  // Normalize VJ name to lowercase so ilike on the API side matches all casing variants
+export async function searchReelplexiMovies(query: string, page = 1, perPage = 100, vj?: string, genre?: string, year?: string) {
   const vjNorm = vj ? vj.toLowerCase() : undefined;
-  if (genre) params.genre = genre;
-  if (year) params.year = year;
 
   // /v1/movies/search requires q with min_length=1.
   // When there is no search text, use the list endpoint which accepts vj as an optional filter.
   if (!query.trim()) {
+    const params: Record<string, string | number> = { page, per_page: perPage };
+    if (genre) params.genre = genre;
+    if (year) params.year = year;
     if (vjNorm) params.vj = vjNorm;
     const res = await fetchReelplexi('/v1/movies', params);
     return (res.data || []).map(normalizeReelplexiMovie);
   }
 
-  params.q = query.trim();
-  if (vjNorm) params.vj = vjNorm;
-  const res = await fetchReelplexi('/v1/movies/search', params);
-  return (res.data || []).map(normalizeReelplexiMovie);
+  // When text is searched, fetch ALL matching results across the entire database
+  const allResults: any[] = [];
+  let currentPage = 1;
+  const pageSize = 100;
+
+  while (true) {
+    const params: Record<string, string | number> = { page: currentPage, per_page: pageSize, q: query.trim() };
+    if (vjNorm) params.vj = vjNorm;
+    if (genre) params.genre = genre;
+    if (year) params.year = year;
+
+    const res = await fetchReelplexi('/v1/movies/search', params);
+    const data = res.data || [];
+    if (!Array.isArray(data) || data.length === 0) break;
+
+    allResults.push(...data.map(normalizeReelplexiMovie));
+
+    if (data.length < pageSize) break;
+    currentPage++;
+    if (currentPage > 50) break; // Safety cap against non-terminating APIs
+  }
+
+  return allResults;
 }
 
-export async function searchReelplexiAll(query: string, page = 1, perPage = 50, vj?: string, genre?: string) {
+export async function searchReelplexiAll(query: string, page = 1, perPage = 100, vj?: string, genre?: string) {
   const vjNorm = vj ? vj.toLowerCase() : undefined;
 
   // /v1/search requires q with min_length=1.
@@ -266,19 +284,35 @@ export async function searchReelplexiAll(query: string, page = 1, perPage = 50, 
     ];
   }
 
-  const params: Record<string, string | number> = { page, per_page: perPage, q: query.trim() };
-  if (vjNorm) params.vj = vjNorm;
-  if (genre) params.genre = genre;
-  const res = await fetchReelplexi('/v1/search', params);
+  // When text is searched, fetch ALL matching results across the entire database
+  const allResults: any[] = [];
+  let currentPage = 1;
+  const pageSize = 100;
 
-  // The search endpoint returns mixed content (movies and series)
-  return (res.data || []).map((item: any) => {
-    if (item.type === 'movie' || item.type === undefined) { // fallback
-      return { ...normalizeReelplexiMovie(item), type: 'movie' };
-    } else {
-      return { ...normalizeReelplexiSeries(item), type: 'series' };
-    }
-  });
+  while (true) {
+    const params: Record<string, string | number> = { page: currentPage, per_page: pageSize, q: query.trim() };
+    if (vjNorm) params.vj = vjNorm;
+    if (genre) params.genre = genre;
+
+    const res = await fetchReelplexi('/v1/search', params);
+    const data = res.data || [];
+    if (!Array.isArray(data) || data.length === 0) break;
+
+    const normalized = data.map((item: any) => {
+      if (item.type === 'movie' || item.type === undefined) {
+        return { ...normalizeReelplexiMovie(item), type: 'movie' };
+      } else {
+        return { ...normalizeReelplexiSeries(item), type: 'series' };
+      }
+    });
+    allResults.push(...normalized);
+
+    if (data.length < pageSize) break;
+    currentPage++;
+    if (currentPage > 50) break; // Safety cap against non-terminating APIs
+  }
+
+  return allResults;
 }
 
 
@@ -306,24 +340,43 @@ export async function getReelplexiSeries(page = 1, perPage = 50, genre?: string)
   return (res.data || []).map(normalizeReelplexiSeries);
 }
 
-export async function searchReelplexiSeries(query: string, page = 1, perPage = 50, vj?: string, genre?: string, year?: string) {
-  const params: Record<string, string | number> = { page, per_page: perPage };
+export async function searchReelplexiSeries(query: string, page = 1, perPage = 100, vj?: string, genre?: string, year?: string) {
   const vjNorm = vj ? vj.toLowerCase() : undefined;
-  if (genre) params.genre = genre;
-  if (year) params.year = year;
 
   // /v1/series/search requires q with min_length=1.
   // When there is no search text, use the list endpoint which accepts vj as an optional filter.
   if (!query.trim()) {
+    const params: Record<string, string | number> = { page, per_page: perPage };
+    if (genre) params.genre = genre;
+    if (year) params.year = year;
     if (vjNorm) params.vj = vjNorm;
     const res = await fetchReelplexi('/v1/series', params);
     return (res.data || []).map(normalizeReelplexiSeries);
   }
 
-  params.q = query.trim();
-  if (vjNorm) params.vj = vjNorm;
-  const res = await fetchReelplexi('/v1/series/search', params);
-  return (res.data || []).map(normalizeReelplexiSeries);
+  // When text is searched, fetch ALL matching results across the entire database
+  const allResults: any[] = [];
+  let currentPage = 1;
+  const pageSize = 100;
+
+  while (true) {
+    const params: Record<string, string | number> = { page: currentPage, per_page: pageSize, q: query.trim() };
+    if (vjNorm) params.vj = vjNorm;
+    if (genre) params.genre = genre;
+    if (year) params.year = year;
+
+    const res = await fetchReelplexi('/v1/series/search', params);
+    const data = res.data || [];
+    if (!Array.isArray(data) || data.length === 0) break;
+
+    allResults.push(...data.map(normalizeReelplexiSeries));
+
+    if (data.length < pageSize) break;
+    currentPage++;
+    if (currentPage > 50) break; // Safety cap against non-terminating APIs
+  }
+
+  return allResults;
 }
 
 export async function getReelplexiSeriesById(id: string) {

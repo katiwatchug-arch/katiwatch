@@ -241,7 +241,7 @@ export default function HomePage() {
     const handler = setTimeout(async () => {
       try {
         const api = await import("@/lib/api");
-        const results = await api.searchAllContent(searchQuery, 20, 1);
+        const results = await api.searchAllContent(searchQuery, 500, 1);
         setSearchResults(results);
         setShowSearchResults(true);
         setIsSearching(false);

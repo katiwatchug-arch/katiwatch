@@ -84,27 +84,27 @@ export class MakyPayService {
   /**
    * Determine mobile money provider based on phone number prefix
    * 
-   * MakyPay officially supported prefixes:
-   * MTN: 077, 078, 076, 079
-   * Airtel: 070, 074, 075
+   * MakyPay officially supported prefixes (per live API spec):
+   * MTN: 077, 078, 076, 079, 039
+   * Airtel: 070, 073, 074, 075
    */
   static getProviderFromPhone(phoneNumber: string): string {
     const formatted = this.formatPhoneNumber(phoneNumber);
 
-    // MTN: 256 + (077, 078, 076, 079) — per MakyPay API docs
-    if (/^256(77|78|76|79)/.test(formatted)) {
+    // MTN: 256 + (77, 78, 76, 79, 39) — per MakyPay live API spec
+    if (/^256(77|78|76|79|39)/.test(formatted)) {
       return 'mtn';
     }
 
-    // Airtel: 256 + (070, 074, 075) — per MakyPay API docs
-    if (/^256(70|74|75)/.test(formatted)) {
+    // Airtel: 256 + (70, 73, 74, 75) — per MakyPay live API spec
+    if (/^256(70|73|74|75)/.test(formatted)) {
       return 'airtel';
     }
 
     // Reject unsupported prefixes instead of silently defaulting
     const prefix = formatted.substring(3, 5);
     throw new MakyPayException(
-      `Unsupported phone prefix (0${prefix}). MakyPay supports MTN (077/078/076/079) and Airtel (070/074/075) only.`
+      `Unsupported phone prefix (0${prefix}). MakyPay supports MTN (077/078/076/079/039) and Airtel (070/073/074/075) only.`
     );
   }
 
