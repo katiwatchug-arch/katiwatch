@@ -127,10 +127,10 @@ export default function MovieDetailsClient() {
     
     // For iOS, show iOS download modal (MKV files need special handling)
     if (isIOSDevice()) {
-      const cleanTitle = (movie.title || 'video').replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim();
+      const cleanTitle = (movie?.title || 'video').replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim();
       const filename = cleanTitle + '.mkv';
       // Use the download API endpoint for iOS
-      const downloadUrl = `/api/download?id=${movie.id}&type=movie&filename=${encodeURIComponent(filename)}`;
+      const downloadUrl = `/api/download?id=${movie?.id}&type=movie&filename=${encodeURIComponent(filename)}`;
       setIOSDownloadInfo({ url: downloadUrl, filename });
       setShowIOSDownloadModal(true);
     } else {
