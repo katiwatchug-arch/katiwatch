@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertCircle, Download, ExternalLink } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface IOSDownloadModalProps {
@@ -49,70 +49,24 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
         className="bg-gray-900 rounded-2xl border border-[#E50914]/30 shadow-2xl max-w-md w-full max-h-[80dvh] overflow-y-auto overscroll-contain flex flex-col animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-[#E50914] to-[#b80710] p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-              <Download className="w-5 h-5 text-white" />
+        {/* Icon */}
+        <div className="p-6 sm:p-8">
+          <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-5">
+            <div className="absolute inset-0 bg-[#E50914]/20 rounded-full animate-ping"></div>
+            <div 
+              className="relative w-full h-full rounded-full flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.2), rgba(229, 9, 20, 0.05))',
+                border: '2px solid rgba(229, 9, 20, 0.4)',
+              }}
+            >
+              <Download className="w-8 h-8 sm:w-9 sm:h-9 text-[#E50914]" strokeWidth={2.5} />
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">iOS Download Instructions</h2>
-              <p className="text-xs text-white/80">iPhone & iPad require special steps</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-4">
-          {/* Alert */}
-          <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-200">
-              iOS doesn't support direct MKV downloads. Tap "Open Link" then long-press the video to save it.
-            </p>
           </div>
 
-          {/* Instructions */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-white">Method 1: Safari Download</h3>
-            <ol className="space-y-2 text-sm text-gray-300">
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#E50914] text-white text-xs flex items-center justify-center font-bold">1</span>
-                <span>Tap "Open Link" button below</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#E50914] text-white text-xs flex items-center justify-center font-bold">2</span>
-                <span>Long-press on the video when it opens</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#E50914] text-white text-xs flex items-center justify-center font-bold">3</span>
-                <span>Select "Download Linked File" from the menu</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#E50914] text-white text-xs flex items-center justify-center font-bold">4</span>
-                <span>Find your video in the Files app → Downloads</span>
-              </li>
-            </ol>
-          </div>
-
-          {/* Alternative Method */}
-          <div className="pt-3 border-t border-gray-700 space-y-2">
-            <h3 className="text-sm font-semibold text-white">Method 2: Use Download Apps</h3>
-            <p className="text-xs text-gray-400">
-              For easier downloads, we recommend using these apps:
-            </p>
-            <ul className="text-xs text-gray-400 space-y-1 ml-4">
-              <li>• Documents by Readdle (Free)</li>
-              <li>• iDownloader (Free)</li>
-              <li>• VLC Media Player (Free, also plays videos)</li>
-            </ul>
-          </div>
-
-          {/* File Info */}
-          <div className="bg-gray-800/50 rounded-lg p-3 text-xs">
-            <div className="text-gray-400">Downloading:</div>
-            <div className="text-white font-medium truncate mt-1">{filename}</div>
-          </div>
+          <h2 className="text-2xl font-bold text-white mb-1.5 text-center">Ready to Download</h2>
+          <p className="text-gray-300 text-sm mb-1 text-center font-semibold">{filename}</p>
+          <p className="text-gray-500 text-xs mb-6 text-center">Fast, high-quality direct download</p>
         </div>
 
         {/* Actions */}
@@ -127,20 +81,13 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
           <Button
             onClick={() => {
               window.open(downloadUrl, '_blank');
-              // Keep modal open so user can reference instructions
+              onClose();
             }}
             className="flex-1 bg-[#E50914] hover:bg-[#b80710] text-white"
           >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Open Link
+            <Download className="w-4 h-4 mr-2" />
+            Start Download
           </Button>
-        </div>
-
-        {/* Footer tip */}
-        <div className="px-4 pb-4">
-          <p className="text-xs text-center text-gray-500">
-            💡 Tip: Keep this guide open while you complete the steps
-          </p>
         </div>
       </div>
     </div>
