@@ -26,14 +26,7 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
       document.body.style.position = "fixed";
       document.body.style.top = "0";
       document.body.style.width = "100%";
-      
-      // Scroll modal into view with smooth behavior
-      setTimeout(() => {
-        const modalElement = document.querySelector('[role="dialog"]') as HTMLElement;
-        if (modalElement) {
-          modalElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 0);
+      document.body.style.height = "100vh";
       
       return () => {
         document.documentElement.style.overflow = "";
@@ -41,6 +34,7 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
         document.body.style.position = "";
         document.body.style.top = "";
         document.body.style.width = "";
+        document.body.style.height = "";
       };
     } else {
       document.documentElement.style.overflow = "";
@@ -48,6 +42,7 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.width = "";
+      document.body.style.height = "";
     }
   }, [isOpen]);
 
@@ -57,7 +52,7 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
     (
     <div 
       role="dialog"
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md h-[100dvh] w-screen overscroll-none touch-none"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md min-h-[100dvh] w-screen overscroll-none touch-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
