@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useAuth } from "@/components/AuthProvider";
 import { MovieWithVJ, SeriesWithVJ } from "@/lib/supabase";
 import AuthRequiredModal, { useAuthCheck } from "@/components/AuthRequiredModal";
+import { IOSDownloadModal } from "@/components/IOSDownloadModal";
 import { FullPageSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { NetflixCard } from "@/components/NetflixCard";
@@ -15,6 +16,7 @@ import { MovieCast } from "@/components/MovieCast";
 import { StreamitHoverCard } from "@/components/StreamitHoverCard";
 import { Play, Download, Check, ThumbsUp, Share2 } from "lucide-react";
 import { useUserPreferences } from "@/lib/hooks/useUserPreferences";
+import { isIOSDevice } from '@/lib/device-utils';
 
 export default function MovieDetailsClient() {
   const params = useParams();
@@ -31,6 +33,8 @@ export default function MovieDetailsClient() {
   const [trailerUrl, setTrailerUrl] = useState("");
   const [streamUrl, setStreamUrl] = useState("");
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [showIOSDownloadModal, setShowIOSDownloadModal] = useState(false);
+  const [iosDownloadInfo, setIOSDownloadInfo] = useState<{ url: string; filename: string } | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authAction, setAuthAction] = useState<"play" | "download">("play");
   const [activeTab, setActiveTab] = useState<"more" | "cast">("more");
@@ -120,7 +124,18 @@ export default function MovieDetailsClient() {
     if (movie?.premium && !isPremium) { router.push("/payment"); return; }
     const allowed = await canUserDownload(user.id);
     if (!allowed) { router.push("/payment"); return; }
-    setShowDownloadModal(true);
+    
+    // For iOS, show iOS download modal (MKV files need special handling)
+    if (isIOSDevice()) {
+      const cleanTitle = (movie.title || 'video').replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim();
+      const filename = cleanTitle + '.mkv';
+      // Use the download API endpoint for iOS
+      const downloadUrl = `/api/download?id=${movie.id}&type=movie&filename=${encodeURIComponent(filename)}`;
+      setIOSDownloadInfo({ url: downloadUrl, filename });
+      setShowIOSDownloadModal(true);
+    } else {
+      setShowDownloadModal(true);
+    }
   };
 
   useEffect(() => {
@@ -306,10 +321,20 @@ export default function MovieDetailsClient() {
         requirePremium={authAction === 'download'}
       />
 
+      <IOSDownloadModal
+        isOpen={showIOSDownloadModal}
+        onClose={() => {
+          setShowIOSDownloadModal(false);
+          setIOSDownloadInfo(null);
+        }}
+        downloadUrl={iosDownloadInfo?.url || ''}
+        filename={iosDownloadInfo?.filename || ''}
+      />
+
       {/* Download Modal - Global Viewport Centered */}
       {showDownloadModal && movie && (
         <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowDownloadModal(false);
           }}

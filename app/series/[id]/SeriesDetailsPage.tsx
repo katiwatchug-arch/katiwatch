@@ -11,10 +11,12 @@ import VideoPlayer from "@/components/VideoPlayer";
 import { useAuth } from "@/components/AuthProvider";
 import { getProfile, Profile } from "@/lib/profiles";
 import AuthRequiredModal from "@/components/AuthRequiredModal";
+import { IOSDownloadModal } from "@/components/IOSDownloadModal";
 import { canUserDownload } from "@/lib/subscriptions";
 import { supabase, Series, SeriesWithVJ, Season, Episode, EpisodeWithSeason, MovieWithVJ } from "@/lib/supabase";
 import { useUserPreferences } from "@/lib/hooks/useUserPreferences";
 import { NetflixCard } from "@/components/NetflixCard";
+import { isIOSDevice } from '@/lib/device-utils';
 
 export default function SeriesDetailsPage() {
   const params = useParams();
@@ -33,6 +35,8 @@ export default function SeriesDetailsPage() {
   const [streamUrl, setStreamUrl] = useState<string>("");
   const [showSeasonDropdown, setShowSeasonDropdown] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [showIOSDownloadModal, setShowIOSDownloadModal] = useState(false);
+  const [iosDownloadInfo, setIOSDownloadInfo] = useState<{ url: string; filename: string } | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authAction, setAuthAction] = useState<"play" | "download">("play");
   const [castInfo, setCastInfo] = useState<{ starring: string; creators: string }>({ starring: "", creators: "" });
@@ -195,7 +199,19 @@ export default function SeriesDetailsPage() {
     if (episode.premium && !isPremium) { router.push("/payment"); return; }
     const allowed = await canUserDownload(user.id);
     if (!allowed) { router.push("/payment"); return; }
-    setShowDownloadModal(true);
+    
+    // For iOS, show iOS download modal (MKV files need special handling)
+    if (isIOSDevice()) {
+      const cleanTitle = (series?.title || 'video').replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim();
+      const cleanEp = episode.title.replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim();
+      const filename = `${cleanTitle} - S${episode.seasonOrder}E${episode.episode_number} - ${cleanEp}.mkv`;
+      // Use the download API endpoint for iOS
+      const downloadUrl = `/api/download?id=${params.id}&type=episode&season=${episode.seasonOrder || 1}&episode=${episode.episode_number}&filename=${encodeURIComponent(filename)}`;
+      setIOSDownloadInfo({ url: downloadUrl, filename });
+      setShowIOSDownloadModal(true);
+    } else {
+      setShowDownloadModal(true);
+    }
   };
 
   useEffect(() => {
@@ -542,10 +558,20 @@ export default function SeriesDetailsPage() {
         requirePremium={authAction === 'download'}
       />
 
+      <IOSDownloadModal
+        isOpen={showIOSDownloadModal}
+        onClose={() => {
+          setShowIOSDownloadModal(false);
+          setIOSDownloadInfo(null);
+        }}
+        downloadUrl={iosDownloadInfo?.url || ''}
+        filename={iosDownloadInfo?.filename || ''}
+      />
+
       {/* Download Modal - Global Viewport Centered */}
       {showDownloadModal && selectedEpisode && (
         <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowDownloadModal(false);
           }}
