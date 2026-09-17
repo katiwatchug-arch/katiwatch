@@ -24,18 +24,6 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
       document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
       
-      // Scroll modal into view
-      setTimeout(() => {
-        const modalContainer = document.querySelector('[role="dialog"]') as HTMLElement;
-        if (modalContainer) {
-          const rect = modalContainer.getBoundingClientRect();
-          window.scrollTo({
-            top: window.scrollY + rect.top - (window.innerHeight / 2),
-            behavior: 'smooth'
-          });
-        }
-      }, 50);
-      
       return () => {
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
