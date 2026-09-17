@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertCircle, Download, ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -12,28 +13,48 @@ interface IOSDownloadModalProps {
 }
 
 export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOSDownloadModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
+      window.scrollTo(0, 0);
+      document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = "0";
+      document.body.style.width = "100%";
       return () => {
+        document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
       };
     } else {
+      document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
-  return (
+  return createPortal(
+    (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md min-h-[100dvh]"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md h-[100dvh] w-screen overscroll-none touch-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
-        className="bg-gray-900 rounded-2xl border border-[#E50914]/30 shadow-2xl max-w-md w-full max-h-[85dvh] overflow-y-auto flex flex-col animate-in fade-in zoom-in-95 duration-200"
+        className="bg-gray-900 rounded-2xl border border-[#E50914]/30 shadow-2xl max-w-md w-full max-h-[80dvh] overflow-y-auto overscroll-contain flex flex-col animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -131,5 +152,7 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
         </div>
       </div>
     </div>
+    ),
+    document.body
   );
 }
