@@ -23,26 +23,26 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
     if (isOpen) {
       document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.top = "0";
-      document.body.style.width = "100%";
-      document.body.style.height = "100vh";
+      
+      // Scroll modal into view
+      setTimeout(() => {
+        const modalContainer = document.querySelector('[role="dialog"]') as HTMLElement;
+        if (modalContainer) {
+          const rect = modalContainer.getBoundingClientRect();
+          window.scrollTo({
+            top: window.scrollY + rect.top - (window.innerHeight / 2),
+            behavior: 'smooth'
+          });
+        }
+      }, 50);
       
       return () => {
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-        document.body.style.height = "";
       };
     } else {
       document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      document.body.style.height = "";
     }
   }, [isOpen]);
 
@@ -52,7 +52,7 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
     (
     <div 
       role="dialog"
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md min-h-[100dvh] w-screen overscroll-none touch-none"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md h-[100dvh] w-screen overscroll-none touch-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
