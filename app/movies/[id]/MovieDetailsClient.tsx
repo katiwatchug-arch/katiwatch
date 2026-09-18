@@ -16,7 +16,6 @@ import { MovieCast } from "@/components/MovieCast";
 import { StreamitHoverCard } from "@/components/StreamitHoverCard";
 import { Play, Download, Check, ThumbsUp, Share2 } from "lucide-react";
 import { useUserPreferences } from "@/lib/hooks/useUserPreferences";
-import { isIOSDevice } from '@/lib/device-utils';
 
 export default function MovieDetailsClient() {
   const params = useParams();
@@ -32,7 +31,6 @@ export default function MovieDetailsClient() {
   const [relatedLoaded, setRelatedLoaded] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState("");
   const [streamUrl, setStreamUrl] = useState("");
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showIOSDownloadModal, setShowIOSDownloadModal] = useState(false);
   const [iosDownloadInfo, setIOSDownloadInfo] = useState<{ url: string; filename: string } | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -125,20 +123,16 @@ export default function MovieDetailsClient() {
     const allowed = await canUserDownload(user.id);
     if (!allowed) { router.push("/payment"); return; }
     
-    // For iOS, show iOS download modal (MKV files need special handling)
-    if (isIOSDevice()) {
-      const clean = movie?.title?.replace(/[^a-zA-Z0-9\s\-_.]/g, "").trim() || "video";
-      const filename = clean + ".mp4";
-      const proxyUrl = `/api/download?id=${movie?.id}&type=movie&filename=${encodeURIComponent(filename)}`;
-      setIOSDownloadInfo({ url: proxyUrl, filename });
-      setShowIOSDownloadModal(true);
-    } else {
-      setShowDownloadModal(true);
-    }
+    // Show iOS/Android download modal
+    const clean = movie?.title?.replace(/[^a-zA-Z0-9\s\-_.]/g, "").trim() || "video";
+    const filename = clean + ".mp4";
+    const proxyUrl = `/api/download?id=${movie?.id}&type=movie&filename=${encodeURIComponent(filename)}`;
+    setIOSDownloadInfo({ url: proxyUrl, filename });
+    setShowIOSDownloadModal(true);
   };
 
   useEffect(() => {
-    if (showDownloadModal) {
+    if (showIOSDownloadModal) {
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = "";
@@ -146,7 +140,7 @@ export default function MovieDetailsClient() {
     } else {
       document.body.style.overflow = "";
     }
-  }, [showDownloadModal]);
+  }, [showIOSDownloadModal]);
 
   if (loading || authLoading) return <FullPageSpinner text="Loading movie details..." />;
   if (error || !movie) {
@@ -332,60 +326,7 @@ export default function MovieDetailsClient() {
 
       {/* Download Modal - Global Viewport Centered */}
       {showDownloadModal && movie && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowDownloadModal(false);
-          }}
-        >
-          <div 
-            className="w-full max-w-md bg-gradient-to-br from-[#1c1c1c] to-[#121212] rounded-2xl shadow-2xl border border-gray-800 my-auto max-h-[90dvh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-            onClick={e => e.stopPropagation()}
-            style={{
-              boxShadow: '0 0 40px rgba(229, 9, 20, 0.15), 0 20px 60px rgba(0, 0, 0, 0.9)',
-            }}
-          >
-            <div className="p-6 sm:p-8 overflow-y-auto">
-              <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-5">
-                <div className="absolute inset-0 bg-[#E50914]/20 rounded-full animate-ping"></div>
-                <div 
-                  className="relative w-full h-full rounded-full flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.2), rgba(229, 9, 20, 0.05))',
-                    border: '2px solid rgba(229, 9, 20, 0.4)',
-                  }}
-                >
-                  <Download className="w-8 h-8 sm:w-9 sm:h-9 text-[#E50914]" strokeWidth={2.5} />
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-1.5 text-center">Ready to Download</h2>
-              <p className="text-gray-300 text-sm mb-1 text-center font-semibold">{movie.title}</p>
-              <p className="text-gray-500 text-xs mb-6 text-center">Fast, high-quality direct download</p>
-              
-              <button
-                type="button"
-                className="w-full bg-[#E50914] hover:bg-[#b80710] text-white font-bold py-4 rounded-xl mb-3 transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-[#E50914]/25 flex items-center justify-center gap-2"
-                onClick={() => {
-                  const clean = movie.title.replace(/[^a-zA-Z0-9\s\-_.]/g, "").trim();
-                  const filename = clean + ".mp4";
-                  const proxyUrl = `/api/download?id=${movie.id}&type=movie&filename=${encodeURIComponent(filename)}`;
-                  window.open(proxyUrl, '_blank');
-                  setShowDownloadModal(false);
-                }}
-              >
-                <Download className="w-5 h-5" />
-                <span>Start Download</span>
-              </button>
-              <button 
-                type="button"
-                className="w-full text-gray-400 hover:text-white text-sm font-medium py-3 transition-colors rounded-xl hover:bg-white/5"
-                onClick={() => setShowDownloadModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+        <></>
       )}
     </div>
   );
