@@ -22,15 +22,21 @@ export function IOSDownloadModal({ isOpen, onClose, downloadUrl, filename }: IOS
   useEffect(() => {
     if (isOpen) {
       document.documentElement.style.overflow = "hidden";
+      document.documentElement.style.height = "100%";
       document.body.style.overflow = "hidden";
+      document.body.style.height = "100%";
       
       return () => {
         document.documentElement.style.overflow = "";
+        document.documentElement.style.height = "";
         document.body.style.overflow = "";
+        document.body.style.height = "";
       };
     } else {
       document.documentElement.style.overflow = "";
+      document.documentElement.style.height = "";
       document.body.style.overflow = "";
+      document.body.style.height = "";
     }
   }, [isOpen]);
 

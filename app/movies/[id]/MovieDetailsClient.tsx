@@ -325,9 +325,6 @@ export default function MovieDetailsClient() {
       />
 
       {/* Download Modal - Global Viewport Centered */}
-      {showDownloadModal && movie && (
-        <></>
-      )}
     </div>
   );
 }
