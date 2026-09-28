@@ -1,11 +1,11 @@
 "use client";
-import { Search, Film, Download, Play, X } from "lucide-react";
+import { Search, Tv, Download, Play, X } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { ModernSearchBar } from "@/components/ModernSearchBar";
-import { getEnglishMovies, searchEnglishMovies, getEnglishMovieDownloads } from "@/lib/api";
+import { getEnglishSeries, searchEnglishSeries, getEnglishSeriesDownloads } from "@/lib/api";
 
-type EnglishMovie = {
+type EnglishSeries = {
   id: string;
   tmdb_id: string;
   title: string;
@@ -17,6 +17,7 @@ type EnglishMovie = {
   genres: string[];
   genre_ids: string[];
   embed_url: string;
+  season_count: number;
   type: string;
 };
 
@@ -34,13 +35,13 @@ type Subtitle = {
   format: string;
 };
 
-const movieTypes = [
+const seriesTypes = [
   { value: 'all', label: 'All' },
   { value: 'popular', label: 'Popular' },
   { value: 'trending', label: 'Trending' },
   { value: 'top-rated', label: 'Top Rated' },
-  { value: 'now-playing', label: 'Now Playing' },
-  { value: 'upcoming', label: 'Upcoming' }
+  { value: 'on-air', label: 'On Air' },
+  { value: 'airing-today', label: 'Airing Today' }
 ];
 
 const LoadingGrid = () => (
@@ -51,66 +52,66 @@ const LoadingGrid = () => (
   </div>
 );
 
-export default function EnglishMoviesPage() {
-  const [movies, setMovies] = useState<EnglishMovie[]>([]);
+export default function EnglishSeriesPage() {
+  const [series, setSeries] = useState<EnglishSeries[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedMovie, setSelectedMovie] = useState<EnglishMovie | null>(null);
+  const [selectedSeries, setSelectedSeries] = useState<EnglishSeries | null>(null);
   const [downloads, setDownloads] = useState<{ downloads: DownloadOption[], subtitles: Subtitle[] } | null>(null);
   const [loadingDownloads, setLoadingDownloads] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
 
-  const fetchMovies = useCallback(async (query = "", type = "all") => {
+  const fetchSeries = useCallback(async (query = "", type = "all") => {
     setLoading(true);
     try {
       if (query.trim()) {
-        const results = await searchEnglishMovies(query);
-        setMovies(results);
+        const results = await searchEnglishSeries(query);
+        setSeries(results);
       } else if (type === 'all') {
         // Fetch from multiple categories when "All" is selected
         const [popular, trending, topRated] = await Promise.all([
-          getEnglishMovies('popular', 12),
-          getEnglishMovies('trending', 12),
-          getEnglishMovies('top-rated', 12)
+          getEnglishSeries('popular', 12),
+          getEnglishSeries('trending', 12),
+          getEnglishSeries('top-rated', 12)
         ]);
         // Combine and deduplicate by id
         const combined = [...popular, ...trending, ...topRated];
-        const uniqueMovies = Array.from(
-          new Map(combined.map(movie => [movie.id, movie])).values()
+        const uniqueSeries = Array.from(
+          new Map(combined.map(s => [s.id, s])).values()
         );
-        setMovies(uniqueMovies);
+        setSeries(uniqueSeries);
       } else {
-        const results = await getEnglishMovies(type as any);
-        setMovies(results);
+        const results = await getEnglishSeries(type as any);
+        setSeries(results);
       }
     } catch (error) {
-      console.error("Error fetching English movies:", error);
-      setMovies([]);
+      console.error("Error fetching English series:", error);
+      setSeries([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchMovies("", selectedType);
-  }, [fetchMovies, selectedType]);
+    fetchSeries("", selectedType);
+  }, [fetchSeries, selectedType]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      fetchMovies(searchQuery, selectedType);
+      fetchSeries(searchQuery, selectedType);
     }, 400);
     return () => clearTimeout(handler);
-  }, [searchQuery, selectedType, fetchMovies]);
+  }, [searchQuery, selectedType, fetchSeries]);
 
-  const handleMovieClick = async (movie: EnglishMovie) => {
-    setSelectedMovie(movie);
+  const handleSeriesClick = async (show: EnglishSeries) => {
+    setSelectedSeries(show);
     setLoadingDownloads(true);
     setDownloads(null);
     setShowPlayer(false);
     
     try {
-      const downloadData = await getEnglishMovieDownloads(movie.tmdb_id || movie.id);
+      const downloadData = await getEnglishSeriesDownloads(show.tmdb_id || show.id);
       setDownloads(downloadData);
     } catch (error) {
       console.error("Error fetching downloads:", error);
@@ -120,7 +121,7 @@ export default function EnglishMoviesPage() {
   };
 
   const closeModal = () => {
-    setSelectedMovie(null);
+    setSelectedSeries(null);
     setDownloads(null);
     setShowPlayer(false);
   };
@@ -138,11 +139,11 @@ export default function EnglishMoviesPage() {
       <div className="bg-gradient-to-b from-[#141414] to-[#0a0a0a] pt-8 pb-6 px-4 border-b border-gray-800/50 pt-safe">
         <div className="container mx-auto sm:px-6">
           <div className="flex items-center gap-3 mb-1">
-            <Film className="w-5 h-5 sm:w-6 sm:h-6 text-[#E50914]" />
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">English Movies</h1>
+            <Tv className="w-5 h-5 sm:w-6 sm:h-6 text-[#E50914]" />
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">English TV Series</h1>
           </div>
           <p className="text-gray-500 text-xs sm:text-sm ml-8 sm:ml-9">
-            Hollywood & International English movies with high-speed downloads
+            International TV series with high-speed downloads
           </p>
         </div>
       </div>
@@ -154,7 +155,7 @@ export default function EnglishMoviesPage() {
             <ModernSearchBar
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder="Search English movies..."
+              placeholder="Search English TV series..."
               className="flex-1"
             />
           </div>
@@ -162,7 +163,7 @@ export default function EnglishMoviesPage() {
           {/* Type Filter Chips */}
           <div className="relative">
             <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide scroll-smooth">
-              {movieTypes.map(type => (
+              {seriesTypes.map(type => (
                 <button
                   key={type.value}
                   onClick={() => setSelectedType(type.value)}
@@ -189,37 +190,37 @@ export default function EnglishMoviesPage() {
         {loading && <LoadingGrid />}
 
         {/* Grid */}
-        {!loading && movies.length > 0 && (
+        {!loading && series.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {movies.map((movie) => (
+            {series.map((show) => (
               <div
-                key={movie.id}
-                onClick={() => handleMovieClick(movie)}
+                key={show.id}
+                onClick={() => handleSeriesClick(show)}
                 className="group relative cursor-pointer rounded-lg overflow-hidden bg-gray-900 hover:ring-2 hover:ring-[#E50914] transition-all duration-300 hover:scale-105"
               >
                 <div className="aspect-[2/3] relative">
                   <Image
-                    src={movie.poster_url || `https://via.placeholder.com/300x450/1a1a2e/e50914?text=${encodeURIComponent(movie.title)}`}
-                    alt={movie.title}
+                    src={show.poster_url || `https://via.placeholder.com/300x450/1a1a2e/e50914?text=${encodeURIComponent(show.title)}`}
+                    alt={show.title}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
                     className="object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://via.placeholder.com/300x450/1a1a2e/e50914?text=${encodeURIComponent(movie.title)}`;
+                      (e.target as HTMLImageElement).src = `https://via.placeholder.com/300x450/1a1a2e/e50914?text=${encodeURIComponent(show.title)}`;
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="absolute top-2 right-2 bg-[#E50914] text-white text-xs font-bold px-2 py-1 rounded">
-                    HD
+                    {show.season_count} {show.season_count === 1 ? 'Season' : 'Seasons'}
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-3 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                    <h3 className="text-white font-semibold text-sm line-clamp-2 mb-1">{movie.title}</h3>
+                    <h3 className="text-white font-semibold text-sm line-clamp-2 mb-1">{show.title}</h3>
                     <div className="flex items-center gap-2 text-xs text-gray-300">
-                      <span>{new Date(movie.release_date).getFullYear()}</span>
-                      {movie.genres && movie.genres.length > 0 && (
+                      <span>{new Date(show.release_date).getFullYear()}</span>
+                      {show.genres && show.genres.length > 0 && (
                         <>
                           <span>•</span>
-                          <span>{movie.genres[0]}</span>
+                          <span>{show.genres[0]}</span>
                         </>
                       )}
                     </div>
@@ -231,14 +232,14 @@ export default function EnglishMoviesPage() {
         )}
 
         {/* Empty state */}
-        {!loading && movies.length === 0 && (
+        {!loading && series.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-16 h-16 rounded-full bg-gray-800/60 flex items-center justify-center mb-5">
               <Search className="w-7 h-7 text-gray-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-300 mb-2">No movies found</h3>
+            <h3 className="text-xl font-bold text-gray-300 mb-2">No series found</h3>
             <p className="text-gray-600 text-sm max-w-xs">
-              {isFiltering ? "Try different search terms or remove filters." : "Movies are being loaded. Please try again shortly."}
+              {isFiltering ? "Try different search terms or remove filters." : "Series are being loaded. Please try again shortly."}
             </p>
             {isFiltering && (
               <button onClick={clearFilters} className="mt-5 px-5 py-2.5 bg-[#E50914] hover:bg-[#b80710] text-white rounded-xl text-sm font-semibold transition-colors">
@@ -249,8 +250,8 @@ export default function EnglishMoviesPage() {
         )}
       </div>
 
-      {/* Movie Details Modal */}
-      {selectedMovie && (
+      {/* Series Details Modal */}
+      {selectedSeries && (
         <div className="fixed inset-0 bg-black/90 z-50 overflow-y-auto" onClick={closeModal}>
           <div className="min-h-screen px-4 py-8 flex items-center justify-center">
             <div 
@@ -260,12 +261,12 @@ export default function EnglishMoviesPage() {
               {/* Header Image */}
               <div className="relative h-64 md:h-96">
                 <Image
-                  src={selectedMovie.cover_image_url || selectedMovie.poster_url}
-                  alt={selectedMovie.title}
+                  src={selectedSeries.cover_image_url || selectedSeries.poster_url}
+                  alt={selectedSeries.title}
                   fill
                   className="object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://via.placeholder.com/1200x600/1a1a2e/e50914?text=${encodeURIComponent(selectedMovie.title)}`;
+                    (e.target as HTMLImageElement).src = `https://via.placeholder.com/1200x600/1a1a2e/e50914?text=${encodeURIComponent(selectedSeries.title)}`;
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/60 to-transparent" />
@@ -279,25 +280,27 @@ export default function EnglishMoviesPage() {
 
               {/* Content */}
               <div className="p-6 md:p-8 -mt-20 relative z-10">
-                <h2 className="text-3xl md:text-4xl font-bold mb-2">{selectedMovie.title}</h2>
+                <h2 className="text-3xl md:text-4xl font-bold mb-2">{selectedSeries.title}</h2>
                 <div className="flex items-center gap-3 text-sm text-gray-400 mb-4">
-                  <span>{new Date(selectedMovie.release_date).getFullYear()}</span>
-                  {selectedMovie.genres && selectedMovie.genres.length > 0 && (
+                  <span>{new Date(selectedSeries.release_date).getFullYear()}</span>
+                  <span>•</span>
+                  <span>{selectedSeries.season_count} {selectedSeries.season_count === 1 ? 'Season' : 'Seasons'}</span>
+                  {selectedSeries.genres && selectedSeries.genres.length > 0 && (
                     <>
                       <span>•</span>
-                      <span>{selectedMovie.genres.join(", ")}</span>
+                      <span>{selectedSeries.genres.join(", ")}</span>
                     </>
                   )}
                 </div>
                 
-                {selectedMovie.description && (
+                {selectedSeries.description && (
                   <p className="text-gray-300 text-base leading-relaxed mb-6">
-                    {selectedMovie.description}
+                    {selectedSeries.description}
                   </p>
                 )}
 
                 {/* Player Button */}
-                {selectedMovie.embed_url && (
+                {selectedSeries.embed_url && (
                   <button
                     onClick={() => setShowPlayer(!showPlayer)}
                     className="mb-6 px-6 py-3 bg-[#E50914] hover:bg-[#b80710] text-white rounded-lg font-semibold flex items-center gap-2 transition-colors"
@@ -308,10 +311,10 @@ export default function EnglishMoviesPage() {
                 )}
 
                 {/* Embedded Player */}
-                {showPlayer && selectedMovie.embed_url && (
+                {showPlayer && selectedSeries.embed_url && (
                   <div className="mb-6 aspect-video rounded-lg overflow-hidden bg-black">
                     <iframe
-                      src={selectedMovie.embed_url}
+                      src={selectedSeries.embed_url}
                       className="w-full h-full"
                       allowFullScreen
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
@@ -364,7 +367,7 @@ export default function EnglishMoviesPage() {
 
                   {!loadingDownloads && downloads && downloads.downloads.length === 0 && (
                     <p className="text-gray-500 text-center py-8">
-                      No download options available for this movie.
+                      No download options available for this series.
                     </p>
                   )}
 

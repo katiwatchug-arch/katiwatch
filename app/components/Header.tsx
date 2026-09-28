@@ -13,6 +13,7 @@ const leftNavItems: { href: string; label: React.ReactNode }[] = [
   { href: "/movies", label: "Movies" },
   { href: "/series", label: "TV Shows" },
   { href: "/english-movies", label: "English Movies" },
+  { href: "/english-series", label: "English Series" },
   { href: "/sports", label: "Sports & Live TV" },
 ];
 
@@ -265,12 +266,6 @@ export default function Header() {
         <div className="border-t border-gray-800 bg-black shadow-lg">
           <nav className="container mx-auto px-4 py-2">
             <div className="flex flex-col space-y-1">
-              <Link href="/"
-                className={`px-4 py-3 rounded-lg flex items-center gap-3 text-base font-semibold transition-all hover:translate-x-2 ${isActive("/") ? "text-[#E50914] bg-black border-r-2 border-[#E50914]" : "text-gray-300 hover:text-[#E50914]"}`}
-                onClick={() => setIsMenuOpen(false)}>
-                <Image src="/logo.jpeg" alt="" width={24} height={24} className="w-6 h-6 rounded" />
-                Home
-              </Link>
               {leftNavItems.map((item) => (
                 <Link key={item.href} href={item.href}
                   className={`px-4 py-3 rounded-lg flex items-center text-base transition-all hover:translate-x-2 ${isActive(item.href) ? "text-[#E50914] bg-black border-r-2 border-[#E50914]" : "text-gray-300 hover:text-[#E50914]"}`}

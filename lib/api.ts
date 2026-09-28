@@ -493,6 +493,34 @@ export async function getEnglishMovieDownloads(tmdbId: string) {
   }
 }
 
+// English Series API
+export async function getEnglishSeries(type: 'popular' | 'trending' | 'top-rated' | 'on-air' | 'airing-today' = 'popular', limit = 20, page = 1) {
+  try {
+    return await Reelplexi.getReelplexiEnglishSeries(type, page, limit);
+  } catch (error) {
+    console.error('Error fetching English series:', error);
+    return [];
+  }
+}
+
+export async function searchEnglishSeries(query: string, limit = 100, page = 1) {
+  try {
+    return await Reelplexi.searchReelplexiEnglishSeries(query, page, limit);
+  } catch (error) {
+    console.error('Error searching English series:', error);
+    return [];
+  }
+}
+
+export async function getEnglishSeriesDownloads(tmdbId: string, season?: number, episode?: number) {
+  try {
+    return await Reelplexi.getReelplexiEnglishSeriesDownloads(tmdbId, season, episode);
+  } catch (error) {
+    console.error(`Error fetching English series downloads for ${tmdbId}:`, error);
+    return { title: '', downloads: [], subtitles: [] };
+  }
+}
+
 // Sports & Live TV API
 export async function getSportsChannels(page = 1, perPage = 50, category?: string) {
   try {

@@ -659,6 +659,110 @@ export async function getReelplexiEnglishMovieDownloads(tmdbId: string) {
   }
 }
 
+// English Series API (following same pattern as English Movies)
+export async function getReelplexiEnglishSeries(type: 'popular' | 'trending' | 'top-rated' | 'on-air' | 'airing-today' = 'popular', page = 1, perPage = 20) {
+  try {
+    const res = await fetchReelplexi(`/v1/english-series/${type}`, { page, per_page: perPage });
+    return (res.data || []).map((series: any) => ({
+      id: asString(series.id) || asString(series.tmdb_id) || '',
+      tmdb_id: series.tmdb_id || series.id,
+      title: asString(series.title) || asString(series.name) || 'Untitled',
+      description: asString(series.overview) || asString(series.description) || '',
+      poster_url: asString(series.poster_url) || '',
+      thumbnail_url: asString(series.poster_url) || '',
+      cover_image_url: asString(series.backdrop_url) || asString(series.poster_url) || '',
+      release_date: asString(series.first_air_date) || asString(series.release_date) || new Date().toISOString(),
+      genres: normalizeGenres(series.genres),
+      genre_ids: normalizeGenres(series.genres).map(g => g.toLowerCase()),
+      embed_url: asString(series.embed_url) || '',
+      season_count: series.number_of_seasons || 0,
+      type: 'english-series'
+    }));
+  } catch (e) {
+    console.error('Error fetching English series:', e);
+    return [];
+  }
+}
+
+export async function searchReelplexiEnglishSeries(query: string, page = 1, perPage = 100) {
+  try {
+    if (!query.trim()) {
+      return await getReelplexiEnglishSeries('popular', page, perPage);
+    }
+
+    const allResults: any[] = [];
+    let currentPage = 1;
+    const pageSize = 100;
+
+    while (true) {
+      const params: Record<string, string | number> = { 
+        page: currentPage, 
+        per_page: pageSize, 
+        q: query.trim() 
+      };
+
+      const res = await fetchReelplexi('/v1/english-series/search', params);
+      const data = res.data || [];
+      if (!Array.isArray(data) || data.length === 0) break;
+
+      const normalized = data.map((series: any) => ({
+        id: asString(series.id) || asString(series.tmdb_id) || '',
+        tmdb_id: series.tmdb_id || series.id,
+        title: asString(series.title) || asString(series.name) || 'Untitled',
+        description: asString(series.overview) || asString(series.description) || '',
+        poster_url: asString(series.poster_url) || '',
+        thumbnail_url: asString(series.poster_url) || '',
+        cover_image_url: asString(series.backdrop_url) || asString(series.poster_url) || '',
+        release_date: asString(series.first_air_date) || asString(series.release_date) || new Date().toISOString(),
+        genres: normalizeGenres(series.genres),
+        genre_ids: normalizeGenres(series.genres).map(g => g.toLowerCase()),
+        embed_url: asString(series.embed_url) || '',
+        season_count: series.number_of_seasons || 0,
+        type: 'english-series'
+      }));
+      
+      allResults.push(...normalized);
+
+      if (data.length < pageSize) break;
+      currentPage++;
+      if (currentPage > 50) break;
+    }
+
+    return allResults;
+  } catch (e) {
+    console.error('Error searching English series:', e);
+    return [];
+  }
+}
+
+export async function getReelplexiEnglishSeriesDownloads(tmdbId: string, season?: number, episode?: number) {
+  try {
+    let endpoint = `/v1/english-series/${tmdbId}/downloads`;
+    if (season !== undefined && episode !== undefined) {
+      endpoint = `/v1/english-series/${tmdbId}/season/${season}/episode/${episode}/downloads`;
+    }
+    const res = await fetchReelplexi(endpoint);
+    return {
+      title: asString(res.title) || '',
+      downloads: (res.downloads || []).map((dl: any) => ({
+        resolution: dl.resolution || 720,
+        name: asString(dl.name) || '',
+        size_bytes: dl.size_bytes || 0,
+        size_readable: asString(dl.size_readable) || '',
+        proxy_url: asString(dl.proxy_url) || ''
+      })),
+      subtitles: (res.subtitles || []).map((sub: any) => ({
+        language: asString(sub.language) || 'English',
+        url: asString(sub.url) || '',
+        format: asString(sub.format) || 'SRT'
+      }))
+    };
+  } catch (e) {
+    console.error(`Error fetching downloads for English series ${tmdbId}:`, e);
+    return { title: '', downloads: [], subtitles: [] };
+  }
+}
+
 // Sports & Live TV API
 export async function getReelplexiSportsChannels(page = 1, perPage = 50, category?: string) {
   try {
