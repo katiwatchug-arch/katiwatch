@@ -464,3 +464,59 @@ export async function getMovieDownload(id: string) {
 export async function getEpisodeDownload(seriesId: string, season: number, episode: number) {
   return await Reelplexi.getReelplexiEpisodeDownloadUrl(seriesId, season, episode);
 }
+
+// English Movies API
+export async function getEnglishMovies(type: 'popular' | 'trending' | 'top-rated' | 'now-playing' | 'upcoming' = 'popular', limit = 20, page = 1) {
+  try {
+    return await Reelplexi.getReelplexiEnglishMovies(type, page, limit);
+  } catch (error) {
+    console.error('Error fetching English movies:', error);
+    return [];
+  }
+}
+
+export async function searchEnglishMovies(query: string, limit = 100, page = 1) {
+  try {
+    return await Reelplexi.searchReelplexiEnglishMovies(query, page, limit);
+  } catch (error) {
+    console.error('Error searching English movies:', error);
+    return [];
+  }
+}
+
+export async function getEnglishMovieDownloads(tmdbId: string) {
+  try {
+    return await Reelplexi.getReelplexiEnglishMovieDownloads(tmdbId);
+  } catch (error) {
+    console.error(`Error fetching English movie downloads for ${tmdbId}:`, error);
+    return { title: '', downloads: [], subtitles: [] };
+  }
+}
+
+// Sports & Live TV API
+export async function getSportsChannels(page = 1, perPage = 50, category?: string) {
+  try {
+    return await Reelplexi.getReelplexiSportsChannels(page, perPage, category);
+  } catch (error) {
+    console.error('Error fetching sports channels:', error);
+    return { total: 0, page: 1, per_page: perPage, categories: [], data: [] };
+  }
+}
+
+export async function searchSportsChannels(query: string) {
+  try {
+    return await Reelplexi.searchReelplexiSportsChannels(query);
+  } catch (error) {
+    console.error('Error searching sports channels:', error);
+    return [];
+  }
+}
+
+export async function getLiveEvents() {
+  try {
+    return await Reelplexi.getReelplexiLiveEvents();
+  } catch (error) {
+    console.error('Error fetching live events:', error);
+    return [];
+  }
+}

@@ -559,3 +559,173 @@ export async function getReelplexiAppNotifications() {
     return [];
   }
 }
+
+// English Movies API
+export async function getReelplexiEnglishMovies(type: 'popular' | 'trending' | 'top-rated' | 'now-playing' | 'upcoming' = 'popular', page = 1, perPage = 20) {
+  try {
+    const res = await fetchReelplexi(`/v1/english-movies/${type}`, { page, per_page: perPage });
+    return (res.data || []).map((movie: any) => ({
+      id: asString(movie.id) || asString(movie.tmdb_id) || '',
+      tmdb_id: movie.tmdb_id || movie.id,
+      title: asString(movie.title) || 'Untitled',
+      description: asString(movie.overview) || asString(movie.description) || '',
+      poster_url: asString(movie.poster_url) || '',
+      thumbnail_url: asString(movie.poster_url) || '',
+      cover_image_url: asString(movie.backdrop_url) || asString(movie.poster_url) || '',
+      release_date: asString(movie.release_date) || new Date().toISOString(),
+      genres: normalizeGenres(movie.genres),
+      genre_ids: normalizeGenres(movie.genres).map(g => g.toLowerCase()),
+      embed_url: asString(movie.embed_url) || '',
+      type: 'english-movie'
+    }));
+  } catch (e) {
+    console.error('Error fetching English movies:', e);
+    return [];
+  }
+}
+
+export async function searchReelplexiEnglishMovies(query: string, page = 1, perPage = 100) {
+  try {
+    if (!query.trim()) {
+      return await getReelplexiEnglishMovies('popular', page, perPage);
+    }
+
+    // Fetch all pages for comprehensive search results
+    const allResults: any[] = [];
+    let currentPage = 1;
+    const pageSize = 100;
+
+    while (true) {
+      const params: Record<string, string | number> = { 
+        page: currentPage, 
+        per_page: pageSize, 
+        q: query.trim() 
+      };
+
+      const res = await fetchReelplexi('/v1/english-movies/search', params);
+      const data = res.data || [];
+      if (!Array.isArray(data) || data.length === 0) break;
+
+      const normalized = data.map((movie: any) => ({
+        id: asString(movie.id) || asString(movie.tmdb_id) || '',
+        tmdb_id: movie.tmdb_id || movie.id,
+        title: asString(movie.title) || 'Untitled',
+        description: asString(movie.overview) || asString(movie.description) || '',
+        poster_url: asString(movie.poster_url) || '',
+        thumbnail_url: asString(movie.poster_url) || '',
+        cover_image_url: asString(movie.backdrop_url) || asString(movie.poster_url) || '',
+        release_date: asString(movie.release_date) || new Date().toISOString(),
+        genres: normalizeGenres(movie.genres),
+        genre_ids: normalizeGenres(movie.genres).map(g => g.toLowerCase()),
+        embed_url: asString(movie.embed_url) || '',
+        type: 'english-movie'
+      }));
+      
+      allResults.push(...normalized);
+
+      if (data.length < pageSize) break;
+      currentPage++;
+      if (currentPage > 50) break;
+    }
+
+    return allResults;
+  } catch (e) {
+    console.error('Error searching English movies:', e);
+    return [];
+  }
+}
+
+export async function getReelplexiEnglishMovieDownloads(tmdbId: string) {
+  try {
+    const res = await fetchReelplexi(`/v1/english-movies/${tmdbId}/downloads`);
+    return {
+      title: asString(res.title) || '',
+      downloads: (res.downloads || []).map((dl: any) => ({
+        resolution: dl.resolution || 720,
+        name: asString(dl.name) || '',
+        size_bytes: dl.size_bytes || 0,
+        size_readable: asString(dl.size_readable) || '',
+        proxy_url: asString(dl.proxy_url) || ''
+      })),
+      subtitles: (res.subtitles || []).map((sub: any) => ({
+        language: asString(sub.language) || 'English',
+        url: asString(sub.url) || '',
+        format: asString(sub.format) || 'SRT'
+      }))
+    };
+  } catch (e) {
+    console.error(`Error fetching downloads for English movie ${tmdbId}:`, e);
+    return { title: '', downloads: [], subtitles: [] };
+  }
+}
+
+// Sports & Live TV API
+export async function getReelplexiSportsChannels(page = 1, perPage = 50, category?: string) {
+  try {
+    const params: Record<string, string | number> = { page, per_page: perPage };
+    if (category && category !== 'all') params.category = category;
+    
+    const res = await fetchReelplexi('/v1/sports/channels', params);
+    return {
+      total: res.total || 0,
+      page: res.page || 1,
+      per_page: res.per_page || perPage,
+      categories: res.categories || [],
+      data: (res.data || []).map((channel: any) => ({
+        id: asString(channel.id) || '',
+        name: asString(channel.name) || '',
+        category: asString(channel.category) || '',
+        channel_type: asString(channel.channel_type) || '',
+        embed_url: asString(channel.embed_url) || '',
+        logo: asString(channel.logo) || '',
+        is_live: channel.is_live !== false
+      }))
+    };
+  } catch (e) {
+    console.error('Error fetching sports channels:', e);
+    return { total: 0, page: 1, per_page: perPage, categories: [], data: [] };
+  }
+}
+
+export async function searchReelplexiSportsChannels(query: string) {
+  try {
+    if (!query.trim()) {
+      const result = await getReelplexiSportsChannels(1, 50);
+      return result.data;
+    }
+
+    const res = await fetchReelplexi('/v1/sports/search', { q: query.trim() });
+    return (res.data || []).map((channel: any) => ({
+      id: asString(channel.id) || '',
+      name: asString(channel.name) || '',
+      category: asString(channel.category) || '',
+      channel_type: asString(channel.channel_type) || '',
+      embed_url: `https://api.reelplexi.com/v1/sports/embed/${channel.id}`,
+      logo: asString(channel.logo) || '',
+      is_live: channel.is_live !== false
+    }));
+  } catch (e) {
+    console.error('Error searching sports channels:', e);
+    return [];
+  }
+}
+
+export async function getReelplexiLiveEvents() {
+  try {
+    const res = await fetchReelplexi('/v1/sports/events/live');
+    return (res.data || res.events || []).map((event: any) => ({
+      id: asString(event.id) || '',
+      title: asString(event.title) || asString(event.name) || '',
+      sport: asString(event.sport) || '',
+      league: asString(event.league) || '',
+      home_team: asString(event.home_team) || '',
+      away_team: asString(event.away_team) || '',
+      start_time: asString(event.start_time) || '',
+      status: asString(event.status) || 'live',
+      embed_url: asString(event.embed_url) || asString(event.stream_url) || ''
+    }));
+  } catch (e) {
+    console.error('Error fetching live events:', e);
+    return [];
+  }
+}

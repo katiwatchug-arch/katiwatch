@@ -234,16 +234,18 @@ export default function HomePage() {
     if (!searchQuery.trim()) {
       setSearchResults([]);
       setShowSearchResults(false);
+      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
+    setShowSearchResults(true); // Show results container immediately
+    
     const handler = setTimeout(async () => {
       try {
         const api = await import("@/lib/api");
         const results = await api.searchAllContent(searchQuery, 500, 1);
         setSearchResults(results);
-        setShowSearchResults(true);
         setIsSearching(false);
       } catch (error) {
         logger.error("Search error:", error);

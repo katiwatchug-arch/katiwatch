@@ -97,11 +97,14 @@ export default function SeriesPage() {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (currentPage !== 1) setCurrentPage(1);
-      else fetchSeries(1, searchQuery, selectedVJ, selectedGenre);
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      } else {
+        fetchSeries(1, searchQuery, selectedVJ, selectedGenre);
+      }
     }, 400);
     return () => clearTimeout(handler);
-  }, [searchQuery, selectedVJ, selectedGenre, fetchSeries]);
+  }, [searchQuery, selectedVJ, selectedGenre]);
 
   const clearFilters = () => { 
     setSelectedVJ(""); 

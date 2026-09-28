@@ -114,11 +114,14 @@ function MoviesPageInner() {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (currentPage !== 1) setCurrentPage(1);
-      else fetchMovies(1, searchQuery, selectedVJ, selectedGenre, selectedYear);
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      } else {
+        fetchMovies(1, searchQuery, selectedVJ, selectedGenre, selectedYear);
+      }
     }, 400);
     return () => clearTimeout(handler);
-  }, [searchQuery, selectedVJ, selectedGenre, selectedYear, fetchMovies]);
+  }, [searchQuery, selectedVJ, selectedGenre, selectedYear]);
 
   const clearFilters = () => { 
     setSelectedVJ(""); 
