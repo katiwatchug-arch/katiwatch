@@ -39,6 +39,12 @@ export function ModernSearchBar({ value, onChange, placeholder = "Search...", cl
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              // Prevent form submission, search happens automatically via onChange
+            }
+          }}
           placeholder={placeholder}
           className={`
             w-full pl-12 pr-12 py-3.5 

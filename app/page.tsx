@@ -324,12 +324,17 @@ export default function HomePage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-6 py-4 md:py-5 pr-14 bg-[#2a2a3e]/80 backdrop-blur-sm border-2 border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-[#E50914] transition-all duration-300 text-base md:text-lg"
                     onKeyDown={(e) => {
-                      // Results are shown inline; no redirect needed
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Results are already shown inline via useEffect
+                      }
                     }}
                   />
                   <button
+                    type="button"
                     className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-[#E50914] hover:bg-[#b80710] flex items-center justify-center transition-all duration-300 hover:scale-110"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       // Results are shown inline automatically
                     }}
                   >
