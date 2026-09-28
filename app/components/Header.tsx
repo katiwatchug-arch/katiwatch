@@ -13,7 +13,6 @@ const leftNavItems: { href: string; label: React.ReactNode }[] = [
   { href: "/movies", label: "Movies" },
   { href: "/series", label: "TV Shows" },
   { href: "/english-movies", label: "English Movies" },
-  { href: "/english-series", label: "English Series" },
   { href: "/sports", label: "Sports & Live TV" },
 ];
 
