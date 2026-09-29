@@ -67,6 +67,7 @@ export default function HomePage() {
   const [filterLoading, setFilterLoading] = useState(false);
   const [seriesFilterLoading, setSeriesFilterLoading] = useState(false);
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; action: 'play' | 'download'; requirePremium?: boolean }>({ isOpen: false, action: 'play' });
+  const [regionRows, setRegionRows] = useState<{ slug: string; name: string; content: any[] }[]>([]);
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -188,6 +189,28 @@ export default function HomePage() {
         ];
         setAnimationContent(combined as TrendingContent[]);
       }).catch(error => logger.error('Error loading animation content:', error));
+    });
+
+    // 5. Region Content (Medium) - Load select regions for homepage
+    import('@/lib/api').then(({ getRegionContent }) => {
+      const featuredRegions = ['kdrama', 'nollywood', 'bollywood', 'anime'];
+      Promise.all(
+        featuredRegions.map(async (slug) => {
+          try {
+            const result = await getRegionContent(slug, 1, 12);
+            return {
+              slug,
+              name: result.region.name || slug,
+              content: result.data
+            };
+          } catch (error) {
+            logger.error(`Error loading ${slug} content:`, error);
+            return { slug, name: slug, content: [] };
+          }
+        })
+      ).then(regions => {
+        setRegionRows(regions.filter(r => r.content.length > 0));
+      });
     });
   }, []);
 
@@ -710,6 +733,27 @@ export default function HomePage() {
             </Swiper>
           </section>
         )}
+
+        {/* Region Rows */}
+        {regionRows.map(region => (
+          region.content.length > 0 && (
+            <section key={region.slug} className="mb-16 container mx-auto px-4 md:px-12">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold text-[#E50914]">{region.name}</h2>
+                <Link href={`/regions/${region.slug}`} className="text-[#E50914] hover:text-[#b80710] font-semibold flex items-center gap-2 transition-colors">
+                  See More <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <Swiper {...swiperProps} className={`region-${region.slug}-swiper`}>
+                {region.content.map(item => (
+                  <SwiperSlide key={`${region.slug}-${item.id}`}>
+                    <NetflixCard content={item} type={item.type || 'movie'} />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </section>
+          )
+        ))}
       </div>
 
       <AuthRequiredModal

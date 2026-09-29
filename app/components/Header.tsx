@@ -14,6 +14,7 @@ const leftNavItems: { href: string; label: React.ReactNode }[] = [
   { href: "/series", label: "TV Shows" },
   { href: "/english-movies", label: "English Movies" },
   { href: "/sports", label: "Sports & Live TV" },
+  { href: "/regions", label: "Regions" },
 ];
 
 export default function Header() {

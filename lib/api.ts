@@ -520,3 +520,40 @@ export async function getLiveEvents() {
     return [];
   }
 }
+
+// Regions API
+export async function getRegions() {
+  try {
+    return await Reelplexi.getReelplexiRegions();
+  } catch (error) {
+    console.error('Error fetching regions:', error);
+    return [];
+  }
+}
+
+export async function getRegionContent(regionSlug: string, page = 1, perPage = 20, genre?: string, year?: string) {
+  try {
+    return await Reelplexi.getReelplexiRegionContent(regionSlug, page, perPage, genre, year);
+  } catch (error) {
+    console.error(`Error fetching region content for ${regionSlug}:`, error);
+    return { region: { slug: regionSlug, name: regionSlug }, data: [], pagination: { page, per_page: perPage, total: 0, total_pages: 0 } };
+  }
+}
+
+export async function getRegionMovies(regionSlug: string, page = 1, perPage = 20, genre?: string, year?: string) {
+  try {
+    return await Reelplexi.getReelplexiRegionMovies(regionSlug, page, perPage, genre, year);
+  } catch (error) {
+    console.error(`Error fetching region movies for ${regionSlug}:`, error);
+    return [];
+  }
+}
+
+export async function getRegionSeries(regionSlug: string, page = 1, perPage = 20, genre?: string, year?: string) {
+  try {
+    return await Reelplexi.getReelplexiRegionSeries(regionSlug, page, perPage, genre, year);
+  } catch (error) {
+    console.error(`Error fetching region series for ${regionSlug}:`, error);
+    return [];
+  }
+}

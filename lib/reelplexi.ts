@@ -575,7 +575,8 @@ export async function getReelplexiEnglishMovies(type: 'popular' | 'trending' | '
       release_date: asString(movie.release_date) || new Date().toISOString(),
       genres: normalizeGenres(movie.genres),
       genre_ids: normalizeGenres(movie.genres).map(g => g.toLowerCase()),
-      embed_url: asString(movie.embed_url) || '',
+      // Use proper embed URL format from documentation
+      embed_url: movie.tmdb_id ? `https://vidsrc.xyz/embed/movie/${movie.tmdb_id}` : '',
       type: 'english-movie'
     }));
   } catch (e) {
@@ -617,7 +618,7 @@ export async function searchReelplexiEnglishMovies(query: string, page = 1, perP
         release_date: asString(movie.release_date) || new Date().toISOString(),
         genres: normalizeGenres(movie.genres),
         genre_ids: normalizeGenres(movie.genres).map(g => g.toLowerCase()),
-        embed_url: asString(movie.embed_url) || '',
+        embed_url: movie.tmdb_id ? `https://vidsrc.xyz/embed/movie/${movie.tmdb_id}` : '',
         type: 'english-movie'
       }));
       
@@ -640,18 +641,14 @@ export async function getReelplexiEnglishMovieDownloads(tmdbId: string) {
     const res = await fetchReelplexi(`/v1/english-movies/${tmdbId}/downloads`);
     return {
       title: asString(res.title) || '',
-      downloads: (res.downloads || []).map((dl: any) => ({
-        resolution: dl.resolution || 720,
-        name: asString(dl.name) || '',
-        size_bytes: dl.size_bytes || 0,
-        size_readable: asString(dl.size_readable) || '',
-        proxy_url: asString(dl.proxy_url) || ''
+      downloads: (res.links || []).map((dl: any) => ({
+        resolution: parseInt(dl.quality?.replace('p', '') || '720', 10),
+        name: `${res.title || 'movie'}_${dl.quality || '720p'}.mp4`,
+        size_bytes: 0,
+        size_readable: asString(dl.size) || '',
+        proxy_url: asString(dl.url) || ''
       })),
-      subtitles: (res.subtitles || []).map((sub: any) => ({
-        language: asString(sub.language) || 'English',
-        url: asString(sub.url) || '',
-        format: asString(sub.format) || 'SRT'
-      }))
+      subtitles: []
     };
   } catch (e) {
     console.error(`Error fetching downloads for English movie ${tmdbId}:`, e);
@@ -726,6 +723,80 @@ export async function getReelplexiLiveEvents() {
     }));
   } catch (e) {
     console.error('Error fetching live events:', e);
+    return [];
+  }
+}
+
+// Regions API
+export async function getReelplexiRegions() {
+  try {
+    const res = await fetchReelplexi('/v1/regions');
+    return (res.data || []).map((region: any) => ({
+      slug: asString(region.slug) || '',
+      name: asString(region.name) || '',
+      description: asString(region.description) || '',
+      countries: region.countries || [],
+      content_count: {
+        movies: region.content_count?.movies || 0,
+        series: region.content_count?.series || 0,
+        total: region.content_count?.total || 0
+      }
+    }));
+  } catch (e) {
+    console.error('Error fetching regions:', e);
+    return [];
+  }
+}
+
+export async function getReelplexiRegionContent(regionSlug: string, page = 1, perPage = 20, genre?: string, year?: string) {
+  try {
+    const params: Record<string, string | number> = { page, per_page: perPage };
+    if (genre) params.genre = genre;
+    if (year) params.year = year;
+    
+    const res = await fetchReelplexi(`/v1/regions/${regionSlug}`, params);
+    return {
+      region: res.region || { slug: regionSlug, name: regionSlug },
+      data: (res.data || []).map((item: any) => {
+        const contentType = asString(item.content_type) || 'movie';
+        if (contentType === 'series') {
+          return normalizeReelplexiSeries(item);
+        } else {
+          return normalizeReelplexiMovie(item);
+        }
+      }),
+      pagination: res.pagination || { page, per_page: perPage, total: 0, total_pages: 0 }
+    };
+  } catch (e) {
+    console.error(`Error fetching region content for ${regionSlug}:`, e);
+    return { region: { slug: regionSlug, name: regionSlug }, data: [], pagination: { page, per_page: perPage, total: 0, total_pages: 0 } };
+  }
+}
+
+export async function getReelplexiRegionMovies(regionSlug: string, page = 1, perPage = 20, genre?: string, year?: string) {
+  try {
+    const params: Record<string, string | number> = { page, per_page: perPage };
+    if (genre) params.genre = genre;
+    if (year) params.year = year;
+    
+    const res = await fetchReelplexi(`/v1/regions/${regionSlug}/movies`, params);
+    return (res.data || []).map(normalizeReelplexiMovie);
+  } catch (e) {
+    console.error(`Error fetching region movies for ${regionSlug}:`, e);
+    return [];
+  }
+}
+
+export async function getReelplexiRegionSeries(regionSlug: string, page = 1, perPage = 20, genre?: string, year?: string) {
+  try {
+    const params: Record<string, string | number> = { page, per_page: perPage };
+    if (genre) params.genre = genre;
+    if (year) params.year = year;
+    
+    const res = await fetchReelplexi(`/v1/regions/${regionSlug}/series`, params);
+    return (res.data || []).map(normalizeReelplexiSeries);
+  } catch (e) {
+    console.error(`Error fetching region series for ${regionSlug}:`, e);
     return [];
   }
 }
