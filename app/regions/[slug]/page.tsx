@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Film, Tv, Search } from "lucide-react";
 import { getRegionContent, getRegionMovies, getRegionSeries } from "@/lib/api";
+import { NetflixCard } from "@/components/NetflixCard";
 
 type ContentType = "all" | "movies" | "series";
 
@@ -223,63 +224,30 @@ export default function RegionDetailPage() {
       {/* Content grid */}
       <div className="container mx-auto px-4 sm:px-6 py-8">
         {loading && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {Array.from({ length: 18 }).map((_, i) => (
-              <div key={i} className="aspect-[2/3] rounded-lg bg-gray-800/40 animate-pulse" />
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-2 gap-y-4">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <div key={i} className="relative pt-[150%] rounded-md bg-gray-800/40 animate-pulse" />
             ))}
           </div>
         )}
 
         {!loading && filteredContent.length > 0 && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-2 gap-y-4">
               {filteredContent.map((item) => (
-                <Link
+                <NetflixCard
                   key={`${item.type}-${item.id}`}
-                  href={item.type === "movie" ? `/movies/${item.id}` : `/series/${item.id}`}
-                  className="group relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 hover:scale-105 transition-transform duration-200"
-                >
-                  {/* Poster */}
-                  <img
-                    src={item.thumbnail_url || item.poster_url || item.poster || `https://via.placeholder.com/300x450/1a1a2e/e50914?text=${encodeURIComponent(item.title)}`}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://via.placeholder.com/300x450/1a1a2e/e50914?text=${encodeURIComponent(item.title)}`;
-                    }}
-                  />
-
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <h3 className="font-bold text-sm line-clamp-2 mb-1">{item.title}</h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-300">
-                        {item.release_date && <span>{new Date(item.release_date).getFullYear()}</span>}
-                        {item.imdb_rating && (
-                          <>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              ⭐ {item.imdb_rating}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Type badge */}
-                  <div className="absolute top-2 right-2 px-2 py-1 bg-black/80 rounded text-xs font-semibold">
-                    {item.type === "movie" ? "Movie" : "Series"}
-                  </div>
-                </Link>
+                  content={item}
+                  type={item.type}
+                />
               ))}
             </div>
 
             {/* Loading more indicator */}
             {loadingMore && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mt-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="aspect-[2/3] rounded-lg bg-gray-800/40 animate-pulse" />
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-2 gap-y-4 mt-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="relative pt-[150%] rounded-md bg-gray-800/40 animate-pulse" />
                 ))}
               </div>
             )}
