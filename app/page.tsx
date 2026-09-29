@@ -193,7 +193,7 @@ export default function HomePage() {
 
     // 5. Region Content (Medium) - Load select regions for homepage
     import('@/lib/api').then(({ getRegionContent }) => {
-      const featuredRegions = ['kdrama', 'nollywood', 'bollywood', 'anime'];
+      const featuredRegions = ['bollywood', 'kdrama', 'chinese-drama'];
       Promise.all(
         featuredRegions.map(async (slug) => {
           try {
