@@ -90,8 +90,8 @@ export default function EnglishMoviesPage() {
         if (append) {
           setMovies(prev => {
             // Deduplicate by id
-            const existingIds = new Set(prev.map(m => m.id));
-            const newMovies = results.filter(m => !existingIds.has(m.id));
+            const existingIds = new Set(prev.map((m: EnglishMovie) => m.id));
+            const newMovies = results.filter((m: EnglishMovie) => !existingIds.has(m.id));
             return [...prev, ...newMovies];
           });
         } else {
@@ -104,8 +104,8 @@ export default function EnglishMoviesPage() {
         
         if (append) {
           setMovies(prev => {
-            const existingIds = new Set(prev.map(m => m.id));
-            const newMovies = results.filter(m => !existingIds.has(m.id));
+            const existingIds = new Set(prev.map((m: EnglishMovie) => m.id));
+            const newMovies = results.filter((m: EnglishMovie) => !existingIds.has(m.id));
             return [...prev, ...newMovies];
           });
         } else {

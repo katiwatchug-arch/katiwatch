@@ -89,11 +89,11 @@ export default function RegionDetailPage() {
       let newContent: Content[] = [];
 
       if (type === "all") {
-        const data = await getRegionContent(slug, pageNum);
-        newContent = [
-          ...data.movies.map((m: Movie) => ({ ...m, type: "movie" as const })),
-          ...data.series.map((s: Series) => ({ ...s, type: "series" as const })),
-        ];
+        const result = await getRegionContent(slug, pageNum);
+        newContent = result.data.map((item: any) => ({
+          ...item,
+          type: item.type || (item.seasons ? "series" : "movie")
+        }));
       } else if (type === "movies") {
         const movies = await getRegionMovies(slug, pageNum);
         newContent = movies.map((m: Movie) => ({ ...m, type: "movie" as const }));
