@@ -10,17 +10,21 @@ type ContentType = "all" | "movies" | "series";
 type Movie = {
   id: string;
   title: string;
-  poster: string;
-  year?: number;
-  rating?: number;
+  thumbnail_url?: string;
+  poster_url?: string;
+  poster?: string;
+  release_date?: string;
+  imdb_rating?: number;
 };
 
 type Series = {
   id: string;
   title: string;
-  poster: string;
-  year?: number;
-  rating?: number;
+  thumbnail_url?: string;
+  poster_url?: string;
+  poster?: string;
+  release_date?: string;
+  imdb_rating?: number;
 };
 
 type Content = (Movie | Series) & { type: "movie" | "series" };
@@ -237,11 +241,11 @@ export default function RegionDetailPage() {
                 >
                   {/* Poster */}
                   <img
-                    src={item.poster || "/placeholder-poster.jpg"}
+                    src={item.thumbnail_url || item.poster_url || item.poster || `https://via.placeholder.com/300x450/1a1a2e/e50914?text=${encodeURIComponent(item.title)}`}
                     alt={item.title}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/placeholder-poster.jpg";
+                      (e.target as HTMLImageElement).src = `https://via.placeholder.com/300x450/1a1a2e/e50914?text=${encodeURIComponent(item.title)}`;
                     }}
                   />
 
@@ -250,12 +254,12 @@ export default function RegionDetailPage() {
                     <div className="absolute bottom-0 left-0 right-0 p-3">
                       <h3 className="font-bold text-sm line-clamp-2 mb-1">{item.title}</h3>
                       <div className="flex items-center gap-2 text-xs text-gray-300">
-                        {item.year && <span>{item.year}</span>}
-                        {item.rating && (
+                        {item.release_date && <span>{new Date(item.release_date).getFullYear()}</span>}
+                        {item.imdb_rating && (
                           <>
                             <span>•</span>
                             <span className="flex items-center gap-1">
-                              ⭐ {item.rating.toFixed(1)}
+                              ⭐ {item.imdb_rating}
                             </span>
                           </>
                         )}
