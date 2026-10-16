@@ -12,6 +12,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { getProfile, Profile } from "@/lib/profiles";
 import AuthRequiredModal from "@/components/AuthRequiredModal";
 import { IOSDownloadModal } from "@/components/IOSDownloadModal";
+import { DownloadModal } from "@/components/DownloadModal";
 import { canUserDownload } from "@/lib/subscriptions";
 import { supabase, Series, SeriesWithVJ, Season, Episode, EpisodeWithSeason, MovieWithVJ } from "@/lib/supabase";
 import { useUserPreferences } from "@/lib/hooks/useUserPreferences";
@@ -213,17 +214,6 @@ export default function SeriesDetailsPage() {
       setShowDownloadModal(true);
     }
   };
-
-  useEffect(() => {
-    if (showDownloadModal) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "";
-      };
-    } else {
-      document.body.style.overflow = "";
-    }
-  }, [showDownloadModal]);
 
   const handleDownloadNow = async () => {
     if (!selectedEpisode) return;
@@ -568,59 +558,13 @@ export default function SeriesDetailsPage() {
         filename={iosDownloadInfo?.filename || ''}
       />
 
-      {/* Download Modal - Global Viewport Centered */}
-      {showDownloadModal && selectedEpisode && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowDownloadModal(false);
-          }}
-        >
-          <div 
-            className="w-full max-w-md bg-gradient-to-br from-[#1c1c1c] to-[#121212] rounded-2xl shadow-2xl border border-gray-800 my-auto max-h-[90dvh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-            onClick={e => e.stopPropagation()}
-            style={{
-              boxShadow: '0 0 40px rgba(229, 9, 20, 0.15), 0 20px 60px rgba(0, 0, 0, 0.9)',
-            }}
-          >
-            <div className="p-6 sm:p-8 overflow-y-auto">
-              <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-5">
-                <div className="absolute inset-0 bg-[#E50914]/20 rounded-full animate-ping"></div>
-                <div 
-                  className="relative w-full h-full rounded-full flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.2), rgba(229, 9, 20, 0.05))',
-                    border: '2px solid rgba(229, 9, 20, 0.4)',
-                  }}
-                >
-                  <Download className="w-8 h-8 sm:w-9 sm:h-9 text-[#E50914]" strokeWidth={2.5} />
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-1.5 text-center">Ready to Download</h2>
-              <p className="text-gray-300 text-sm mb-1 text-center font-semibold">{series?.title}</p>
-              <p className="text-gray-500 text-xs mb-6 text-center">
-                S{selectedEpisode.seasonOrder}E{selectedEpisode.episode_number}: {selectedEpisode.title}
-              </p>
-              
-              <button
-                type="button"
-                className="w-full bg-[#E50914] hover:bg-[#b80710] text-white font-bold py-4 rounded-xl mb-3 transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-[#E50914]/25 flex items-center justify-center gap-2"
-                onClick={handleDownloadNow}
-              >
-                <Download className="w-5 h-5" />
-                <span>Start Download</span>
-              </button>
-              <button 
-                type="button"
-                className="w-full text-gray-400 hover:text-white text-sm font-medium py-3 transition-colors rounded-xl hover:bg-white/5"
-                onClick={() => setShowDownloadModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DownloadModal
+        isOpen={showDownloadModal && !!selectedEpisode}
+        onClose={() => setShowDownloadModal(false)}
+        onConfirm={handleDownloadNow}
+        title={selectedEpisode ? `${(series?.title || '').replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim()} - S${selectedEpisode.seasonOrder}E${selectedEpisode.episode_number} - ${selectedEpisode.title.replace(/[^a-zA-Z0-9\s\-_.]/g, '').trim()}.mkv` : ''}
+        subtitle="Fast, high-quality direct download"
+      />
     </div>
   );
 }
