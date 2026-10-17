@@ -9,6 +9,7 @@ import { SubscriptionPlan } from '@/lib/supabase';
 import { PaymentProviders } from '@/lib/payment-config';
 import Link from 'next/link';
 import { YoPaymentsService } from '@/lib/yopayments';
+import { createPortal } from 'react-dom';
 
 const LoadingDots = () => (
   <span className="inline-flex items-center justify-center font-bold tracking-widest text-2xl text-[#E50914]">
@@ -421,18 +422,15 @@ function PaymentPageContent() {
         )}
 
         {/* Payment Modal */}
-        {showPaymentModal && selectedPlan && (
+        {showPaymentModal && selectedPlan && createPortal(
           <div
-            className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto"
-            style={{
-              paddingTop: 'max(1rem, env(safe-area-inset-top))',
-            }}
+            className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 h-[100dvh] w-screen overscroll-none touch-none"
             onClick={(e) => {
               if (e.target === e.currentTarget) closePaymentModal();
             }}
           >
             <div
-              className="bg-[#141414] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
+              className="bg-[#141414] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200 max-h-[90dvh] overflow-y-auto overscroll-contain"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
@@ -533,7 +531,8 @@ function PaymentPageContent() {
                 </p>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </div>
