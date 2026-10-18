@@ -493,6 +493,53 @@ export async function getEnglishMovieDownloads(tmdbId: string) {
   }
 }
 
+// English Series API
+export async function getEnglishSeries(type: 'popular' | 'trending' | 'top-rated' = 'popular', limit = 20, page = 1) {
+  try {
+    return await Reelplexi.getReelplexiEnglishSeries(type, page, limit);
+  } catch (error) {
+    console.error('Error fetching English series:', error);
+    return [];
+  }
+}
+
+export async function searchEnglishSeries(query: string, limit = 50, page = 1) {
+  try {
+    return await Reelplexi.searchReelplexiEnglishSeries(query, page, limit);
+  } catch (error) {
+    console.error('Error searching English series:', error);
+    return [];
+  }
+}
+
+export async function getEnglishSeriesDetails(tmdbId: string) {
+  try {
+    return await Reelplexi.getReelplexiEnglishSeriesDetails(tmdbId);
+  } catch (error) {
+    console.error(`Error fetching English series details for ${tmdbId}:`, error);
+    return null;
+  }
+}
+
+export async function getEnglishSeriesSeason(tmdbId: string, seasonNumber: number) {
+  try {
+    return await Reelplexi.getReelplexiEnglishSeriesSeason(tmdbId, seasonNumber);
+  } catch (error) {
+    console.error(`Error fetching season ${seasonNumber} for English series ${tmdbId}:`, error);
+    return null;
+  }
+}
+
+export async function getEnglishEpisodeDownloads(tmdbId: string, seasonNumber: number, episodeNumber: number) {
+  try {
+    return await Reelplexi.getReelplexiEnglishEpisodeDownloads(tmdbId, seasonNumber, episodeNumber);
+  } catch (error) {
+    console.error(`Error fetching episode downloads for English series ${tmdbId} S${seasonNumber}E${episodeNumber}:`, error);
+    return { title: '', season_number: seasonNumber, episode_number: episodeNumber, downloads: [], subtitles: [] };
+  }
+}
+
+
 // Sports & Live TV API
 export async function getSportsChannels(page = 1, perPage = 50, category?: string) {
   try {

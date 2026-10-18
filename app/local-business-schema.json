@@ -1,0 +1,82 @@
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": "https://katiwatch.com/#organization",
+  "name": "Katiwatch",
+  "alternateName": [
+    "Katiwatch Uganda",
+    "Katiwatch UG",
+    "VJ Movies Uganda"
+  ],
+  "description": "Uganda's number 1 streaming platform for VJ translated movies in Luganda. Stream VJ Junior, VJ Jjingo, ICE P translated movies and series online free.",
+  "url": "https://katiwatch.com",
+  "logo": "https://katiwatch.com/logo.jpeg",
+  "image": "https://katiwatch.com/logo.jpeg",
+  "telephone": "+256",
+  "email": "info@katiwatch.com",
+  "priceRange": "Free - Premium",
+  "paymentAccepted": "Mobile Money, Credit Card, Visa, Mastercard",
+  "currenciesAccepted": "UGX, USD",
+  "areaServed": {
+    "@type": "Country",
+    "name": "Uganda"
+  },
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "UG",
+    "addressRegion": "Uganda"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "0.3476",
+    "longitude": "32.5825"
+  },
+  "hasMap": "https://goo.gl/maps/uganda",
+  "openingHours": "Mo-Su 00:00-23:59",
+  "sameAs": [
+    "https://twitter.com/katiwatch",
+    "https://facebook.com/katiwatch",
+    "https://instagram.com/katiwatch"
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "15000",
+    "bestRating": "5",
+    "worstRating": "1"
+  },
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Free VJ Movies Streaming",
+      "price": "0",
+      "priceCurrency": "UGX",
+      "description": "Watch thousands of VJ translated movies in Luganda for free"
+    },
+    {
+      "@type": "Offer",
+      "name": "Premium Subscription",
+      "price": "10000",
+      "priceCurrency": "UGX",
+      "description": "Access exclusive VJ movies, download content, ad-free streaming"
+    }
+  ],
+  "potentialAction": {
+    "@type": "WatchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://katiwatch.com/movies/{movie_id}",
+      "actionPlatform": [
+        "http://schema.org/DesktopWebPlatform",
+        "http://schema.org/MobileWebPlatform",
+        "http://schema.org/IOSPlatform",
+        "http://schema.org/AndroidPlatform"
+      ]
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://katiwatch.com"
+  },
+  "keywords": "VJ translated movies luganda, VJ movies Uganda, VJ Junior movies, VJ Jjingo movies, ICE P movies, movies in luganda, translated movies Uganda, free VJ movies, luganda movies online, watch VJ movies, VJ Emmy movies, VJ Kevo movies, Hollywood movies luganda, Bollywood movies luganda, Korean drama luganda"
+}

@@ -1,0 +1,49 @@
+# Katiwatch - VJ Translated Movies Uganda
+# robots.txt for https://katiwatch.com
+
+User-agent: *
+Allow: /
+Allow: /movies
+Allow: /series
+Allow: /non-translated
+Allow: /categories
+Allow: /regions
+Allow: /premium
+Allow: /movies/*
+Allow: /series/*
+Allow: /regions/*
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /auth/
+Disallow: /profile
+Disallow: /payment
+Disallow: /admin
+
+# Allow crawling of important pages
+Allow: /api/anime/search
+Allow: /api/search
+Allow: /api/movies/full-catalog
+
+# Sitemaps
+Sitemap: https://katiwatch.com/sitemap.xml
+Sitemap: https://katiwatch.com/sitemap-movies.xml
+Sitemap: https://katiwatch.com/sitemap-series.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Google-specific directives
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+# Bing-specific directives
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Yandex
+User-agent: Yandex
+Allow: /
+Crawl-delay: 2

@@ -293,7 +293,49 @@ export default function HomePage() {
   return (
     <>
       <div className="min-h-screen bg-[#141414] text-white pb-4">
-        <h1 className="sr-only">Katiwatch - We Are Entertainment</h1>
+        <h1 className="sr-only">Katiwatch - VJ Translated Movies in Luganda | Watch VJ Junior, VJ Jjingo Movies Uganda Free Online</h1>
+        
+        {/* SEO-optimized hidden content for search engines */}
+        <div className="sr-only">
+          <h2>Watch VJ Translated Movies in Luganda Online Free</h2>
+          <p>Katiwatch is Uganda&apos;s #1 platform for VJ translated movies in Luganda. Stream Hollywood, Bollywood, and Korean drama movies dubbed in Luganda by top Ugandan VJs including VJ Junior, VJ Jjingo, ICE P, VJ Emmy, and VJ Kevo. Watch free VJ movies online, download translated movies, and enjoy premium VJ series. New VJ movies added daily.</p>
+          
+          <h3>Popular VJ Translators on Katiwatch</h3>
+          <ul>
+            <li>VJ Junior Movies - Watch VJ Junior translated movies in Luganda</li>
+            <li>VJ Jjingo Movies - Stream VJ Jjingo dubbed movies and series</li>
+            <li>ICE P Movies - Watch ICE P translated movies online</li>
+            <li>VJ Emmy Movies - Stream VJ Emmy Luganda movies</li>
+            <li>VJ Kevo Movies - Watch VJ Kevo translated content</li>
+          </ul>
+          
+          <h3>Categories of VJ Translated Movies</h3>
+          <ul>
+            <li>Hollywood movies in Luganda - Action, thriller, romance movies translated</li>
+            <li>Bollywood movies in Luganda - Indian movies dubbed by VJs</li>
+            <li>Korean drama in Luganda - K-drama translated to Luganda</li>
+            <li>Chinese movies in Luganda - Asian content translated by VJs</li>
+            <li>VJ translated series - TV shows dubbed in Luganda</li>
+            <li>Latest 2026 VJ movies - New releases translated to Luganda</li>
+          </ul>
+          
+          <h3>Why Choose Katiwatch for VJ Movies?</h3>
+          <ul>
+            <li>100% Free VJ translated movies streaming</li>
+            <li>Daily updates with new VJ movies and series</li>
+            <li>HD quality VJ dubbed content</li>
+            <li>All popular Ugandan VJ translators in one place</li>
+            <li>Mobile-friendly VJ movie streaming</li>
+            <li>Download VJ movies for offline watching</li>
+            <li>Premium VJ content and exclusive releases</li>
+          </ul>
+          
+          <h3>Watch VJ Movies by Genre</h3>
+          <p>Action movies in Luganda, Comedy movies in Luganda, Romance movies in Luganda, Horror movies in Luganda, Drama series in Luganda, Thriller movies in Luganda, Sci-Fi movies in Luganda, Animation movies in Luganda</p>
+          
+          <h3>Katiwatch - Your Home for VJ Translated Movies in Uganda</h3>
+          <p>Stream thousands of VJ translated movies and series online. Katiwatch.com brings you the latest Hollywood, Bollywood, and international movies translated to Luganda by your favorite Ugandan VJs. Watch VJ Junior movies, VJ Jjingo movies, ICE P movies, and more. New VJ translations added every day. Join millions of Ugandans watching free VJ movies on Katiwatch.</p>
+        </div>
 
         {/* Hero Section - FMovies Style with Auto-Changing Slider */}
         <section className="relative min-h-[80vh] md:min-h-[85vh] w-full overflow-hidden mb-12">
