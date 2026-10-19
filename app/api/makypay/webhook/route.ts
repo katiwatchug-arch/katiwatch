@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { resolveFriendlyPaymentError } from '@/lib/payment-errors';
 
 /**
  * MakyPay Webhook Handler
@@ -51,19 +52,36 @@ export async function POST(request: NextRequest) {
       updateData.provider_reference = collection.provider_reference;
     }
 
+    if (transaction.status === 'failed' || event_type === 'collection.failed' || event_type === 'collection.cancelled') {
+      updateData.status = 'failed';
+      const rawReason = transaction.error_message || transaction.message || (event_type === 'collection.cancelled' ? 'user cancelled' : 'Payment failed');
+      updateData.error_message = resolveFriendlyPaymentError(rawReason);
+    }
+
     // Update by UUID or reference
     // Use service-role client for server-side webhook writes
     if (!supabaseAdmin) {
       console.error('Webhook: SUPABASE_SERVICE_ROLE_KEY not set — cannot update transaction status');
     } else {
-      const { error } = await supabaseAdmin
+      // Terminal state protection: Never overwrite a completed transaction
+      const { data: existing } = await supabaseAdmin
         .from('makypay_transactions')
-        .update(updateData)
-        .or(`uuid.eq.${transaction.uuid},reference.eq.${transaction.reference}`);
+        .select('status')
+        .or(`uuid.eq.${transaction.uuid},reference.eq.${transaction.reference}`)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Failed to update transaction from webhook:', error);
-        // Don't return error to MakyPay - we received the webhook
+      if (existing?.status === 'completed' && updateData.status !== 'completed') {
+        console.log(`Webhook: Transaction ${transaction.uuid} is already completed. Skipping update to ${updateData.status}.`);
+      } else {
+        const { error } = await supabaseAdmin
+          .from('makypay_transactions')
+          .update(updateData)
+          .or(`uuid.eq.${transaction.uuid},reference.eq.${transaction.reference}`);
+
+        if (error) {
+          console.error('Failed to update transaction from webhook:', error);
+          // Don't return error to MakyPay - we received the webhook
+        }
       }
     }
 
@@ -138,6 +156,15 @@ async function activateSubscriptionFromTransaction(
 
     if (txError || !txRecord || !txRecord.user_id) {
       console.error('Could not find transaction for subscription activation:', txError);
+      return;
+    }
+
+    // Verify upstream with MakyPay API directly before activating
+    // Guarantees spoofed webhook requests without secret cannot bypass payment
+    const { MakyPayService } = await import('@/lib/makypay');
+    const upstream = await MakyPayService.checkTransactionStatus(transactionUuid);
+    if (!upstream.isCompleted) {
+      console.warn('Webhook verification failed: MakyPay upstream does not report transaction as completed:', transactionUuid);
       return;
     }
 

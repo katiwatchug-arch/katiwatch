@@ -10,6 +10,7 @@ import { PaymentProviders } from '@/lib/payment-config';
 import Link from 'next/link';
 import { YoPaymentsService } from '@/lib/yopayments';
 import { createPortal } from 'react-dom';
+import { resolveFriendlyPaymentError, PaymentErrorMessages } from '@/lib/payment-errors';
 
 const LoadingDots = () => (
   <span className="inline-flex items-center justify-center font-bold tracking-widest text-2xl text-[#E50914]">
@@ -42,6 +43,7 @@ function PaymentPageContent() {
   const [modalPhoneNumber, setModalPhoneNumber] = useState('');
   const [modalDetectedMNO, setModalDetectedMNO] = useState<string>('');
   const phoneInputRef = useRef<HTMLInputElement>(null);
+  const lastAttemptRef = useRef<{ time: number; phone: string } | null>(null);
 
   useEffect(() => {
     if (showPaymentModal) {
@@ -135,6 +137,23 @@ function PaymentPageContent() {
   const handlePayment = async (overridePhone?: string) => {
     const payPhone = overridePhone || phoneNumber;
     if (!selectedPlan || !payPhone || !user) return;
+
+    // Check offline status before initiating
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setPaymentStatus('failed');
+      setErrorMessage(PaymentErrorMessages.NETWORK_ERROR);
+      return;
+    }
+
+    // Guard against rapid duplicate clicks/attempts in quick succession
+    const now = Date.now();
+    if (lastAttemptRef.current && (now - lastAttemptRef.current.time < 35000) && lastAttemptRef.current.phone === payPhone) {
+      setPaymentStatus('failed');
+      setErrorMessage(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+      return;
+    }
+    lastAttemptRef.current = { time: now, phone: payPhone };
+
     setIsProcessing(true);
     setPaymentStatus('processing');
     setErrorMessage('');
@@ -149,7 +168,9 @@ function PaymentPageContent() {
         body: JSON.stringify({ userId: user.id, accessToken, phoneNumber: payPhone, amount, description: `Subscription: ${selectedPlan.name}`, paymentMethod: 'mobile_money' }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Payment initiation failed');
+      if (!response.ok) {
+        throw new Error(data.error || 'Payment initiation failed');
+      }
       const result = data.transaction;
       const transactionId = result.uuid || result.transactionReference || result.internalReference;
       setTransactionRef(transactionId);
@@ -189,16 +210,28 @@ function PaymentPageContent() {
           }
           if (txStatus?.isFailed) {
             setPaymentStatus('failed');
-            setErrorMessage(txStatus.displayStatus || 'Payment was declined');
+            // Show clear friendly error message instead of generic "Failed"
+            const failureReason = txStatus.errorMessage || resolveFriendlyPaymentError(txStatus.displayStatus || 'declined');
+            setErrorMessage(failureReason);
             return;
           }
         } catch { }
       }
       setPaymentStatus('timeout');
-      setErrorMessage('Payment is still processing. If you approved on your phone, your subscription will activate shortly.');
-    } catch (error) {
+      setErrorMessage('Payment is taking longer than expected to confirm. If you approved the prompt on your phone, your subscription will activate shortly.');
+    } catch (error: any) {
       setPaymentStatus('failed');
-      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+      const isNetwork = (typeof navigator !== 'undefined' && !navigator.onLine) ||
+        error?.name === 'TypeError' ||
+        error?.message?.toLowerCase().includes('fetch') ||
+        error?.message?.toLowerCase().includes('network') ||
+        error?.message?.toLowerCase().includes('load failed');
+
+      if (isNetwork) {
+        setErrorMessage(PaymentErrorMessages.NETWORK_ERROR);
+      } else {
+        setErrorMessage(resolveFriendlyPaymentError(error instanceof Error ? error.message : String(error)));
+      }
     } finally {
       setIsProcessing(false);
     }

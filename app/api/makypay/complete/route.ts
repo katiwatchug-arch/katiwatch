@@ -137,6 +137,23 @@ export async function POST(request: NextRequest) {
           // Use the admin dashboard's authoritative duration
           planDurationDays = planRecord.duration_in_days || planDurationDays;
           console.log(`Plan lookup: "${planRecord.name}" → ${planDurationDays} days (from admin dashboard)`);
+
+          // Amount verification: Ensure the transaction amount actually covers this plan
+          if (planRecord.amount && planRecord.amount > 0) {
+            const { data: txData } = await db
+              .from('makypay_transactions')
+              .select('amount')
+              .eq('uuid', transactionId)
+              .maybeSingle();
+
+            if (txData && txData.amount && txData.amount < planRecord.amount) {
+              console.error(`Security alert: Amount tampering detected. Paid ${txData.amount} UGX, requested plan "${planRecord.name}" requires ${planRecord.amount} UGX`);
+              return NextResponse.json(
+                { error: 'Payment amount does not match the requested subscription plan.', success: false },
+                { status: 400 }
+              );
+            }
+          }
         }
       }
     } catch (e) {

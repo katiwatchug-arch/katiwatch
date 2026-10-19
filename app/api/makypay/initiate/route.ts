@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MakyPayService } from '@/lib/makypay';
 import { createClient } from '@supabase/supabase-js';
+import { resolveFriendlyPaymentError } from '@/lib/payment-errors';
 
 export async function POST(request: NextRequest) {
   try {
@@ -103,6 +104,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Resolve callback URL for webhooks so status updates are received even if user leaves the page
+    const origin = request.nextUrl.origin || process.env.NEXT_PUBLIC_APP_URL || 'https://katiwatch.com';
+    const callbackUrl = `${origin}/api/makypay/webhook`;
+
     // Initiate payment with MakyPay
     let result;
     
@@ -112,6 +117,7 @@ export async function POST(request: NextRequest) {
         userId: userIdToValidate as string,
         amount: parseFloat(amount),
         description,
+        callbackUrl,
       });
     } else {
       // Mobile money payment
@@ -120,6 +126,7 @@ export async function POST(request: NextRequest) {
         phoneNumber,
         amount: parseFloat(amount),
         description,
+        callbackUrl,
       });
     }
 
@@ -130,7 +137,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const isUserFacing = error instanceof Error && error.name === 'MakyPayException';
-    const errorMessage = isUserFacing ? error.message : 'Payment initiation failed';
+    const rawError = error instanceof Error ? error.message : 'Payment initiation failed';
+    const errorMessage = isUserFacing ? resolveFriendlyPaymentError(rawError) : 'Payment initiation failed. Please try again.';
     console.error('MakyPay API error:', {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

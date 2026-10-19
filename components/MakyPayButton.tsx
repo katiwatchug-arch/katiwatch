@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/AuthProvider';
+import { resolveFriendlyPaymentError, PaymentErrorMessages } from '@/lib/payment-errors';
 
 interface MakyPayButtonProps {
   amount: number;
@@ -32,6 +33,7 @@ export default function MakyPayButton({
   const [phoneNumber, setPhoneNumber] = useState('');
   const [detectedProvider, setDetectedProvider] = useState('');
   const phoneInputRef = useRef<HTMLInputElement>(null);
+  const lastAttemptRef = useRef<{ time: number; phone: string } | null>(null);
 
   useEffect(() => {
     if (showModal) {
@@ -53,11 +55,11 @@ export default function MakyPayButton({
     if (cleaned.length >= 10) {
       const prefix = cleaned.startsWith('256') ? cleaned.substring(3, 5) : cleaned.substring(1, 3);
       
-      // MTN: 77, 78, 76, 79, 39 — per MakyPay live API spec
-      if (['77', '78', '76', '79', '39'].includes(prefix)) {
+      // MTN: 77, 78, 76, 39 — per MakyPay API docs
+      if (['77', '78', '76', '39'].includes(prefix)) {
         setDetectedProvider('MTN Mobile Money');
-      // Airtel: 70, 73, 74, 75 — per MakyPay live API spec
-      } else if (['70', '73', '74', '75'].includes(prefix)) {
+      // Airtel: 70, 74, 75 — per MakyPay API docs
+      } else if (['70', '74', '75'].includes(prefix)) {
         setDetectedProvider('Airtel Money');
       } else {
         setDetectedProvider('Unknown Network');
@@ -83,6 +85,20 @@ export default function MakyPayButton({
       onError?.('Please enter your phone number');
       return;
     }
+
+    // Check offline status
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      onError?.(PaymentErrorMessages.NETWORK_ERROR);
+      return;
+    }
+
+    // Guard against rapid duplicate attempts in quick succession
+    const now = Date.now();
+    if (lastAttemptRef.current && (now - lastAttemptRef.current.time < 35000) && lastAttemptRef.current.phone === phoneNumber) {
+      onError?.(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+      return;
+    }
+    lastAttemptRef.current = { time: now, phone: phoneNumber };
 
     setIsProcessing(true);
 
@@ -118,48 +134,75 @@ export default function MakyPayButton({
       }
 
       // For mobile money, poll for status
-      const statusResponse = await fetch('/api/makypay/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactionId: initiateData.transaction.uuid,
-        }),
-      });
+      const transactionId = initiateData.transaction.uuid;
+      const MAX_POLLS = 24;
+      const POLL_INTERVAL = 5000;
 
-      const statusData = await statusResponse.json();
+      for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+        await new Promise(r => setTimeout(r, POLL_INTERVAL));
+        try {
+          const statusResponse = await fetch('/api/makypay/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transactionId }),
+          });
 
-      if (!statusResponse.ok) {
-        throw new Error(statusData.error || 'Failed to check payment status');
-      }
+          if (!statusResponse.ok) continue;
 
-      if (statusData.transaction.isCompleted) {
-        // Complete subscription
-        const completeResponse = await fetch('/api/makypay/complete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user.id,
-            transactionId: initiateData.transaction.uuid,
-            subscriptionPlan,
-            subscriptionDuration,
-            accessToken,
-          }),
-        });
+          const statusData = await statusResponse.json();
+          const tx = statusData.transaction;
 
-        if (!completeResponse.ok) {
-          const completeData = await completeResponse.json();
-          throw new Error(completeData.error || 'Failed to complete subscription');
+          if (tx?.isCompleted) {
+            // Complete subscription
+            const completeResponse = await fetch('/api/makypay/complete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: user.id,
+                transactionId,
+                subscriptionPlan,
+                subscriptionDuration,
+                accessToken,
+              }),
+            });
+
+            if (!completeResponse.ok) {
+              const completeData = await completeResponse.json();
+              throw new Error(completeData.error || 'Failed to complete subscription');
+            }
+
+            setShowModal(false);
+            await refreshPremiumStatus();
+            onSuccess?.();
+            return;
+          }
+
+          if (tx?.isFailed) {
+            const failureReason = tx.errorMessage || resolveFriendlyPaymentError(tx.displayStatus || 'declined');
+            throw new Error(failureReason);
+          }
+        } catch (pollErr: any) {
+          if (pollErr.message && pollErr.message !== 'Failed to check payment status') {
+            throw pollErr;
+          }
         }
-
-        setShowModal(false);
-        // Refresh premium status in AuthProvider so isPremium updates immediately
-        await refreshPremiumStatus();
-        onSuccess?.();
-      } else {
-        throw new Error(statusData.transaction.displayStatus || 'Payment failed');
       }
-    } catch (error) {
-      onError?.(error instanceof Error ? error.message : 'Payment failed');
+
+      // If loop finishes without terminal status
+      throw new Error('Payment is taking longer than expected. If you approved on your phone, your subscription will activate shortly.');
+
+    } catch (error: any) {
+      const isNetwork = (typeof navigator !== 'undefined' && !navigator.onLine) ||
+        error?.name === 'TypeError' ||
+        error?.message?.toLowerCase().includes('fetch') ||
+        error?.message?.toLowerCase().includes('network') ||
+        error?.message?.toLowerCase().includes('load failed');
+
+      if (isNetwork) {
+        onError?.(PaymentErrorMessages.NETWORK_ERROR);
+      } else {
+        onError?.(resolveFriendlyPaymentError(error instanceof Error ? error.message : String(error)));
+      }
     } finally {
       setIsProcessing(false);
     }

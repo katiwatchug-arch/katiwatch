@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { supabaseAdmin } from './supabase-admin';
+import { resolveFriendlyPaymentError } from './payment-errors';
 
 /**
  * MakyPay Standard API Integration
@@ -84,27 +85,27 @@ export class MakyPayService {
   /**
    * Determine mobile money provider based on phone number prefix
    * 
-   * MakyPay officially supported prefixes (per live API spec):
-   * MTN: 077, 078, 076, 079, 039
-   * Airtel: 070, 073, 074, 075
+   * MakyPay officially supported prefixes:
+   * MTN: 077, 078, 076, 039
+   * Airtel: 070, 074, 075
    */
   static getProviderFromPhone(phoneNumber: string): string {
     const formatted = this.formatPhoneNumber(phoneNumber);
 
-    // MTN: 256 + (77, 78, 76, 79, 39) — per MakyPay live API spec
-    if (/^256(77|78|76|79|39)/.test(formatted)) {
+    // MTN: 256 + (77, 78, 76, 39) — per MakyPay API spec
+    if (/^256(77|78|76|39)/.test(formatted)) {
       return 'mtn';
     }
 
-    // Airtel: 256 + (70, 73, 74, 75) — per MakyPay live API spec
-    if (/^256(70|73|74|75)/.test(formatted)) {
+    // Airtel: 256 + (70, 74, 75) — per MakyPay API spec
+    if (/^256(70|74|75)/.test(formatted)) {
       return 'airtel';
     }
 
     // Reject unsupported prefixes instead of silently defaulting
     const prefix = formatted.substring(3, 5);
     throw new MakyPayException(
-      `Unsupported phone prefix (0${prefix}). MakyPay supports MTN (077/078/076/079/039) and Airtel (070/073/074/075) only.`
+      `Unsupported phone prefix (0${prefix}). MakyPay supports MTN (077/078/076/039) and Airtel (070/074/075) only.`
     );
   }
 
@@ -368,19 +369,37 @@ export class MakyPayService {
         );
       }
 
-      return {
-        uuid: data.data.transaction.uuid,
-        reference: data.data.transaction.reference,
-        status: data.data.transaction.status,
-        amount: data.data.transaction.amount?.raw || 0,
-        currency: data.data.transaction.amount?.currency || 'UGX',
-        provider: data.data.transaction.provider,
-        providerReference: data.data.transaction.provider_reference,
-        isCompleted: data.data.transaction.status === 'completed',
-        isFailed: data.data.transaction.status === 'failed',
-        isPending: data.data.transaction.status === 'processing',
-        displayStatus: this.getDisplayStatus(data.data.transaction.status),
+      const tx = data?.data?.transaction;
+      const details = data?.data?.details;
+      const status = tx?.status || 'processing';
+      const rawError = tx?.error_message || tx?.failure_reason || tx?.message || details?.message || details?.error || null;
+      const friendlyError = status === 'failed' ? resolveFriendlyPaymentError(rawError) : null;
+
+      const result: MakyPayTransactionStatus = {
+        uuid: tx?.uuid || transactionId,
+        reference: tx?.reference || '',
+        status: status,
+        amount: tx?.amount?.raw || 0,
+        currency: tx?.amount?.currency || 'UGX',
+        provider: tx?.provider || details?.provider || '',
+        providerReference: tx?.provider_reference || details?.provider_reference,
+        isCompleted: status === 'completed',
+        isFailed: status === 'failed',
+        isPending: status === 'processing',
+        displayStatus: this.getDisplayStatus(status),
+        errorMessage: friendlyError,
       };
+
+      // Synchronize failed terminal status directly to the database so failed records don't stay in "processing"
+      if (result.isFailed) {
+        await this.updateTransactionStatus(
+          result.uuid,
+          result.status,
+          result.errorMessage || null
+        );
+      }
+
+      return result;
     } catch (e) {
       if (e instanceof MakyPayException) throw e;
       throw new MakyPayException(`Failed to check transaction status: ${e}`);
@@ -457,7 +476,27 @@ export class MakyPayService {
         );
       }
 
-      // Check if payment was successful
+      // 1. Ownership & Replay Protection: Verify transaction in database
+      const { data: txRecord } = await supabaseAdmin
+        .from('makypay_transactions')
+        .select('*')
+        .eq('uuid', transactionId)
+        .maybeSingle();
+
+      if (txRecord) {
+        // Prevent cross-user payment theft
+        if (txRecord.user_id && txRecord.user_id !== userId) {
+          throw new MakyPayException('Unauthorized: Transaction does not belong to this user.');
+        }
+
+        // Prevent replay attacks (cannot re-activate an already redeemed transaction)
+        if (txRecord.status === 'completed') {
+          console.warn(`completeSubscriptionPayment: Transaction ${transactionId} has already been completed.`);
+          return;
+        }
+      }
+
+      // 2. Upstream Verification: Directly verify with MakyPay
       const result = await this.checkTransactionStatus(transactionId);
 
       if (result.isCompleted) {
@@ -587,12 +626,29 @@ export class MakyPayService {
   /**
    * Update transaction status in database
    */
-  private static async updateTransactionStatus(
+  static async updateTransactionStatus(
     transactionId: string,
     status: string,
     errorMessage: string | null
   ): Promise<void> {
     try {
+      if (!supabaseAdmin) {
+        console.warn('updateTransactionStatus: supabaseAdmin not available, status update may fail due to RLS');
+      }
+      const dbClient = supabaseAdmin || supabase;
+
+      // Terminal state protection: Never overwrite a completed transaction with failed/cancelled
+      const { data: existing } = await dbClient
+        .from('makypay_transactions')
+        .select('status')
+        .eq('uuid', transactionId)
+        .maybeSingle();
+
+      if (existing?.status === 'completed' && status !== 'completed') {
+        console.log(`updateTransactionStatus: Transaction ${transactionId} is already completed. Skipping update to ${status}.`);
+        return;
+      }
+
       const updateData: Record<string, any> = {
         status,
         updated_at: new Date().toISOString(),
@@ -602,10 +658,6 @@ export class MakyPayService {
         updateData.error_message = errorMessage;
       }
 
-      if (!supabaseAdmin) {
-        console.warn('updateTransactionStatus: supabaseAdmin not available, status update may fail due to RLS');
-      }
-      const dbClient = supabaseAdmin || supabase;
       const { error } = await dbClient
         .from('makypay_transactions')
         .update(updateData)
@@ -728,6 +780,7 @@ export interface MakyPayTransactionStatus {
   isFailed: boolean;
   isPending: boolean;
   displayStatus: string;
+  errorMessage?: string | null;
 }
 
 export interface MakyPayTransaction {
