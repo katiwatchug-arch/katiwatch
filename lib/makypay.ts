@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { supabaseAdmin } from './supabase-admin';
-import { resolveFriendlyPaymentError } from './payment-errors';
+import { resolveFriendlyPaymentError, PaymentErrorMessages } from './payment-errors';
 
 /**
  * MakyPay Standard API Integration
@@ -209,24 +209,41 @@ export class MakyPayService {
         body: formData.toString(),
       });
 
+      if (response.status === 429) {
+        throw new MakyPayException(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+      }
+
       let data: any;
-      const responseText = await response.text();
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        console.error('MakyPay returned non-JSON response:', responseText.substring(0, 500));
-        throw new MakyPayException(`MakyPay returned invalid response (HTTP ${response.status})`);
+      if (typeof response.text === 'function') {
+        const responseText = await response.text();
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          console.error('MakyPay returned non-JSON response:', responseText.substring(0, 500));
+          if (response.status === 429 || responseText.includes('429') || responseText.toLowerCase().includes('too many')) {
+            throw new MakyPayException(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+          }
+          throw new MakyPayException(`MakyPay returned invalid response (HTTP ${response.status})`);
+        }
+      } else {
+        data = await response.json();
       }
 
       console.log('MakyPay Collection Response:', JSON.stringify(data, null, 2));
 
       if (!response.ok || data.status !== 'success') {
+        if (response.status === 429) {
+          throw new MakyPayException(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        }
         const errorMsg = this.extractErrorMessage(data, response.status);
         console.error('MakyPay Collection FAILED:', {
           httpStatus: response.status,
           fullResponse: JSON.stringify(data),
           extractedError: errorMsg,
         });
+        if (String(errorMsg).includes('429') || String(errorMsg).toLowerCase().includes('too many')) {
+          throw new MakyPayException(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        }
         throw new MakyPayException(errorMsg);
       }
 
@@ -302,24 +319,41 @@ export class MakyPayService {
         body: formData.toString(),
       });
 
+      if (response.status === 429) {
+        throw new MakyPayException(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+      }
+
       let data: any;
-      const responseText = await response.text();
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        console.error('MakyPay Card returned non-JSON:', responseText.substring(0, 500));
-        throw new MakyPayException(`MakyPay returned invalid response (HTTP ${response.status})`);
+      if (typeof response.text === 'function') {
+        const responseText = await response.text();
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          console.error('MakyPay Card returned non-JSON:', responseText.substring(0, 500));
+          if (response.status === 429 || responseText.includes('429') || responseText.toLowerCase().includes('too many')) {
+            throw new MakyPayException(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+          }
+          throw new MakyPayException(`MakyPay returned invalid response (HTTP ${response.status})`);
+        }
+      } else {
+        data = await response.json();
       }
 
       console.log('MakyPay Card Collection Response:', JSON.stringify(data, null, 2));
 
       if (!response.ok || data.status !== 'success') {
+        if (response.status === 429) {
+          throw new MakyPayException(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        }
         const errorMsg = this.extractErrorMessage(data, response.status);
         console.error('MakyPay Card Collection FAILED:', {
           httpStatus: response.status,
           fullResponse: JSON.stringify(data),
           extractedError: errorMsg,
         });
+        if (String(errorMsg).includes('429') || String(errorMsg).toLowerCase().includes('too many')) {
+          throw new MakyPayException(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        }
         throw new MakyPayException(errorMsg);
       }
 
@@ -361,11 +395,67 @@ export class MakyPayService {
         },
       });
 
-      const data = await response.json();
+      if (response.status === 429) {
+        return {
+          uuid: transactionId,
+          reference: '',
+          status: 'processing',
+          amount: 0,
+          currency: 'UGX',
+          provider: '',
+          isCompleted: false,
+          isFailed: false,
+          isPending: true,
+          displayStatus: 'Pending',
+          errorMessage: null,
+        };
+      }
+
+      let data: any;
+      if (typeof response.text === 'function') {
+        const responseText = await response.text();
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          if (response.status === 429 || responseText.includes('429')) {
+            return {
+              uuid: transactionId,
+              reference: '',
+              status: 'processing',
+              amount: 0,
+              currency: 'UGX',
+              provider: '',
+              isCompleted: false,
+              isFailed: false,
+              isPending: true,
+              displayStatus: 'Pending',
+              errorMessage: null,
+            };
+          }
+          throw new MakyPayException(`Failed to check status: HTTP ${response.status}`);
+        }
+      } else {
+        data = await response.json();
+      }
 
       if (!response.ok) {
+        if (response.status === 429) {
+          return {
+            uuid: transactionId,
+            reference: '',
+            status: 'processing',
+            amount: 0,
+            currency: 'UGX',
+            provider: '',
+            isCompleted: false,
+            isFailed: false,
+            isPending: true,
+            displayStatus: 'Pending',
+            errorMessage: null,
+          };
+        }
         throw new MakyPayException(
-          data.message || `Failed to check status: ${response.status}`
+          data?.message || `Failed to check status: ${response.status}`
         );
       }
 

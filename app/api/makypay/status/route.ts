@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MakyPayService } from '@/lib/makypay';
+import { resolveFriendlyPaymentError, PaymentErrorMessages } from '@/lib/payment-errors';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,13 +25,17 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('MakyPay status check error:', error);
 
-    const isUserFacing = error instanceof Error && error.name === 'MakyPayException';
+    const rawError = error instanceof Error ? error.message : 'Status check failed';
+    const isTooMany = rawError.includes('429') ||
+      rawError.toLowerCase().includes('too many') ||
+      rawError.toLowerCase().includes('rate limit');
+
     return NextResponse.json(
       {
-        error: isUserFacing ? error.message : 'Status check failed',
+        error: isTooMany ? PaymentErrorMessages.TOO_MANY_ATTEMPTS : resolveFriendlyPaymentError(rawError),
         success: false
       },
-      { status: 500 }
+      { status: isTooMany ? 429 : 500 }
     );
   }
 }

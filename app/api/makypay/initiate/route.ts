@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MakyPayService } from '@/lib/makypay';
 import { createClient } from '@supabase/supabase-js';
-import { resolveFriendlyPaymentError } from '@/lib/payment-errors';
+import { resolveFriendlyPaymentError, PaymentErrorMessages } from '@/lib/payment-errors';
 
 export async function POST(request: NextRequest) {
   try {
@@ -138,7 +138,15 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const isUserFacing = error instanceof Error && error.name === 'MakyPayException';
     const rawError = error instanceof Error ? error.message : 'Payment initiation failed';
-    const errorMessage = isUserFacing ? resolveFriendlyPaymentError(rawError) : 'Payment initiation failed. Please try again.';
+    const isTooMany = rawError.includes('429') ||
+      rawError.toLowerCase().includes('too many') ||
+      rawError.toLowerCase().includes('rate limit') ||
+      rawError.toLowerCase().includes('in quick succession');
+
+    const errorMessage = isTooMany
+      ? PaymentErrorMessages.TOO_MANY_ATTEMPTS
+      : (isUserFacing ? resolveFriendlyPaymentError(rawError) : 'Payment initiation failed. Please try again.');
+
     console.error('MakyPay API error:', {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -149,7 +157,7 @@ export async function POST(request: NextRequest) {
         error: errorMessage,
         success: false
       },
-      { status: 500 }
+      { status: isTooMany ? 429 : 500 }
     );
   }
 }

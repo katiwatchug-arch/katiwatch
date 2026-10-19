@@ -147,10 +147,18 @@ function PaymentPageContent() {
 
     // Guard against rapid duplicate clicks/attempts in quick succession
     const now = Date.now();
-    if (lastAttemptRef.current && (now - lastAttemptRef.current.time < 35000) && lastAttemptRef.current.phone === payPhone) {
-      setPaymentStatus('failed');
-      setErrorMessage(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
-      return;
+    if (lastAttemptRef.current) {
+      const elapsed = now - lastAttemptRef.current.time;
+      if (elapsed < 35000 && lastAttemptRef.current.phone === payPhone) {
+        setPaymentStatus('failed');
+        setErrorMessage(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        return;
+      }
+      if (elapsed < 5000) {
+        setPaymentStatus('failed');
+        setErrorMessage(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        return;
+      }
     }
     lastAttemptRef.current = { time: now, phone: payPhone };
 
@@ -167,8 +175,31 @@ function PaymentPageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, accessToken, phoneNumber: payPhone, amount, description: `Subscription: ${selectedPlan.name}`, paymentMethod: 'mobile_money' }),
       });
-      const data = await response.json();
+
+      if (response.status === 429) {
+        setPaymentStatus('failed');
+        setErrorMessage(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        return;
+      }
+
+      let data: any = {};
+      try {
+        data = await response.json();
+      } catch {
+        if (response.status === 429) {
+          setPaymentStatus('failed');
+          setErrorMessage(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+          return;
+        }
+        throw new Error(response.ok ? 'Unexpected response from payment server' : 'Payment initiation failed');
+      }
+
       if (!response.ok) {
+        if (response.status === 429 || (data.error && (String(data.error).includes('429') || String(data.error).toLowerCase().includes('too many')))) {
+          setPaymentStatus('failed');
+          setErrorMessage(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+          return;
+        }
         throw new Error(data.error || 'Payment initiation failed');
       }
       const result = data.transaction;
@@ -186,8 +217,17 @@ function PaymentPageContent() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(PaymentProviders.isMakyPayEnabled() ? { transactionId } : { transactionReference: transactionId }),
           });
+          if (pollResponse.status === 429) {
+            await new Promise(r => setTimeout(r, 3000));
+            continue;
+          }
           if (!pollResponse.ok) continue;
-          const pollData = await pollResponse.json();
+          let pollData: any;
+          try {
+            pollData = await pollResponse.json();
+          } catch {
+            continue;
+          }
           const txStatus = pollData.transaction;
           if (txStatus?.isCompleted) {
             const completeEndpoint = PaymentProviders.isMakyPayEnabled() ? '/api/makypay/complete' : '/api/yopayments/complete';
@@ -211,7 +251,8 @@ function PaymentPageContent() {
           if (txStatus?.isFailed) {
             setPaymentStatus('failed');
             // Show clear friendly error message instead of generic "Failed"
-            const failureReason = txStatus.errorMessage || resolveFriendlyPaymentError(txStatus.displayStatus || 'declined');
+            const rawFail = txStatus.errorMessage || txStatus.displayStatus || 'declined';
+            const failureReason = resolveFriendlyPaymentError(rawFail);
             setErrorMessage(failureReason);
             return;
           }
@@ -221,16 +262,17 @@ function PaymentPageContent() {
       setErrorMessage('Payment is taking longer than expected to confirm. If you approved the prompt on your phone, your subscription will activate shortly.');
     } catch (error: any) {
       setPaymentStatus('failed');
+      const errorMsg = error instanceof Error ? error.message : String(error);
       const isNetwork = (typeof navigator !== 'undefined' && !navigator.onLine) ||
         error?.name === 'TypeError' ||
-        error?.message?.toLowerCase().includes('fetch') ||
-        error?.message?.toLowerCase().includes('network') ||
-        error?.message?.toLowerCase().includes('load failed');
+        errorMsg.toLowerCase().includes('fetch') ||
+        errorMsg.toLowerCase().includes('network') ||
+        errorMsg.toLowerCase().includes('load failed');
 
       if (isNetwork) {
         setErrorMessage(PaymentErrorMessages.NETWORK_ERROR);
       } else {
-        setErrorMessage(resolveFriendlyPaymentError(error instanceof Error ? error.message : String(error)));
+        setErrorMessage(resolveFriendlyPaymentError(errorMsg));
       }
     } finally {
       setIsProcessing(false);

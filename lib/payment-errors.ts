@@ -47,11 +47,19 @@ export function resolveFriendlyPaymentError(
     return PaymentErrorMessages.NETWORK_ERROR;
   }
 
-  // 2. Too many attempts / duplicate requests / rapid retries
+  // 2. Too many attempts / duplicate requests / rapid retries / HTTP 429
   if (
     httpStatus === 429 ||
+    normalized.includes('429') ||
     normalized.includes('too many') ||
     normalized.includes('rate limit') ||
+    normalized.includes('ratelimit') ||
+    normalized.includes('throttle') ||
+    normalized.includes('throttled') ||
+    normalized.includes('slow down') ||
+    normalized.includes('limit exceeded') ||
+    normalized.includes('quota') ||
+    normalized.includes('maximum attempts') ||
     normalized.includes('duplicate') ||
     normalized.includes('pending transaction') ||
     normalized.includes('active transaction') ||
@@ -77,7 +85,24 @@ export function resolveFriendlyPaymentError(
     return PaymentErrorMessages.INSUFFICIENT_FUNDS;
   }
 
-  // 4. Cancelled or timed out on user phone (USSD session closed/expired)
+  // 4. Server/Gateway internal errors or parse errors - never leak raw tech info
+  if (
+    normalized.includes('unexpected token') ||
+    normalized.includes('syntaxerror') ||
+    normalized.includes('500') ||
+    normalized.includes('502') ||
+    normalized.includes('503') ||
+    normalized.includes('504') ||
+    normalized.includes('bad gateway') ||
+    normalized.includes('gateway timeout') ||
+    normalized.includes('service unavailable') ||
+    normalized.includes('internal server error') ||
+    normalized.includes('invalid response')
+  ) {
+    return PaymentErrorMessages.GENERIC_DECLINED;
+  }
+
+  // 5. Cancelled or timed out on user phone (USSD session closed/expired)
   if (
     normalized.includes('cancel') ||
     normalized.includes('rejected') ||
@@ -91,7 +116,7 @@ export function resolveFriendlyPaymentError(
     return PaymentErrorMessages.PROMPT_CANCELLED_OR_TIMEOUT;
   }
 
-  // 5. If the raw string is just the status word "Failed" or "Processing" or generic
+  // 6. If the raw string is just the status word "Failed" or "Processing" or generic
   if (
     normalized === 'failed' ||
     normalized === 'declined' ||

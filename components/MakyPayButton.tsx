@@ -94,9 +94,16 @@ export default function MakyPayButton({
 
     // Guard against rapid duplicate attempts in quick succession
     const now = Date.now();
-    if (lastAttemptRef.current && (now - lastAttemptRef.current.time < 35000) && lastAttemptRef.current.phone === phoneNumber) {
-      onError?.(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
-      return;
+    if (lastAttemptRef.current) {
+      const elapsed = now - lastAttemptRef.current.time;
+      if (elapsed < 35000 && lastAttemptRef.current.phone === phoneNumber) {
+        onError?.(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        return;
+      }
+      if (elapsed < 5000) {
+        onError?.(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        return;
+      }
     }
     lastAttemptRef.current = { time: now, phone: phoneNumber };
 
@@ -121,9 +128,24 @@ export default function MakyPayButton({
         }),
       });
 
-      const initiateData = await initiateResponse.json();
+      if (initiateResponse.status === 429) {
+        throw new Error(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+      }
+
+      let initiateData: any = {};
+      try {
+        initiateData = await initiateResponse.json();
+      } catch {
+        if (initiateResponse.status === 429) {
+          throw new Error(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        }
+        throw new Error(initiateResponse.ok ? 'Unexpected response from payment server' : 'Payment initiation failed');
+      }
 
       if (!initiateResponse.ok) {
+        if (initiateResponse.status === 429 || (initiateData.error && (String(initiateData.error).includes('429') || String(initiateData.error).toLowerCase().includes('too many')))) {
+          throw new Error(PaymentErrorMessages.TOO_MANY_ATTEMPTS);
+        }
         throw new Error(initiateData.error || 'Payment initiation failed');
       }
 
@@ -147,9 +169,19 @@ export default function MakyPayButton({
             body: JSON.stringify({ transactionId }),
           });
 
+          if (statusResponse.status === 429) {
+            await new Promise(r => setTimeout(r, 3000));
+            continue;
+          }
+
           if (!statusResponse.ok) continue;
 
-          const statusData = await statusResponse.json();
+          let statusData: any;
+          try {
+            statusData = await statusResponse.json();
+          } catch {
+            continue;
+          }
           const tx = statusData.transaction;
 
           if (tx?.isCompleted) {
@@ -178,8 +210,8 @@ export default function MakyPayButton({
           }
 
           if (tx?.isFailed) {
-            const failureReason = tx.errorMessage || resolveFriendlyPaymentError(tx.displayStatus || 'declined');
-            throw new Error(failureReason);
+            const rawFail = tx.errorMessage || tx.displayStatus || 'declined';
+            throw new Error(resolveFriendlyPaymentError(rawFail));
           }
         } catch (pollErr: any) {
           if (pollErr.message && pollErr.message !== 'Failed to check payment status') {
@@ -192,16 +224,17 @@ export default function MakyPayButton({
       throw new Error('Payment is taking longer than expected. If you approved on your phone, your subscription will activate shortly.');
 
     } catch (error: any) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
       const isNetwork = (typeof navigator !== 'undefined' && !navigator.onLine) ||
         error?.name === 'TypeError' ||
-        error?.message?.toLowerCase().includes('fetch') ||
-        error?.message?.toLowerCase().includes('network') ||
-        error?.message?.toLowerCase().includes('load failed');
+        errorMsg.toLowerCase().includes('fetch') ||
+        errorMsg.toLowerCase().includes('network') ||
+        errorMsg.toLowerCase().includes('load failed');
 
       if (isNetwork) {
         onError?.(PaymentErrorMessages.NETWORK_ERROR);
       } else {
-        onError?.(resolveFriendlyPaymentError(error instanceof Error ? error.message : String(error)));
+        onError?.(resolveFriendlyPaymentError(errorMsg));
       }
     } finally {
       setIsProcessing(false);
