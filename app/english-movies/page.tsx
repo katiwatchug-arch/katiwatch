@@ -1165,7 +1165,10 @@ export default function EnglishMoviesPage() {
                           ? "bg-emerald-600 text-white"
                           : "bg-gray-700 text-gray-200";
 
-                      const downloadHref = dl.url || dl.proxy_url;
+                      const rawHref = dl.proxy_url || dl.url;
+                      const downloadHref = rawHref?.startsWith("/")
+                        ? `https://api.reelplexi.com${rawHref}`
+                        : rawHref;
 
                       return (
                         <div

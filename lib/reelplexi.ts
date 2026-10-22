@@ -636,14 +636,20 @@ export async function getReelplexiEnglishMovieDownloads(tmdbId: string) {
       downloads: rawLinks.map((dl: any) => {
         const qualityStr = asString(dl.quality || dl.resolution || '720p') || '720p';
         const numRes = parseInt(String(dl.resolution || qualityStr).replace(/[^\d]/g, '') || '720', 10);
+        const rawProxy = asString(dl.proxy_url);
+        const resolvedProxyUrl = rawProxy
+          ? (rawProxy.startsWith('http') ? rawProxy : `https://api.reelplexi.com${rawProxy.startsWith('/') ? '' : '/'}${rawProxy}`)
+          : '';
+        const directUrl = asString(dl.url);
+        const effectiveUrl = resolvedProxyUrl || directUrl;
         return {
           resolution: numRes,
           quality: qualityStr.includes('p') ? qualityStr : `${numRes}p`,
           name: asString(dl.name) || `${res.title || 'Movie'}_${numRes}p.mp4`,
           size_bytes: dl.size_bytes || 0,
           size_readable: asString(dl.size || dl.size_readable) || '',
-          url: asString(dl.url || dl.proxy_url) || '',
-          proxy_url: asString(dl.proxy_url || dl.url) || '',
+          url: effectiveUrl,
+          proxy_url: resolvedProxyUrl || directUrl,
           type: asString(dl.type) || 'direct'
         };
       }),
@@ -784,14 +790,20 @@ export async function getReelplexiEnglishEpisodeDownloads(tmdbId: string, season
       downloads: rawLinks.map((dl: any) => {
         const qualityStr = asString(dl.quality || dl.resolution || '720p') || '720p';
         const numRes = parseInt(String(dl.resolution || qualityStr).replace(/[^\d]/g, '') || '720', 10);
+        const rawProxy = asString(dl.proxy_url);
+        const resolvedProxyUrl = rawProxy
+          ? (rawProxy.startsWith('http') ? rawProxy : `https://api.reelplexi.com${rawProxy.startsWith('/') ? '' : '/'}${rawProxy}`)
+          : '';
+        const directUrl = asString(dl.url);
+        const effectiveUrl = resolvedProxyUrl || directUrl;
         return {
           resolution: numRes,
           quality: qualityStr.includes('p') ? qualityStr : `${numRes}p`,
           name: asString(dl.name) || `S${seasonNumber}E${episodeNumber}_${numRes}p.mp4`,
           size_bytes: dl.size_bytes || 0,
           size_readable: asString(dl.size || dl.size_readable) || '',
-          url: asString(dl.url || dl.proxy_url) || '',
-          proxy_url: asString(dl.proxy_url || dl.url) || '',
+          url: effectiveUrl,
+          proxy_url: resolvedProxyUrl || directUrl,
           type: asString(dl.type) || 'direct'
         };
       }),
