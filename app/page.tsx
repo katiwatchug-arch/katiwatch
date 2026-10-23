@@ -13,7 +13,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { NetflixCard } from "@/components/NetflixCard";
 import { FullPageSpinner } from "@/components/LoadingSpinner";
-import { getVJContent, getMovieById, getSeriesById, getMovies, getSeries, getGenreRowsForHome, searchMovies, searchSeries } from "@/lib/api";
+import { getVJContent, getMovieById, getSeriesById, getMovies, getSeries, getGenreRowsForHome, searchMovies, searchSeries, getRegions } from "@/lib/api";
 import { Movie, Series } from "@/lib/supabase";
 import { useAuthCheck } from "@/components/AuthRequiredModal";
 import AuthRequiredModal from "@/components/AuthRequiredModal";
@@ -68,6 +68,7 @@ export default function HomePage() {
   const [seriesFilterLoading, setSeriesFilterLoading] = useState(false);
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; action: 'play' | 'download'; requirePremium?: boolean }>({ isOpen: false, action: 'play' });
   const [regionRows, setRegionRows] = useState<{ slug: string; name: string; content: any[] }[]>([]);
+  const [regions, setRegions] = useState<{ slug: string; name: string; description: string; countries: string[] }[]>([]);
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -190,6 +191,9 @@ export default function HomePage() {
         setAnimationContent(combined as TrendingContent[]);
       }).catch(error => logger.error('Error loading animation content:', error));
     });
+
+    // 5b. Region cards for horizontal strip
+    getRegions().then(data => setRegions(data)).catch(() => {});
 
     // 5. Region Content (Medium) - Load select regions for homepage
     import('@/lib/api').then(({ getRegionContent }) => {
@@ -338,7 +342,7 @@ export default function HomePage() {
         </div>
 
         {/* Hero Section - FMovies Style with Auto-Changing Slider */}
-        <section className="relative min-h-[80vh] md:min-h-[85vh] w-full overflow-hidden mb-12">
+        <section className="relative min-h-[80vh] md:min-h-[85vh] w-full md:overflow-hidden md:mb-12">
           {/* Background with auto-changing movie slides */}
           <div className="absolute inset-0">
             {heroSlides.map((slide, index) => (
@@ -366,7 +370,7 @@ export default function HomePage() {
           </div>
 
           {/* Centered Content */}
-          <div className="relative z-30 flex flex-col items-center justify-center h-full min-h-[80vh] md:min-h-[85vh] px-4 py-12">
+          <div className="relative z-30 flex flex-col items-center justify-center h-full min-h-[80vh] md:min-h-[85vh] px-4 py-4 md:py-12">
             <div className="text-center max-w-4xl mx-auto space-y-8">
               {/* Large Logo/Title */}
               <div className="mb-8">
@@ -409,10 +413,10 @@ export default function HomePage() {
               </div>
 
               {/* CTA Button */}
-              <div className="pt-4">
+              <div className="pt-4 flex items-center justify-center gap-3 flex-wrap">
                 <Button
                   size="lg"
-                  className="font-bold px-10 py-6 rounded-full bg-[#E50914] text-white hover:bg-[#b80710] transition-all duration-300 flex items-center gap-3 shadow-2xl hover:shadow-[#E50914]/50 hover:scale-105 text-base md:text-lg mx-auto"
+                  className="font-bold px-10 py-6 rounded-full bg-[#E50914] text-white hover:bg-[#b80710] transition-all duration-300 flex items-center gap-3 shadow-2xl hover:shadow-[#E50914]/50 hover:scale-105 text-base md:text-lg"
                   onClick={(e) => {
                     e.preventDefault();
                     const authCheck = checkAuth(featuredItem?.is_premium || false);
@@ -426,6 +430,12 @@ export default function HomePage() {
                   <Play className="w-6 h-6 fill-current" />
                   Kati watch
                 </Button>
+                <Link
+                  href="/english-movies"
+                  className="font-bold px-8 py-[14px] rounded-full border-2 border-orange-500/60 text-white hover:bg-orange-500/20 hover:border-orange-500 transition-all duration-300 text-base md:text-lg"
+                >
+                  🎬 Non-Translated
+                </Link>
               </div>
 
               {/* Featured Content Info with fade animation */}
@@ -479,6 +489,38 @@ export default function HomePage() {
               animation: fade-in 0.5s ease-out;
             }
           `}</style>
+
+          {/* Regions horizontal strip — inside hero on mobile */}
+          {regions.length > 0 && (
+            <div className="relative z-30 md:hidden px-4 pb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-bold text-white">Browse by Region</h2>
+                <Link href="/regions" className="text-[#E50914] font-semibold flex items-center gap-1 text-sm">
+                  See More <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {regions.map(region => {
+                  const icons: Record<string,string> = { 'kdrama':'🇰🇷','chinese-drama':'🇨🇳','western':'🇺🇸','bollywood':'🇮🇳','nollywood':'🇳🇬','east-african':'🇺🇬','anime':'🇯🇵','latin':'🇲🇽','turkish':'🇹🇷','filipino':'🇵🇭','thai':'🇹🇭' };
+                  const themes: Record<string,{from:string;to:string}> = { 'kdrama':{from:'#e8f0fe',to:'#c7d9f8'},'chinese-drama':{from:'#fde8e8',to:'#f8c7c7'},'western':{from:'#e8f4fd',to:'#c7e6f8'},'bollywood':{from:'#fef3e8',to:'#f8dfc7'},'nollywood':{from:'#e8fdf0',to:'#c7f8d9'},'east-african':{from:'#e8fdf8',to:'#c7f8ee'},'anime':{from:'#fde8ee',to:'#f8c7d4'},'latin':{from:'#fef0e8',to:'#f8d9c7'},'turkish':{from:'#fde8e8',to:'#f8c7c7'},'filipino':{from:'#e8eefe',to:'#c7d2f8'},'thai':{from:'#f0e8fe',to:'#d9c7f8'} };
+                  const t = themes[region.slug] || { from:'#1f2937', to:'#374151' };
+                  return (
+                    <Link
+                      key={region.slug}
+                      href={`/regions/${region.slug}`}
+                      className="flex-shrink-0 w-[120px] rounded-xl overflow-hidden border border-gray-200/40"
+                      style={{ background: `linear-gradient(135deg, ${t.from} 0%, ${t.to} 100%)` }}
+                    >
+                      <div className="p-3 flex flex-col items-center text-center gap-1">
+                        <span className="text-3xl">{icons[region.slug] || '🌍'}</span>
+                        <span className="text-gray-800 font-bold text-xs leading-tight line-clamp-2">{region.name}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Search Results Section */}
@@ -529,21 +571,58 @@ export default function HomePage() {
           </section>
         )}
 
+        {/* Regions horizontal strip — desktop only (mobile is inside hero) */}
+        {regions.length > 0 && (
+          <section className="hidden md:block mb-10 container mx-auto px-4 md:px-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg md:text-xl font-bold text-white">Browse by Region</h2>
+              <Link href="/regions" className="text-[#E50914] hover:text-[#b80710] font-semibold flex items-center gap-2 transition-colors text-sm">
+                See More <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {regions.map(region => {
+                const icons: Record<string,string> = { 'kdrama':'🇰🇷','chinese-drama':'🇨🇳','western':'🇺🇸','bollywood':'🇮🇳','nollywood':'🇳🇬','east-african':'🇺🇬','anime':'🇯🇵','latin':'🇲🇽','turkish':'🇹🇷','filipino':'🇵🇭','thai':'🇹🇭' };
+                const themes: Record<string,{from:string;to:string}> = { 'kdrama':{from:'#1e3a8a',to:'#3b82f6'},'chinese-drama':{from:'#7f1d1d',to:'#dc2626'},'western':{from:'#1e40af',to:'#3b82f6'},'bollywood':{from:'#ea580c',to:'#f97316'},'nollywood':{from:'#065f46',to:'#059669'},'east-african':{from:'#0f766e',to:'#14b8a6'},'anime':{from:'#be123c',to:'#e11d48'},'latin':{from:'#b91c1c',to:'#dc2626'},'turkish':{from:'#991b1b',to:'#dc2626'},'filipino':{from:'#1e40af',to:'#3b82f6'},'thai':{from:'#1e3a8a',to:'#3b82f6'} };
+                const t = themes[region.slug] || { from:'#1f2937', to:'#374151' };
+                return (
+                  <Link
+                    key={region.slug}
+                    href={`/regions/${region.slug}`}
+                    className="flex-shrink-0 w-[140px] rounded-xl overflow-hidden border border-gray-800 hover:scale-105 transition-all duration-300"
+                    style={{ background: `linear-gradient(135deg, ${t.from} 0%, ${t.to} 100%)` }}
+                  >
+                    <div className="p-3 flex flex-col items-center text-center gap-1">
+                      <span className="text-3xl">{icons[region.slug] || '🌍'}</span>
+                      <span className="text-white font-bold text-xs leading-tight line-clamp-2">{region.name}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* New 2026 Movies */}
         {movies2026.length > 0 && (
           <section className="mb-16 container mx-auto px-4 md:px-12 relative">
             <div className="absolute inset-0 bg-gradient-to-b from-[#FFD700]/5 to-transparent pointer-events-none rounded-t-3xl -z-10" />
-            <Link href="/movies?year=2026" className="flex flex-col gap-1 mb-8 group w-max">
-              <h2 className="text-[10px] md:text-xs font-semibold tracking-[0.3em] text-gray-400 uppercase">
-                Exclusive Premieres
-              </h2>
-              <div className="flex items-center gap-4">
-                <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-white to-gray-300 uppercase tracking-wide drop-shadow-sm group-hover:brightness-110 transition-all duration-300">
-                  New Movies 2026
-                </span>
-                <div className="h-[2px] w-16 bg-gradient-to-r from-white/40 to-transparent rounded-full mt-1 group-hover:w-24 transition-all duration-500" />
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex flex-col gap-1 group">
+                <h2 className="text-[10px] md:text-xs font-semibold tracking-[0.3em] text-gray-400 uppercase">
+                  Exclusive Premieres
+                </h2>
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-white to-gray-300 uppercase tracking-wide drop-shadow-sm">
+                    New Movies 2026
+                  </span>
+                  <div className="h-[2px] w-16 bg-gradient-to-r from-white/40 to-transparent rounded-full mt-1" />
+                </div>
               </div>
-            </Link>
+              <Link href="/movies?year=2026" className="text-[#E50914] hover:text-[#b80710] font-semibold flex items-center gap-2 transition-colors">
+                See More <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
             {contentLoading ? <SwiperSkeleton /> : (
               <Swiper
                 {...swiperProps}

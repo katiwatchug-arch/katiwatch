@@ -196,6 +196,9 @@ function MoviesPageInner() {
         </div>
 
         {/* Loading */}
+        {loading && selectedYear && (
+          <p className="text-center text-[#E50914] text-sm mb-4">This may take 2 to 5 seconds, please don&apos;t leave&hellip;</p>
+        )}
         {loading && <LoadingGrid />}
 
         {/* Grid */}
